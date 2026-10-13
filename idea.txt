@@ -1,0 +1,799 @@
+# PALM ISLAND
+
+Game Design Document (GDD) · Version 1.0 · Windows PC · C + Raylib
+
+[マヤ文明に影響を受けたアニメ調2D横スクロールACT『ITORAH』発売日決定―幻想的な古代遺跡を縦横無尽に駆け巡れ | Game\*Spark - 国内・海外ゲーム情報サイト](https://images.openai.com/static-rsc-4/mh_mDDsXqPF2ocIuh_ypV3kKOxlPOaMvYx5YZiVv5Kwc1Ubb9fWi9-eGDNGV1zqPBbYL5R_ZbkUKHSqDrD9hYUc1mlfihKKIRo1l5g1KpdHy5CJdve5yAXDKTmfZWjAZbcZtIG6Co5rGffLBxcL11YE8GK3C7f-4o-AxgYNgRMk?purpose=inline)
+
+[gamespark.jp](https://www.gamespark.jp/article/2022/02/22/116218.html)
+
+Tagline: One island. Five legendary weapons. One sword worthy of a hero.
+
+Palm Island is a 2D side-scrolling open-world adventure in which Ichigo explores a mysterious tropical island, discovers ancient clues, collects five legendary weapons, battles guardians, solves environmental puzzles, and ultimately earns the right to wield Excalibur.
+
+The game's defining feature is not the number of enemies or the size of its map. It's the feeling that every unexplored path might conceal a story, a secret, a treasure, or a way forward.
+
+This document defines the game vision, mechanics, world progression, technical architecture, save system, and a practical implementation roadmap using C and Raylib.
+
+## 1. Game overview
+
+## Palm Island
+
+Development target
+
+GENRE
+
+2D action-adventure
+
+CAMERA
+
+Side-scrolling
+
+ART DIRECTION
+
+Anime-inspired
+
+PLATFORM
+
+Windows PC
+
+TECHNOLOGY
+
+C + Raylib
+
+MODE
+
+Single-player offline
+
+Core gameplay loop
+
+Explore the island
+
+Find clues, paths and secrets
+
+Solve puzzles and fight guardians
+
+Collect a legendary weapon and gain a new ability
+
+Unlock new places and uncover the island's history
+
+### Design pillars
+
+1. Curiosity over quest markers: the world should reward observation and experimentation.
+2. Every weapon changes gameplay: each discovery adds a combat ability and a new way to interact with the world.
+3. Freedom with meaningful progression: players can explore multiple areas, but certain obstacles require specific abilities.
+4. Combat with purpose: enemies provide challenge, resources, environmental storytelling, and occasional rewards.
+5. A memorable payoff: Excalibur must feel earned through mastery and discovery.
+
+## 2. Story and narrative
+
+### Premise
+
+Ichigo arrives on Palm Island after discovering an old symbol associated with a forgotten kingdom. The island appears uninhabited at first, but ancient mechanisms still operate, guardians protect buried relics, and strange symbols appear in places where nobody should have visited for centuries.
+
+An inscription describes five weapons that once belonged to the island's legendary protectors. Legends claim these weapons can awaken Excalibur, a sword hidden in a sanctuary beneath the island.
+
+Ichigo's initial objective is simple: find the weapons.
+
+As he progresses, he discovers that the weapons were not merely scattered treasure. They were created to test five qualities: agility, strength, awareness, precision, and courage. The final mystery is whether Ichigo can use their power responsibly.
+
+### Narrative delivery
+
+Keep the story integrated into gameplay rather than relying on lengthy cutscenes.
+
+- Ancient inscriptions: short fragments that reveal history.
+- Explorer journals: optional stories and puzzle hints.
+- NPC dialogue: rumors, warnings, and local legends.
+- Environmental storytelling: abandoned camps, broken statues, sealed doors, and signs of previous explorers.
+- Guardian encounters: each guardian reveals something about the weapon it protects.
+
+The main story should remain understandable without collecting every optional document.
+
+## 3. The five clues and legendary weapons
+
+The weapons below are the core progression system. Each weapon has a unique identity, an active combat use, and an exploration ability that unlocks new routes.
+
+[Ethereal Fantasy Sword: Vines and Gold](https://images.openai.com/static-rsc-4/CAFQ41ijzdYbKvRZU2wlCyhb1z94Ixh7gP4KZq9XEFHUcrb-mfAmfA3Cv98lZTVisA7M3lYu2H0vvOp2RAzgE41qXYrAD2ugerybVGDWAjdkpatP4KUklCYSNWKyNLB_1t64eG-9PHe28GvBqK_C14E40OjZz4-Auz8ZfbJRSxM?purpose=inline)
+
+## 01 — Thornfang
+
+Jungle · Agility
+
+Clue: The Map of Roots
+
+Guardian: Thornback, a creature covered in vines and bark.
+
+Combat: Fast attacks, three-hit combo, low stamina cost.
+
+Exploration: Cuts thorn barriers and enables a quick recovery slash after a dodge.
+
+Puzzle: Follow markings on trees to find a concealed shrine.
+
+[Draw any concept, item, fantasy, armor, mecha weapon by Theikh | Fiverr](https://images.openai.com/static-rsc-4/g-8j2noPcXFZM4vmhSZqnZGRplngqpgW5rBMm5Rk0kJo8WqdHLUVMV8elQhYYO9d5xmF4JDJprEl3Q_GSv5Pd4UQIREEt4uPhlWwi1fEfTYH3Ij0HGL8jduhfP6iEJ0mlr9V-IZvQmmGiNWBVwuw8fT-j4_yCEu3cWzrxU6WwGQ?purpose=inline)
+
+## 02 — Embercleaver
+
+Volcanic Caverns · Strength
+
+Clue: The Broken Tablet
+
+Guardian: Magma Golem, a slow enemy with powerful area attacks.
+
+Combat: Heavy strikes, armor breaking, and a charged ground slam.
+
+Exploration: Smashes cracked stone walls and activates heavy pressure plates.
+
+Puzzle: Redirect molten flow to power an ancient forge.
+
+[Crimson Desert Builds, Damage Calculator & Skill Builder | Meta — Calculators.Games | calculators.games](https://images.openai.com/static-rsc-4/iWQTYMHcgbDSXxOu9O_WOcl4NztLbNBxPsALleS54GveG08SxyjrGKVsSMqWGK7mBBmyAyqFhnY_1IyJeK8CjszDSMsAwk3Df-dxbmydVkVjlQUnZ0ZsufYSVu3kGau03JDnYUjjd1A00ccDrUtd3uh7F0f65TdH9_naE1rR6z0?purpose=inline)
+
+## 03 — Stormpiercer
+
+Sunken Temple · Awareness
+
+Clue: The Explorer's Journal
+
+Guardian: Tide Warden, a temple protector that manipulates water and electricity.
+
+Combat: Long-reach thrusts and a charged lightning strike.
+
+Exploration: Activates electrical devices and conducts power through special crystal nodes.
+
+Puzzle: Connect three power nodes in the correct sequence.
+
+[Player • R.HORSE](https://images.openai.com/static-rsc-4/g8oqtQFO8hBhrkXh1h46OICN3E8bgdvpDuMw5j9VW-hnda6rdi8rwMz1nHUyM6WtsjHjYRZv99s-CBR63R5hECXWzPu74fQwNlrFQ1UKiQDVAyXBFofvkX-ltEq5JQEhwsNap_AE8lLiLdSlv7aM7NOEM9tw7SLBVZ_GmEOvNBU?purpose=inline)
+
+## 04 — Dawnstring
+
+Skywatch Cliffs · Precision
+
+Clue: The Shadow of the Sun
+
+Guardian: The Sunhawk, a flying enemy that attacks from different elevations.
+
+Combat: Aimed shots, charged arrows, and ranged attacks.
+
+Exploration: Hits distant switches, cuts ropes, and redirects beams using special targets.
+
+Puzzle: Align mirrors to illuminate an ancient seal.
+
+[Acheron Blade by Eduard0314 on DeviantArt](https://images.openai.com/static-rsc-4/EU0RRYcHsKYJKxzbAPgt_JLZbcdChK41sCV9gX-bRqVuVpGLusd94d3UNbOssU2HteZyMxcqrmjvKHv5SjGnT9RjeyhLb-JJHIE_7roxafBeXd_3ofra44PmU7p3FV7UbAiLr_33XdgAjwqtQVgmyomv0pWH4-OL1eEgH0KTuW0?purpose=inline)
+
+## 05 — Voidfang
+
+Lost Kingdom · Courage
+
+Clue: The King's Last Secret
+
+Guardian: The Hollow Knight, a skilled swordsman who mirrors Ichigo's attacks.
+
+Combat: Short-range shadow dash, counterattack, and brief invulnerability during a special move.
+
+Exploration: Crosses shadow gates and bypasses specific magical barriers.
+
+Puzzle: Reconstruct a royal memory from five hidden symbols.
+
+### Weapon design rules
+
+- Collected weapons remain permanently available; players can switch between them.
+- Each weapon has a basic attack and at least one special move.
+- Exploration abilities should have obvious visual feedback.
+- Bosses should teach the player how to use the weapon, not just require repeated attacks.
+- Weapon switching should be fast enough to support creative combinations.
+
+For the first release, use five weapon types but keep the combat system data-driven so adding another weapon does not require rewriting the entire engine.
+
+## 4. World map and progression
+
+[Pirate bay | Leo's Play Center](https://images.openai.com/static-rsc-4/te_KOvZ5Ayogo5C97h3A4ix40Nd1lXWvnDL6Si87BHULvLXrDtLny4PMTT_YgyVhaaJZlQI7so7qwz4lVRZ4l_JxwFzyXGZdPWh1y-qLvZDmBKIYjbqFYGi3CcK9k7ARRW0owt22EugLSyhjenhR3fp_el8y_GEaXWQc-HoGBjY?purpose=inline)
+
+[leosabenteuerpark.de](https://www.leosabenteuerpark.de/en/pirate-bay)
+
+The world should be one interconnected island built from smaller side-scrolling areas. The island can feel open without requiring a single enormous level loaded into memory.
+
+### Region plan
+
+| Region              | Purpose                                 | Main unlock           |
+| ------------------- | --------------------------------------- | --------------------- |
+| Palmshore Beach     | Tutorial, basic movement                | Access to the village |
+| Driftwood Village   | NPCs, shops, rumors                     | First clue            |
+| Forgotten Jungle    | Exploration and first guardian          | Thornfang             |
+| Ember Caverns       | Heavy obstacles and forge puzzle        | Embercleaver          |
+| Sunken Temple       | Electrical mechanisms and water hazards | Stormpiercer          |
+| Skywatch Cliffs     | Vertical platforming and ranged puzzles | Dawnstring            |
+| Lost Kingdom        | Advanced combat and hidden passages     | Voidfang              |
+| Excalibur Sanctuary | Final trials and ending                 | Excalibur             |
+
+These areas are connected through gates, paths, caves, and shortcuts. Completing an area should often open a route back to a previously visited region.
+
+### Suggested world connectivity
+
+\#chatgpt-mermaid-\_r_sa\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_sa\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_sa\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_sa\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_sa\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sa\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_sa\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_sa\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_sa\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_sa\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_sa\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_sa\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sa\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sa\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_sa\_ p{margin:0;}#chatgpt-mermaid-\_r_sa\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sa\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sa\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sa\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_sa\_ .label text,#chatgpt-mermaid-\_r_sa\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sa\_ .node rect,#chatgpt-mermaid-\_r_sa\_ .node circle,#chatgpt-mermaid-\_r_sa\_ .node ellipse,#chatgpt-mermaid-\_r_sa\_ .node polygon,#chatgpt-mermaid-\_r_sa\_ .node path{fill:rgb(9, 23, 44);stroke:rgb(31, 78, 148);stroke-width:1px;}#chatgpt-mermaid-\_r_sa\_ .rough-node .label text,#chatgpt-mermaid-\_r_sa\_ .node .label text,#chatgpt-mermaid-\_r_sa\_ .image-shape .label,#chatgpt-mermaid-\_r_sa\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_sa\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_sa\_ .rough-node .label,#chatgpt-mermaid-\_r_sa\_ .node .label,#chatgpt-mermaid-\_r_sa\_ .image-shape .label,#chatgpt-mermaid-\_r_sa\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_sa\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_sa\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sa\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sa\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_sa\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_sa\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_sa\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_sa\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_sa\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_sa\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_sa\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sa\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sa\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_sa\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sa\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_sa\_ .icon-shape,#chatgpt-mermaid-\_r_sa\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_sa\_ .icon-shape p,#chatgpt-mermaid-\_r_sa\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_sa\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_sa\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_sa\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_sa\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_sa\_ .node .neo-node{stroke:rgb(31, 78, 148);}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_sa\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_sa\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].node .neo-line path{stroke:rgb(31, 78, 148);filter:none;}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_sa\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_sa\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sa\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_sa\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sa\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(153, 206, 255);}#chatgpt-mermaid-\_r_sa\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(153, 206, 255);}#chatgpt-mermaid-\_r_sa\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_sa\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_sa\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(0, 14, 26);stroke:rgb(26, 62, 95);stroke-width:1px;}#chatgpt-mermaid-\_r_sa\_ .node rect,#chatgpt-mermaid-\_r_sa\_ .node circle,#chatgpt-mermaid-\_r_sa\_ .node ellipse,#chatgpt-mermaid-\_r_sa\_ .node polygon,#chatgpt-mermaid-\_r_sa\_ .node path{fill:rgb(0, 40, 77);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_sa\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_sa\_ .node.mermaid-decision .label-container{fill:rgb(0, 14, 26);stroke:rgb(26, 62, 95);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_sa\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_sa\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sa\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}Palmshore BeachDriftwood VillageForgotten JungleEmber CavernsSunken TempleSkywatch CliffsLost KingdomExcalibur SanctuarySecret passageHidden underwater route
+
+### How to preserve open-world freedom
+
+After the first weapon, allow the player to investigate multiple regions in a non-linear order where practical. The intended path may be clear, but curiosity should sometimes let players discover a secret early.
+
+Use three types of progression gates:
+
+- Ability gates: a thorn wall, cracked wall, or shadow barrier that requires a weapon.
+- Knowledge gates: a riddle, sequence, or symbol puzzle the player must understand.
+- Skill gates: a challenging platform section or guardian that tests movement and combat.
+
+Not every locked door needs a key. Sometimes the answer should be hidden in the environment.
+
+## 5. Player controls and movement
+
+Start with a responsive keyboard-and-mouse control scheme, with optional controller support later.
+
+| Action          | Default input           |
+| --------------- | ----------------------- |
+| Move            | A / D or Left / Right   |
+| Jump            | Space                   |
+| Dodge / dash    | Left Shift              |
+| Basic attack    | J or left mouse button  |
+| Special attack  | K or right mouse button |
+| Switch weapon   | 1–5                     |
+| Interact / talk | E                       |
+| Open map        | M                       |
+| Open inventory  | I                       |
+| Pause           | Esc                     |
+
+These are defaults and should eventually be remappable.
+
+### Movement mechanics
+
+- Acceleration and deceleration, rather than instant horizontal movement.
+- Jumping with variable jump height.
+- Coyote time: a brief grace period after leaving a ledge.
+- Jump buffering: pressing jump just before landing queues the next jump.
+- Dodge with a short cooldown.
+- Ladders, ledges, moving platforms, and one-way platforms.
+- Fall damage should be limited or disabled initially to avoid punishing exploration.
+
+The movement system should feel good before advanced combat is added. In a side-scrolling game, poor jumping physics can make even excellent level design frustrating.
+
+## 6. Combat and enemy design
+
+### Player combat model
+
+Ichigo has health, attack strength, defense, and optional stamina or special-energy meters. For the first playable version, use health and attack cooldowns only; add stamina once the controls and combat are enjoyable.
+
+Suggested initial tuning values:
+
+| Property              | Starting value     |
+| --------------------- | ------------------ |
+| Maximum health        | 100 HP             |
+| Common enemy health   | 30–50 HP           |
+| Mini-boss health      | 180–250 HP         |
+| Main guardian health  | 350–500 HP         |
+| Basic sword damage    | 15 HP              |
+| Dodge duration        | 0.18 seconds       |
+| Basic attack cooldown | 0.35 seconds       |
+| Respawn after defeat  | Nearest checkpoint |
+
+These are prototype values, not final balance targets.
+
+### Enemy roster
+
+[Wall and Dash mechanics redone - Jack's Journey by RafaelMatos](https://images.openai.com/static-rsc-4/e7BUn-GUEGT9_WFJmzYJvpoQRkywnPVoXpnAMNJ5HfyUD5cW78CE__pfxeRqtV2BtIMe3AzlIXf72xH5B58G6QjfXpWh6tYvqSSJ420Ait-ZDf0h_7XhvaHlRFAJR-lZR3D4H6wXp7_JlCIENxVymY_QvWs-6st52BYAtPnT5A0?purpose=inline)
+
+Jungle Slime — basic enemy
+
+Slow, low health, simple contact attack. Teaches movement and dodging.
+
+[Unreal Game Dev Starter Bundle | GameDev.tv](https://images.openai.com/static-rsc-4/UUwQOxQwOVvhMeqcHPLDvCxHbi0eB_OREzH5T5hhx6oSATtQRngFx_LYtXuFIZler06irCX065UUdjcyNA7poh321PX8Re6P_VBKrOmS7M46GDfSVGRvAvk-qXl4PlKHRQt_t01mpNNldSZQCnpawOWSADogXt9_7M9sss3tn8s?purpose=inline)
+
+Island Raider — melee enemy
+
+Approaches Ichigo, telegraphs a strike, and blocks careless attacks.
+
+[Welcome to HoYoWiki!](https://images.openai.com/static-rsc-4/IOUPOYiS4AexF2BbfQTSSdPBffPhLWvo712Hl5zBMRzByi-eZSURI7hW1NmL4oF-O7Fq_BL4Il_vl-57rcgxIbgWKY879Iic1t4pBaoylvTr2Vsa10aPrs6GeWRhBr75N1nIpUkHm4DdJy7CufDgiXamNTvlCSD5p9xP0v3Kbus?purpose=inline)
+
+Ruin Wraith — ranged enemy
+
+Fires slow projectiles and forces the player to use cover, movement, or ranged weapons.
+
+[Explore Fantasy Lore](https://images.openai.com/static-rsc-4/qYzbZ-cQpqg6kVu2_wcDLdZnlWSoj80iooW9DFr943rvWAomg7ePQVul9J2GiHU1U4mzDWPhxzF_yFBwMSh6IReE3bwWYRye_NCDJiw1z9V-zH9LyY8JA-Gq1yJXZqmmqKbh00FqmNruEQO2fgTfI8r3a-8OZq8f7mycv45ddnE?purpose=inline)
+
+Ancient Guardian — elite enemy
+
+Has a small set of distinct attacks, clear wind-up animations, and recovery windows.
+
+### Guardian encounter structure
+
+Every guardian should have three readable phases:
+
+1. Observe: the guardian demonstrates its attack pattern.
+2. Adapt: the player learns when to dodge, counter, or use the environment.
+3. Master: the guardian becomes more aggressive at low health without introducing unfair attacks.
+
+Use telegraphs such as glowing ground markers, weapon flashes, audio cues, or distinct animations. Damage should be applied through hitboxes and hurtboxes, not merely because two sprites overlap.
+
+## 7. Puzzles, secrets and rewards
+
+The puzzle system should be modular, allowing multiple puzzles to share reusable components.
+
+[ASRA by Phaelis, Outretaupe, ApiSurion](https://images.openai.com/static-rsc-4/cepZaRrG7IWQLPvBcBkOFc9qXNEXIpdhwCgOpk2hJOnA1QRAo4tP-VNx4AA9jAuJiP6UTfais-1aA6ZMRS4jA_Zt7a9V9JJyd5l8iVlzsasDsfD0CmrcnEELs8U_qv_i5zM64UZClFkGTe4x9AiyPiAvsfw0Bl6mD9yR66vLFRw?purpose=inline)
+
+Symbol puzzles
+
+Observe a clue, find matching symbols, and activate them in the right order. Wrong attempts may reset the puzzle without causing damage.
+
+[Archaica: The Path of Light is a pretty puzzler with lasers and mirrors | PC Gamer](https://images.openai.com/static-rsc-4/gllZDubWAzRcUiTBhcY_ITyQtBeVXx6CHsV7WGYq35WiO9v8kA1y0B0F-PWoQKl1MgO6dWsAiaPvmtnXXopaPfyAIDxdC-Iehx9CywWdSc7lq76WOqF6GTlxpWH54XW19uJOkqAgWKhCZPcvfAz-IX_kmfCCI_pNd7pQMrSo2Qg?purpose=inline)
+
+Environmental puzzles
+
+Move objects, redirect beams, activate switches, or use weapon abilities to change the environment.
+
+[Download Fantasy Artistic HD Wallpaper](https://images.openai.com/static-rsc-4/_ubkLdFKs-R5pWbXpJ4SR0Sa1FQFLyOXhVxhacFjwRHNtC_lc35nfRGTrdPpywo-5lyLmkaLcC8-ScUtM-NP5I1iJQm-WLTHv7F-K-mOEYzHR53o9nBcJfl5O4bie9L-vc2lN5eqCSgD8x9E-5Ggo3NqQNNigmmj3IxU3-2Qmkk?purpose=inline)
+
+Optional secrets
+
+Hidden treasure rooms, rare upgrades, secret NPCs, lore pages, and shortcuts. Some secrets should be hinted at rather than marked on the map.
+
+### Reward categories
+
+- Coins for buying healing items or upgrades.
+- Health upgrades for surviving harder areas.
+- Weapon upgrades that modify damage or special effects.
+- Lore fragments that deepen the story.
+- Cosmetic rewards such as alternate outfits.
+- Hidden challenges that reward exploration rather than grinding.
+
+Keep optional rewards useful but not mandatory for finishing the main story.
+
+## 8. Technical architecture: C + Raylib
+
+The best approach is a small custom 2D game engine built on Raylib, rather than trying to implement every feature in one giant C file.
+
+Raylib handles window creation, rendering, keyboard/controller input, audio, textures, and collision primitives. Your game code handles the world, physics, combat, enemies, puzzles, inventory, save data, and progression.
+
+### Recommended development environment
+
+- Language: C11
+- Framework: Raylib
+- Compiler: GCC via MinGW-w64 on Windows
+- Build system: CMake
+- Data formats: JSON for game definitions and save metadata; TMX/TSX or a custom format for tile maps
+- Image assets: PNG spritesheets and tilesets
+- Audio: WAV for sound effects and OGG for music
+- Version control: Git
+
+Use an asset tool such as Tiled to design levels visually rather than hardcoding every platform and wall in C.
+
+### Project directory structure
+
+PalmIsland/
+
+CMakeLists.txt
+
+Build configuration
+
+README.md
+
+Setup and development notes
+
+src/
+
+C source files
+
+include/
+
+Header files and shared interfaces
+
+assets/
+
+Sprites, tilesets, audio and fonts
+
+data/
+
+Levels, enemies, weapons and puzzles
+
+saves/
+
+Local save files
+
+tests/
+
+Unit tests and logic tests
+
+Inside `src/`, split responsibilities into modules:
+
+| Module             | Responsibility                                 |
+| ------------------ | ---------------------------------------------- |
+| `main.c`           | Initialization, main loop, shutdown            |
+| `game.c/.h`        | Global game state and high-level update flow   |
+| `input.c/.h`       | Input mapping and control state                |
+| `player.c/.h`      | Movement, jumping, health and player animation |
+| `combat.c/.h`      | Attacks, hitboxes, damage and invulnerability  |
+| `weapon.c/.h`      | Weapon definitions, switching and abilities    |
+| `enemy.c/.h`       | Enemy behaviors and AI                         |
+| `boss.c/.h`        | Guardian phases and boss logic                 |
+| `world.c/.h`       | Areas, transitions, collision and loading      |
+| `physics.c/.h`     | Gravity, collision resolution and movement     |
+| `puzzle.c/.h`      | Switches, gates, mechanisms and puzzle states  |
+| `interaction.c/.h` | NPC dialogue, clues and interactable objects   |
+| `camera.c/.h`      | Side-scrolling camera and boundaries           |
+| `render.c/.h`      | World rendering, sprites and effects           |
+| `ui.c/.h`          | HUD, menus, inventory and map                  |
+| `save.c/.h`        | Serialization, validation and checkpoints      |
+| `audio.c/.h`       | Music and sound-effect management              |
+| `assets.c/.h`      | Asset loading, caching and cleanup             |
+
+Do not create every module on day one. Add them as the corresponding features become necessary.
+
+### Architecture diagram
+
+\#chatgpt-mermaid-\_r_sj\_{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;fill:rgb(237, 237, 237);}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#chatgpt-mermaid-\_r_sj\_ .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_sj\_ .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#chatgpt-mermaid-\_r_sj\_ .error-icon{fill:rgb(48, 48, 48);}#chatgpt-mermaid-\_r_sj\_ .error-text{fill:rgb(237, 237, 237);stroke:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sj\_ .edge-thickness-normal{stroke-width:1px;}#chatgpt-mermaid-\_r_sj\_ .edge-thickness-thick{stroke-width:3.5px;}#chatgpt-mermaid-\_r_sj\_ .edge-pattern-solid{stroke-dasharray:0;}#chatgpt-mermaid-\_r_sj\_ .edge-thickness-invisible{stroke-width:0;fill:none;}#chatgpt-mermaid-\_r_sj\_ .edge-pattern-dashed{stroke-dasharray:3;}#chatgpt-mermaid-\_r_sj\_ .edge-pattern-dotted{stroke-dasharray:2;}#chatgpt-mermaid-\_r_sj\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sj\_ .marker.cross{stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sj\_ svg{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:16px;}#chatgpt-mermaid-\_r_sj\_ p{margin:0;}#chatgpt-mermaid-\_r_sj\_ .label{font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sj\_ .cluster-label text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sj\_ .cluster-label span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sj\_ .cluster-label span p{background-color:transparent;}#chatgpt-mermaid-\_r_sj\_ .label text,#chatgpt-mermaid-\_r_sj\_ span{fill:rgb(237, 237, 237);color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sj\_ .node rect,#chatgpt-mermaid-\_r_sj\_ .node circle,#chatgpt-mermaid-\_r_sj\_ .node ellipse,#chatgpt-mermaid-\_r_sj\_ .node polygon,#chatgpt-mermaid-\_r_sj\_ .node path{fill:rgb(9, 23, 44);stroke:rgb(31, 78, 148);stroke-width:1px;}#chatgpt-mermaid-\_r_sj\_ .rough-node .label text,#chatgpt-mermaid-\_r_sj\_ .node .label text,#chatgpt-mermaid-\_r_sj\_ .image-shape .label,#chatgpt-mermaid-\_r_sj\_ .icon-shape .label{text-anchor:middle;}#chatgpt-mermaid-\_r_sj\_ .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#chatgpt-mermaid-\_r_sj\_ .rough-node .label,#chatgpt-mermaid-\_r_sj\_ .node .label,#chatgpt-mermaid-\_r_sj\_ .image-shape .label,#chatgpt-mermaid-\_r_sj\_ .icon-shape .label{text-align:center;}#chatgpt-mermaid-\_r_sj\_ .node.clickable{cursor:pointer;}#chatgpt-mermaid-\_r_sj\_ .root .anchor path{fill:rgb(175, 175, 175)!important;stroke-width:0;stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sj\_ .arrowheadPath{fill:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sj\_ .edgePath .path{stroke:rgb(175, 175, 175);stroke-width:1px;}#chatgpt-mermaid-\_r_sj\_ .flowchart-link{stroke:rgb(175, 175, 175);fill:none;}#chatgpt-mermaid-\_r_sj\_ .edgeLabel{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_sj\_ .edgeLabel p{background-color:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_sj\_ .edgeLabel rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_sj\_ .labelBkg{background-color:rgba(0, 0, 0, 0.5);}#chatgpt-mermaid-\_r_sj\_ .cluster rect{fill:rgb(48, 48, 48);stroke:rgba(255, 255, 255, 0.15);stroke-width:1px;}#chatgpt-mermaid-\_r_sj\_ .cluster text{fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sj\_ .cluster span{color:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sj\_ div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";font-size:12px;background:rgb(48, 48, 48);border:1px solid rgba(255, 255, 255, 0.15);border-radius:2px;pointer-events:none;z-index:100;}#chatgpt-mermaid-\_r_sj\_ .flowchartTitleText{text-anchor:middle;font-size:18px;fill:rgb(237, 237, 237);}#chatgpt-mermaid-\_r_sj\_ rect.text{fill:none;stroke-width:0;}#chatgpt-mermaid-\_r_sj\_ .icon-shape,#chatgpt-mermaid-\_r_sj\_ .image-shape{background-color:rgb(0, 0, 0);text-align:center;}#chatgpt-mermaid-\_r_sj\_ .icon-shape p,#chatgpt-mermaid-\_r_sj\_ .image-shape p{background-color:rgb(0, 0, 0);padding:2px;}#chatgpt-mermaid-\_r_sj\_ .icon-shape .label rect,#chatgpt-mermaid-\_r_sj\_ .image-shape .label rect{opacity:0.5;background-color:rgb(0, 0, 0);fill:rgb(0, 0, 0);}#chatgpt-mermaid-\_r_sj\_ .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#chatgpt-mermaid-\_r_sj\_ .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#chatgpt-mermaid-\_r_sj\_ .node .neo-node{stroke:rgb(31, 78, 148);}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].node rect,#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].cluster rect,#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].node polygon{stroke:url(#chatgpt-mermaid-\_r_sj\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].swimlane.cluster rect{filter:none;}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].node path{stroke:url(#chatgpt-mermaid-\_r_sj\_-gradient);stroke-width:1px;}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].node .outer-path{filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].node .neo-line path{stroke:rgb(31, 78, 148);filter:none;}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].node circle{stroke:url(#chatgpt-mermaid-\_r_sj\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].node circle .state-start{fill:#000000;}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].icon-shape .icon{fill:url(#chatgpt-mermaid-\_r_sj\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sj\_ [data-look="neo"].icon-shape .icon-neo path{stroke:url(#chatgpt-mermaid-\_r_sj\_-gradient);filter:drop-shadow( 1px 2px 2px rgba(185,185,185,1));}#chatgpt-mermaid-\_r_sj\_ .node text{font-size:14px;font-weight:600;letter-spacing:normal;fill:rgb(153, 206, 255);}#chatgpt-mermaid-\_r_sj\_ .edgeLabels text{font-size:13px;font-weight:600;letter-spacing:-0.08px;fill:rgb(153, 206, 255);}#chatgpt-mermaid-\_r_sj\_ .node tspan[font-weight="normal"],#chatgpt-mermaid-\_r_sj\_ .edgeLabels tspan[font-weight="normal"]{font-weight:600;}#chatgpt-mermaid-\_r_sj\_ .edgeLabel .label rect{opacity:1;rx:13px;ry:13px;fill:rgb(0, 14, 26);stroke:rgb(26, 62, 95);stroke-width:1px;}#chatgpt-mermaid-\_r_sj\_ .node rect,#chatgpt-mermaid-\_r_sj\_ .node circle,#chatgpt-mermaid-\_r_sj\_ .node ellipse,#chatgpt-mermaid-\_r_sj\_ .node polygon,#chatgpt-mermaid-\_r_sj\_ .node path{fill:rgb(0, 40, 77);stroke:rgba(255, 255, 255, 0.1);stroke-width:1px;}#chatgpt-mermaid-\_r_sj\_ .node rect{rx:16px;ry:16px;}#chatgpt-mermaid-\_r_sj\_ .node.mermaid-decision .label-container{fill:rgb(0, 14, 26);stroke:rgb(26, 62, 95);stroke-dasharray:2,2;}#chatgpt-mermaid-\_r_sj\_ .edgePaths .flowchart-link{stroke:rgb(175, 175, 175);stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;}#chatgpt-mermaid-\_r_sj\_ .marker{fill:rgb(175, 175, 175);stroke:rgb(175, 175, 175);}#chatgpt-mermaid-\_r_sj\_ :root{--mermaid-font-family:-apple-system-body,ui-sans-serif,-apple-system,system-ui,"Segoe UI",Helvetica,"Apple Color Emoji",Arial,sans-serif,"Segoe UI Emoji","Segoe UI Symbol";}main.cGame LoopInputGame UpdateRendererPlayer and PhysicsCombat and WeaponsEnemies and BossesWorld and PuzzlesInteraction and InventoryCollision and World StateProgression StateSave SystemCamera, Sprites and UI
+
+### Main game loop
+
+Use Raylib's standard frame loop with a fixed timestep for gameplay simulation and normal rendering.
+
+```
+#include "raylib.h"
+
+int main(void)
+{
+    InitWindow(1280, 720, "Palm Island");
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        // 1. Read player input.
+        // 2. Update gameplay at a fixed timestep.
+        // 3. Update camera and animations.
+        // 4. Render the world and UI.
+
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        // RenderGame();
+
+        EndDrawing();
+    }
+
+    // UnloadGameAssets();
+    CloseWindow();
+    return 0;
+}
+```
+
+This is only the application skeleton. The real game loop should call dedicated update and render functions and use a fixed update step, such as 1/60 of a second, for movement and collision. Add a frame-time accumulator so gameplay remains stable if rendering slows down.
+
+### Core programming principles
+
+Use structs and enums. They keep related data together and make it easier to add content.
+
+```
+typedef enum {
+    WEAPON_NONE,
+    WEAPON_THORNFANG,
+    WEAPON_EMBERCLEAVER,
+    WEAPON_STORMPIERCER,
+    WEAPON_DAWNSTRING,
+    WEAPON_VOIDFANG,
+    WEAPON_EXCALIBUR
+} WeaponId;
+
+typedef struct {
+    Vector2 position;
+    Vector2 velocity;
+    float health;
+    float maxHealth;
+    int facing;          // -1 = left, 1 = right
+    bool grounded;
+    WeaponId equipped;
+} Player;
+```
+
+Avoid storing all weapon behaviors in a huge `switch` inside `main.c`. Keep common weapon data in definitions and implement special abilities in the weapon module.
+
+Separate simulation from rendering. `UpdatePlayer()` should change gameplay state; `DrawPlayer()` should draw it. This separation makes collision debugging, tests, and animations easier.
+
+Use stable entity IDs. Enemies, puzzle objects, and treasure chests need persistent identifiers so their states can be saved and restored.
+
+Load assets once. Cache textures, sound effects, and fonts instead of loading them every frame or every time the player enters a room.
+
+## 9. World and entity representation
+
+### Level representation
+
+Use tiled levels for individual areas, with separate object layers for collisions, spawn points, triggers, and interactive objects.
+
+A practical setup might include:
+
+- `background`: distant mountains, clouds, and scenery.
+- `ground`: floor and platform tiles.
+- `collision`: solid walls and terrain.
+- `objects`: chests, switches, gates, ladders, and hazards.
+- `entities`: enemy and NPC spawn points.
+- `triggers`: room transitions, secrets, checkpoints, and boss activation.
+
+Each area is a separate map file, and the world system manages connections between them. This provides an open-world feel without loading every island asset simultaneously.
+
+### Persistent world state
+
+Represent progression independently of visual objects.
+
+For example, a treasure chest can have an ID such as `jungle_chest_03`. Once opened, its state is recorded in the world progression data. Reloading the map should not recreate the treasure.
+
+Likewise, a gate can check whether `WEAPON_EMBERCLEAVER` has been acquired. Its appearance and collision state should both update from the same underlying state.
+
+## 10. Save system
+
+Saving is essential for a game based on exploration and collection. Players should never lose a major discovery because they closed the game.
+
+### What to save
+
+Player position, current area, health and equipped weapon
+
+Five weapon ownership flags and weapon upgrades
+
+Clues discovered and lore entries collected
+
+Bosses defeated and puzzle states completed
+
+Opened treasure chests and permanent world changes
+
+Coins, inventory and player upgrades
+
+Checkpoint position and main story progression
+
+Save version and basic integrity metadata
+
+### Save format
+
+For an early version, use JSON because it is readable and easy to debug. You can migrate to a compact binary format later if necessary.
+
+Example of the intended save structure:
+
+```
+{
+  "version": 1,
+  "area": "forgotten_jungle",
+  "player": {
+    "x": 420.0,
+    "y": 180.0,
+    "health": 85,
+    "equipped_weapon": 1
+  },
+  "weapons": {
+    "thornfang": true,
+    "embercleaver": false,
+    "stormpiercer": false,
+    "dawnstring": false,
+    "voidfang": false
+  },
+  "progress": {
+    "clues_found": 1,
+    "guardians_defeated": 1,
+    "excalibur_unlocked": false
+  },
+  "world": {
+    "jungle_chest_03": true,
+    "jungle_gate_01": false
+  }
+}
+```
+
+This is illustrative JSON, not a complete save implementation.
+
+### Saving strategy
+
+1. Save at checkpoints and after major milestones.
+2. Allow manual saving at designated save points.
+3. Use a temporary file, then replace the previous save only after writing succeeds.
+4. Keep a backup of the last valid save.
+5. Validate the file version and ranges when loading.
+6. If loading fails, offer the backup or a new game rather than crashing.
+
+Store user saves in the Windows local application-data directory, such as `%LOCALAPPDATA%/PalmIsland/`, instead of relying on the current working directory.
+
+For the first version, implement one main save slot and one backup. Multiple slots and configurable autosave can be added later.
+
+## 11. Development roadmap
+
+Build Palm Island in milestones where every phase produces something playable. The estimates below assume one developer working part-time; they are planning estimates, not guarantees.
+
+Phase 1 — Foundation
+
+Week 1
+
+Set up CMake, Raylib, the game loop, input handling, basic rendering, and the camera.
+
+Deliverable: a Windows executable opens and displays a test level.
+
+Phase 2 — Player controller
+
+Weeks 2–3
+
+Implement movement, jumping, gravity, collision, camera tracking, animation states, and respawning.
+
+Deliverable: Ichigo can traverse a small platforming level reliably.
+
+Phase 3 — Combat prototype
+
+Weeks 4–5
+
+Implement attack hitboxes, enemy AI, health, damage, dodge, knockback, and one guardian.
+
+Deliverable: a complete fight that feels fair and responsive.
+
+Phase 4 — Exploration prototype
+
+Weeks 6–7
+
+Add a tiled map, transitions between areas, an interactable clue, a hidden chest, a puzzle, and Thornfang's ability.
+
+Deliverable: the first meaningful exploration loop.
+
+Phase 5 — Persistence
+
+Week 8
+
+Add inventory, permanent world flags, checkpoints, save/load, and error recovery.
+
+Deliverable: progress survives quitting and restarting the game.
+
+Phase 6 — Vertical slice
+
+Weeks 9–11
+
+Complete one polished region with a clue, weapon, secret, enemies, guardian, soundtrack, dialogue, and checkpoint.
+
+Deliverable: a small but representative slice of the final game.
+
+Phase 7 — Content production
+
+Weeks 12–20+
+
+Add the remaining regions, four other weapons, guardians, clues, secrets, story events, and progression gates.
+
+Deliverable: the complete main quest and interconnected island.
+
+Phase 8 — Polish and release
+
+Weeks 21–24+
+
+Tune combat, improve effects and audio, optimize assets, fix bugs, test saves, and package a Windows build.
+
+Deliverable: a distributable PC release.
+
+A realistic first complete indie release could take around six months or longer for a part-time solo developer, depending on asset creation and the amount of content. Prioritize a fun, polished prototype over hitting a specific calendar date.
+
+## 12. First playable milestone: The Forgotten Jungle
+
+Do not start by implementing the entire island. Your first milestone should be a self-contained 10–15 minute gameplay experience.
+
+[Krut: The Mythic Wings on Steam](https://images.openai.com/static-rsc-4/zzJbCGOMd4au6SRNg5Ez-l8w37zAmZ_BBOY-rBKfTBA06mvh_Zbuey7uvYMlCZ3yXSiMMrddMufhErDXVaRyv1foZoBWKjRflF1xnSxidOS6lDO6eh7AgM4w9ONSovdToY3lgSmM9r5Z7yyonSf95FY-sWZ4ULXriNMNZtK7PHc?purpose=inline)
+
+[store.steampowered.com](https://store.steampowered.com/app/1649860/Krut_The_Mythic_Wings/)
+
+### Required features
+
+- One playable Ichigo character with idle, run, jump, fall, attack, hurt, and death states.
+- One small side-scrolling jungle level.
+- Solid terrain, platforms, camera following, and a respawn checkpoint.
+- One basic sword attack and dodge.
+- Two enemy types.
+- One hidden chest and one environmental puzzle.
+- The first clue and the Thornfang weapon.
+- One guardian boss with at least two attack patterns.
+- A simple HUD displaying health and the equipped weapon.
+- Save/load for the weapon, clue, and boss progression.
+
+### Definition of done
+
+The milestone is complete when a player can:
+
+- Start a new game.
+- Explore the jungle without falling through terrain or becoming stuck.
+- Find the clue and understand the hint.
+- Discover a hidden secret.
+- Fight ordinary enemies and defeat the guardian.
+- Collect Thornfang and use its ability to reach a previously inaccessible area.
+- Save, quit, relaunch, and resume without losing progression.
+- Reach the end of the prototype without a crash or game-breaking bug.
+
+This vertical slice proves that the central idea works before you invest in four more regions.
+
+## 13. Development priorities and risks
+
+| Risk                                         | Mitigation                                                                  |
+| -------------------------------------------- | --------------------------------------------------------------------------- |
+| Scope becomes too large                      | Build one polished region first; expand only after testing it               |
+| Combat feels unresponsive                    | Tune movement, hitboxes, attack timing, and animation before adding content |
+| Open-world levels become difficult to manage | Split the island into interconnected maps with shared world-state data      |
+| Save files become inconsistent               | Use versioned saves, stable object IDs, validation, and backups             |
+| Asset creation slows progress                | Establish sprite dimensions and animation conventions early                 |
+| New weapons require code rewrites            | Use shared weapon interfaces and data-driven definitions                    |
+| Too many secrets confuse players             | Provide environmental hints and optional journal clues                      |
+
+### Minimum viable release versus future features
+
+Include in the first full release:
+
+- Five clues and five legendary weapons.
+- Five major guardians.
+- Interconnected exploration regions.
+- Combat, puzzles, inventory, save/load, and the Excalibur finale.
+- Basic music, sound effects, and polished menus.
+
+Leave for later updates:
+
+- Multiple endings.
+- Large quest chains and many NPC side quests.
+- Crafting and complex equipment systems.
+- Dynamic weather and day/night cycles.
+- Additional playable characters.
+- Procedural world generation.
+
+These additions can be excellent, but they are not necessary to prove Palm Island's core identity.
+
+## 14. Testing checklist
+
+Before every milestone, test the following:
+
+- Movement and collisions at different frame rates.
+- Player attacks hitting enemies only once per intended attack window.
+- Weapon switching during combat.
+- Guardian death, reward collection, and checkpoint behavior.
+- Puzzles remaining solved after loading a save.
+- Collectibles not respawning after they have been permanently collected.
+- Missing or corrupted save files.
+- Transitioning between connected regions.
+- Memory cleanup when unloading maps and textures.
+- Windows builds running without development-only files or absolute asset paths.
+
+Use Git from the first day, commit working milestones, and maintain a known-good build.
+
+## 15. Your first week of implementation
+
+## Week 1 checklist
+
+0 of 7
+
+Install Raylib and a C compiler
+
+Verify that a minimal Raylib program compiles on Windows.
+
+Create the CMake project
+
+Build a repeatable Debug executable from the project root.
+
+Open a 1280 × 720 game window
+
+Add a title, background and a controlled shutdown.
+
+Draw a temporary Ichigo sprite
+
+Use a placeholder rectangle or sprite before creating final art.
+
+Implement left/right movement and jumping
+
+Add gravity, ground collision and a simple platform.
+
+Implement the side-scrolling camera
+
+Keep Ichigo near the center while respecting level boundaries.
+
+Commit the working prototype to Git
+
+Record a clean baseline before adding combat.
+
+&#x20;Copy checklist
+
+## Final recommendation
+
+Build Palm Island as a sequence of increasingly complete experiences:
+
+1. Movement prototype — make controlling Ichigo enjoyable.
+2. Combat prototype — make fighting and defeating a guardian satisfying.
+3. Exploration prototype — make discovering Thornfang and opening a hidden route rewarding.
+4. Vertical slice — connect these mechanics into a complete jungle adventure.
+5. Full game — expand the same architecture into the remaining regions and the Excalibur finale.
+
+The most important technical decision is to keep the code modular, the world state persistent, and each weapon's combat and exploration abilities independent. That will let you expand the game without having to rebuild its foundations every time you introduce a new mechanic.
+
+The first concrete coding target should be a controllable Ichigo moving through a single jungle platforming level in Raylib. Once that works smoothly, every other system has a foundation to build on.
