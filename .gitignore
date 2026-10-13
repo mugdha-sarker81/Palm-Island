@@ -1,0 +1,36 @@
+# Build
+build/
+out/
+cmake-build-*/
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.dylib
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Raylib / temp
+*.log
+temp/
+*.pdb
+*.ilk
+
+# Assets that should not be committed (optional)
+# assets/raw/
