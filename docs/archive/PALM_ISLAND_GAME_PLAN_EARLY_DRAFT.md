@@ -1,7 +1,7 @@
 # Palm Island — Game Plan
 
 **Status:** Planning proposal  
-**Based on:** `idea.txt` (Game Design Document v1.0)  
+**Based on:** `../source/ORIGINAL_GAME_DESIGN.txt` (Game Design Document v1.0)
 **Purpose:** Clarify the game's story, progression, combat, weapons, enemies, and level structure before implementation. Recommendations below are proposals, not final decisions.
 
 ## 1. Core concept

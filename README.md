@@ -7,7 +7,7 @@ Palm Island is a 2D side-scrolling action-adventure game where you explore a mys
 **Technology:** C + Raylib  
 **Platform:** Windows PC (primary)  
 **Mode:** Single-player offline  
-**Status:** Pre-production / Planning → Early prototype
+**Status:** Early prototype — movement and platforming foundation
 
 ---
 
@@ -39,7 +39,9 @@ Excalibur is not simply a stronger sword — it is the final proof that you are 
 
 ## Current Milestone
 
-**Forgotten Jungle Vertical Slice** (target: 10–15 minutes of complete gameplay)
+**Current: Movement Prototype.** Responsive movement, jumping, platform collisions, and a side-scrolling camera, using placeholder shapes while controls and physics are tuned.
+
+**Target: Forgotten Jungle Vertical Slice** (10–15 minutes of complete gameplay)
 
 This single region will prove the core loop:
 - Movement & basic combat
@@ -59,22 +61,23 @@ Palm-Island/
 ├── CMakeLists.txt
 ├── .gitignore
 ├── assets/
-│   ├── sprites/
-│   ├── tiles/
-│   ├── audio/
-│   └── fonts/
+│   ├── concept_art/
+│   │   ├── forgotten-jungle-concept-sheet.png
+│   │   ├── palm-island-concept-poster.png
+│   │   └── player-weapon-enemy-concepts.png
+│   └── source_packs/
 ├── src/
-│   ├── main.c
-│   ├── player.c / player.h
-│   ├── camera.c / camera.h
-│   ├── physics.c / physics.h
-│   ├── world.c / world.h
-│   └── ... (modules added as needed)
+│   └── main.c
 └── docs/
-    ├── PALM_ISLAND_GAME_PLAN.md
+    ├── DECISIONS.md
     ├── FORGOTTEN_JUNGLE_DESIGN.md
-    └── DECISIONS.md
+    ├── PALM_ISLAND_GAME_PLAN.md
+    ├── ASSET_INDEX.md
+    ├── archive/ (superseded planning drafts)
+    └── source/ (original designs and reference packages)
 ```
+
+See [docs/ASSET_INDEX.md](docs/ASSET_INDEX.md) for the concept art and bundled asset packs. Original design documents are kept under `docs/source/`; the earlier game-plan draft is retained under `docs/archive/`.
 
 ---
 
@@ -94,9 +97,32 @@ See `docs/DECISIONS.md` for the full list of finalized choices (story motivation
 
 ---
 
-## How to Build (Coming Soon)
+## Build and Run
 
-Instructions will be added once the Raylib + CMake skeleton is in place.
+Requirements:
+- CMake 3.16 or newer
+- MSYS2 MinGW64 with GCC, CMake, and Make (`mingw-w64-x86_64-gcc`, `mingw-w64-x86_64-cmake`, `mingw-w64-x86_64-make`)
+- Git and an internet connection for the initial Raylib download
+
+From PowerShell in the project directory, after installing MSYS2:
+
+```powershell
+$env:Path = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;$env:Path"
+cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --parallel 4
+```
+
+Run `build\PalmIsland.exe`. The first configure downloads and extracts pinned Raylib 5.5 into the ignored build directory; subsequent builds reuse it.
+
+### Prototype Controls
+
+- **Move:** A/D or arrow keys
+- **Jump:** Space, W, or Up (release early for a shorter jump)
+- **Restart:** R
+- **Close:** Escape
+- **Gamepad:** left stick or D-pad to move, A to jump
+
+The next milestone is a basic attack and one readable enemy encounter.
 
 ---
 

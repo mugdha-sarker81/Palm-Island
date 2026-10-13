@@ -1,7 +1,7 @@
 # Palm Island — Game Plan
 
 **Status:** Planning complete for Vertical Slice  
-**Based on:** Original idea.txt (GDD v1.0) + locked decisions  
+**Based on:** Original game design text (`source/ORIGINAL_GAME_DESIGN.txt`, GDD v1.0) + locked decisions
 **Purpose:** Single source of truth for story, progression, combat, weapons, enemies, and level structure before and during early implementation.
 
 ---
