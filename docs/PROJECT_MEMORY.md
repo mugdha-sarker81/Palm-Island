@@ -68,9 +68,11 @@ the original GDD remains historical reference material.
 - Use MSYS2 MinGW64, not the unrelated legacy `C:\MinGW` compiler. If the
   generator differs from the existing CMake cache, remove the generated
   `build` directory and configure it again.
-- This workspace was not detected as a Git repository at the time this was
-  written. Do not claim a commit/history exists; establish Git separately
-  before relying on version-control history.
+- GitHub repository `mugdha-sarker81/Palm-Island` has commit history. This
+  local Downloads folder is an exported copy without `.git` metadata, so local
+  `git status`, commits, and pushes cannot run here. For normal future work,
+  use a real clone of the GitHub repository and copy/migrate any newer local
+  changes deliberately.
 - No automated gameplay test suite is configured.
 
 ### Implemented in the current prototype
