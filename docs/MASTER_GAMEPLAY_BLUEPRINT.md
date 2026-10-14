@@ -1375,14 +1375,12 @@ Never store absolute developer paths in committed level/save data.
 
 ### Stage A — Confirm the new direction
 
-1. Keep the current side-scrolling executable as a known-good baseline.
-2. Create a separate top-down movement prototype branch/work session; do not
-   abruptly replace the only working program before parity.
-3. Define virtual resolution, tile size, and 8-direction movement on a plain
+1. Replace the minimal Raylib scaffold with a bounded top-down test room.
+2. Define virtual resolution, tile size, and 8-direction movement on a plain
    test floor.
-4. Implement normalized keyboard/gamepad movement, foot-point collision,
+3. Implement normalized keyboard/gamepad movement, foot-point collision,
    facing, wall sliding, and room camera.
-5. Add one ramp/elevation connector and Y-sort/foreground occlusion test.
+4. Add one ramp/elevation connector and Y-sort/foreground occlusion test.
 
 **Gate:** run around a block, approach from all eight directions, transition
 between elevations, and verify no diagonal speed boost, jitter, or wall
@@ -1483,7 +1481,8 @@ decision log once chosen.
 | Item | Status |
 |---|---|
 | Existing Windows build and launch | Verified |
-| Existing side-scroll coast prototype | Implemented; legacy prototype |
+| Existing side-scroll coast prototype | Removed on 2026-10-14 at user direction |
+| Current executable scaffold | Minimal Raylib window; top-down game not implemented |
 | Top-down camera/game direction | Selected for future game; not implemented |
 | 8-region / 24-zone campaign outline | Planned in this document |
 | Top-down eight-direction controller | Not started |
@@ -1493,7 +1492,8 @@ decision log once chosen.
 | Ichigo costume/animation set | Appearance direction proposed; no production sprites |
 | Enemy and guardian systems | Planned; not implemented |
 
-**Next bounded task:** make and playtest a separate top-down movement test room
-with normalized eight-direction movement, camera bounds, solid wall collision,
-and one visible ramp/elevation transition. Preserve the old build until this
-new direction is verified.
+**Next bounded task:** replace the runnable scaffold with a top-down movement
+test room using normalized eight-direction movement, camera bounds, solid wall
+collision, and one visible ramp/elevation transition. Add code modules only as
+their responsibilities are implemented; the old side-scroller has been
+removed.

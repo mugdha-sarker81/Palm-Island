@@ -75,26 +75,25 @@ the original GDD remains historical reference material.
   changes deliberately.
 - No automated gameplay test suite is configured.
 
-### Implemented in the current prototype
+### Current code state
 
-- One C source file, `src/main.c`, with a Raylib game loop.
-- A 1280×720 window and a code-drawn, 5,200-unit horizontal coast.
-- Basic horizontal movement, gravity, platform collision, acceleration,
-  coyote time, jump buffering, variable jump height, and collision substeps.
-- Camera following, parallax scenery, code-drawn player, HUD, and a marker
-  interaction that displays a field-note message.
-- Keyboard and gamepad input paths for movement, jump, and marker interaction.
-- `R` resets the prototype; Escape closes it.
+- The previous side-scrolling coast implementation and its movement, camera,
+  scenery, HUD, and marker interaction have been removed from `src/main.c`.
+- `src/main.c` is now a minimal Raylib window scaffold with a placeholder
+  screen; Escape closes the window.
+- The top-down room, player movement, collision, and asset loading are not
+  implemented yet.
 
 ### Not implemented yet
 
 - The complete game or the 10–15 minute vertical slice.
-- The selected top-down eight-direction game; the current executable is still
-  the earlier side-scrolling prototype and is not evidence that the new
-  direction is implemented.
+- The selected top-down eight-direction game; the current executable is only
+  a window scaffold and is not evidence that the new direction is implemented.
 - Combat, enemies, health, boss/guardian behavior, or Thornfang.
 - Driftwood Village, rooms/region transitions, authored maps, or a level editor.
 - Production character/environment art, animation sheets, music, or sound.
+  Starter pixel-art sprites and a tileset now exist under `assets/`, but are
+  visual prototypes and are not loaded by the game.
 - Dialogue system, inventory, persistent clue/world state, checkpoints, or
   save/load.
 - Character health, food/shop, weapon switching UI, material pickups, fixed
@@ -102,17 +101,16 @@ the original GDD remains historical reference material.
   blueprint but no such feature or production sprite is implemented.
 - Menu, pause/settings, release packaging, or automated gameplay tests.
 
-The concept images and ZIP archives in `assets/` are references, not assets
-loaded by the current game. Consult `docs/ASSET_INDEX.md` and review licenses
-before using third-party assets.
+The concept images and ZIP archives in `assets/` are references, and the
+starter sprites and tileset are not yet loaded by the current game. Consult
+`docs/ASSET_INDEX.md` and review licenses before using third-party assets.
 
 ## 3. Product direction
 
-The chosen full-game camera is now **top-down 2D pixel art with 3D-like depth
-cues** (layered scenery, Y-sorting, occlusion, and explicit elevation links).
-This supersedes the earlier side-scrolling full-game direction. The current
-side-scrolling executable is a legacy prototype to preserve until a replacement
-top-down movement test room is verified.
+The chosen full-game camera is **top-down 2D pixel art with 3D-like depth cues**
+(layered scenery, Y-sorting, occlusion, and explicit elevation links). The
+earlier side-scrolling prototype has been removed; the current executable is
+only a runnable scaffold while the top-down movement room is built.
 
 ### Player promise
 
@@ -227,8 +225,11 @@ weapons distinct without making any one a strict power upgrade.
   Older active documents become redirects; the original GDD remains archived.
 - **2026-10-14:** User selected a top-down 2D pixel-art world with eight-way
   movement and 3D-like depth cues. This supersedes the earlier side-scrolling
-  target for the full game. Preserve the existing side-scrolling build as a
-  known-good prototype while developing a separate top-down test room.
+  target for the full game.
+- **2026-10-14:** User directed removal of the previous side-scrolling game
+  implementation. Replace it with a minimal runnable scaffold and plan the
+  top-down movement-room source modules; do not build a full game architecture
+  before those responsibilities are implemented.
 - **2026-10-14:** User approved character/HP/weapon-switching/food/shop/tool/
   costume planning and selected a small fixed set of material-built tools,
   not full recipe crafting. Starting balance values remain proposals pending
@@ -278,34 +279,34 @@ room transitions, and Y-sorted/occluding scenery—not side-scrolling jumps.
 
 ## 7. Technical approach
 
-### Keep the code small, then split when needed
+### Planned source-file responsibilities
 
-The current prototype is intentionally one file. Do not create a full custom
-engine up front. As responsibilities grow, extract and validate one boundary
-at a time:
+The previous all-in-one side-scroller was removed. Keep the replacement
+incremental: the files below are the intended boundaries for the movement
+test room, not a requirement to create empty modules in advance.
 
-1. `main.c` — startup, main loop, high-level state.
-2. `player.c/.h` — player state, input-facing movement, collision.
-3. `world.c/.h` — room/region geometry, triggers, persistent world flags.
-4. `interaction.c/.h` — interactables, prompts, clue discovery.
-5. `save.c/.h` — versioned persistence/checkpoints when progression exists.
-6. Add UI, audio, combat/enemy, and content modules only when the slice needs
-   them.
+| File | Responsibility |
+|---|---|
+| `src/main.c` | Raylib startup/shutdown and top-level frame loop; delegate gameplay work |
+| `src/input.h/.c` | Read keyboard/gamepad controls and produce normalized movement intent |
+| `src/player.h/.c` | Player state, facing, eight-way movement, and solid collision |
+| `src/room.h/.c` | Test-room layout, blocked geometry, world bounds, and explicit ramp/elevation connector |
+| `src/camera.h/.c` | Follow the player while clamping the view to room bounds |
+| `src/render.h/.c` | Pixel-scaled scene drawing, ground/entity/foreground ordering, feet-point Y sorting, and one occluder |
+| `CMakeLists.txt` | Add each implementation file to the executable as it is introduced |
 
-Preserve the current playable build while moving code. Keep input/update/draw
-separable enough that physics changes do not require rebuilding unrelated
-systems. Do not design data formats or abstractions for unimplemented full-game
-content prematurely.
+Start with the smallest buildable set and add a module when its responsibility
+is implemented. Do not create interaction, save, combat, audio, or generic
+engine modules for this movement-room milestone. Keep shared types local until
+more than one module genuinely needs them.
 
 ### Movement foundation
 
-The **existing side-scroller** has acceleration, ground/air control, drag,
-gravity, coyote time, jump buffering, variable jump height, substep collision
-handling, and camera easing. Preserve it as a known-good reference. The
-**selected full game** needs a new top-down controller: eight-way normalized
-walking, stable wall collision, Y-sorted feet anchor, elevation connectors,
-room transitions, camera bounds, keyboard/gamepad parity, and occlusion tests.
-Do not carry over coyote-time/jump mechanics as required top-down controls.
+The top-down controller is not implemented. Build eight-way normalized
+walking, stable wall collision, a feet-point Y-sort anchor, one explicit
+elevation connector, bounded camera movement, keyboard/gamepad parity, and a
+foreground occlusion test. Do not carry over platformer jump mechanics as
+required top-down controls.
 
 ### World and persistence targets
 
@@ -338,8 +339,7 @@ changes to build files or compiler-facing code.
 
 ### Phase 1 — Prototype the selected movement direction (next)
 
-1. Preserve the existing side-scroll build as a baseline; do not destroy the
-   only working executable/source while evaluating the new camera.
+1. Keep the new Raylib scaffold buildable while adding the top-down room.
 2. In a bounded test room, implement eight-way normalized input, facing,
    stable solid-wall collision, room camera bounds, and one explicit
    ramp/elevation transition.
@@ -352,15 +352,14 @@ changes to build files or compiler-facing code.
 through the test room and elevation connector without speed bias, jitter,
 penetration, or softlock. Do not start combat or full content before this gate.
 
-### Phase 2 — Refactor only the first necessary boundary
+### Phase 2 — Add only necessary boundaries
 
-1. Extract player movement/collision from `main.c` into `player.c/.h`.
-2. Preserve behavior exactly; avoid simultaneously redesigning physics.
-3. Update CMake and build.
-4. Compare play behavior before/after extraction.
+Add or refine the planned source modules as the movement-room responsibilities
+are implemented. Do not extract placeholder behavior or introduce unrelated
+game systems.
 
-**Gate:** same prototype behavior, clean build, no new warnings/errors from the
-change. Defer further modules until another responsibility is actually needed.
+**Gate:** each new module builds cleanly and keeps its behavior within its
+documented responsibility.
 
 ### Phase 3 — Block out the top-down Jungle route
 
@@ -518,24 +517,27 @@ Memory updated: yes/no
 
 ## 12. Current next work item
 
-**Create and playtest a separate top-down movement test room** with normalized
-eight-direction movement, camera bounds, solid wall collision, and one visible
-ramp/elevation transition. Preserve the legacy side-scroller until this is
-verified. Do not start combat or build all regions yet.
+**Replace the blank scaffold with a playable top-down movement test room** in
+the planned small modules: normalized eight-direction movement, camera bounds,
+solid wall collision, and one visible ramp/elevation transition. Add only the
+files needed as their behavior is implemented. Do not start combat or build
+all regions yet.
 
 Checklist for that session:
 
-1. Keep the current build runnable as the known-good legacy prototype.
-2. Prototype on a separate branch or safely staged code path; do not delete
-   the only working version before the new direction builds.
+1. Keep the Raylib scaffold buildable throughout the movement-room work.
+2. Implement the planned modules incrementally; avoid empty files and unrelated
+   systems.
 3. Test cardinal/diagonal speed, wall sliding, corners, narrow passages,
    elevation transition, occlusion, world bounds, and frame-time stability.
 4. Test keyboard and a connected controller if available.
 5. Record reproducible issues; fix only the top verified issue in a follow-up.
 
 **Completion record:** On 2026-10-14, the Windows target was clean-configured
-and built with MSYS2 MinGW64 and launched successfully. Interactive playtesting
-of movement is not recorded yet.
+and the previous side-scroller was launched successfully. The side-scroller
+was removed on 2026-10-14 at the user's direction. The replacement scaffold's
+build and launch still need validation; top-down movement playtesting is not
+recorded.
 
 ## 13. Consolidation and reference map
 

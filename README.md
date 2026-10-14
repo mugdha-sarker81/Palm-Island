@@ -5,16 +5,16 @@ Raylib 5.5. You play as Ichigo, an outsider whose family symbol is connected
 to a quiet, mysterious island. The intended game is about noticing, exploring,
 and understanding the island—not grinding or constant combat.
 
-> **Honest status:** this is an early playable prototype, not the complete
-> game or the planned Forgotten Jungle vertical slice. The current executable
-> has a long code-drawn coast, basic platform movement, parallax scenery, one
-> ancient marker interaction, and a field-note message. It does not yet have
-> enemies, combat, Thornfang, authored levels, dialogue, audio, or saving.
+> **Honest status:** this is not the complete game or the planned Forgotten
+> Jungle vertical slice. The previous side-scrolling prototype was removed;
+> the current executable is a minimal Raylib window scaffold. Top-down
+> movement, authored levels, enemies, combat, dialogue, audio, and saving are
+> not implemented.
 >
-> **Direction change:** the planned full game is now top-down 2D pixel art
-> with eight-direction movement and 3D-like depth cues (layering, occlusion,
-> and stairs/ramps between elevation layers). The current side-scrolling build
-> is a legacy movement prototype; it has not been converted yet.
+> **Direction:** the game is planned as top-down 2D pixel art with
+> eight-direction movement and 3D-like depth cues (layering, occlusion, and
+> stairs/ramps between elevation layers). A movement test room is the next
+> implementation milestone.
 
 ## Start here
 
@@ -53,23 +53,28 @@ cmake --build build --parallel 4
 The `build` directory is generated and ignored by Git. The first configure
 downloads Raylib 5.5 into `build/_deps`; subsequent builds reuse it.
 
-## Current prototype controls
+## Current executable
 
-| Action | Keyboard | Controller |
-|---|---|---|
-| Move | A/D or arrow keys | Left stick / D-pad |
-| Jump | Space, W, or Up | Bottom face button |
-| Examine marker | E | Right face button |
-| Restart prototype | R | — |
-| Quit | Esc | — |
+The previous side-scrolling prototype has been removed. The current executable
+is a minimal Raylib window scaffold; the top-down movement room is not
+implemented yet. Close the window or press Esc to exit.
 
 ## Project layout
 
 ```text
 AGENTS.md                 Assistant behavior and memory entry point
-src/main.c                Current prototype implementation
-assets/concept_art/       Visual references
+src/main.c                Minimal runnable application scaffold
+src/player.[ch]            Planned player movement and collision module
+src/room.[ch]              Planned test-room geometry and elevation connectors
+src/input.[ch]             Planned keyboard/controller input mapping
+src/camera.[ch]            Planned room-bounded camera
+src/render.[ch]            Planned pixel-art scene rendering and depth ordering
+assets/concept_art/       Visual references and art guide
+assets/sprites/           Starter player and prop sprites
+assets/tilesets/          Starter 16x16 tileset
+assets/previews/          Rendered scene previews
 assets/source_packs/      Bundled reference archives
+tools/generate_assets.py  Starter art generator
 docs/PROJECT_MEMORY.md    Current canonical design, status, and work plan
 docs/MASTER_GAMEPLAY_BLUEPRINT.md
                           Detailed map-by-map gameplay feature plan
