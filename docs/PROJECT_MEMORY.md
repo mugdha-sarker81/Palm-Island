@@ -3,11 +3,15 @@
 **Purpose:** This is the canonical, compact-enough handoff for developers and
 AI assistants, including models with limited context or usage. It merges the
 current README and active planning documents into one working source of truth.
+The map-by-map implementation blueprint is maintained in
+`docs/MASTER_GAMEPLAY_BLUEPRINT.md`, including the detailed player
+exploration/subtask sequence for all 24 proposed zones.
 
 **Last reconciled:** 2026-10-14
 **Current milestone:** playable movement-and-atmosphere prototype
-**Next milestone:** prepare a small, maintainable foundation for the Forgotten
-Jungle vertical slice—not the whole island.
+**Next milestone:** prototype the selected top-down movement direction in a
+separate test room, then make the Forgotten Jungle vertical slice—not the whole
+island.
 
 > Update this document when implementation status, a locked decision, or the
 > next task changes. Keep the current status factual. Do not mark design ideas
@@ -27,8 +31,10 @@ one playable Forgotten Jungle slice before making the full island.
 
 1. `AGENTS.md` — assistant workflow.
 2. This file's **Current Status**, **Locked Decisions**, and **Next Work Item**.
-3. The exact code/files touched by the assigned task.
-4. One relevant design detail section if needed.
+3. `docs/MASTER_GAMEPLAY_BLUEPRINT.md` only when working on game features,
+   campaign maps, player movement, progression, or zone exploration flow.
+4. The exact code/files touched by the assigned task.
+5. One relevant design detail section if needed.
 
 Do not reread every plan or the archived source GDD for an ordinary coding
 task. The other active design documents have been consolidated into this file;
@@ -81,11 +87,17 @@ the original GDD remains historical reference material.
 ### Not implemented yet
 
 - The complete game or the 10–15 minute vertical slice.
+- The selected top-down eight-direction game; the current executable is still
+  the earlier side-scrolling prototype and is not evidence that the new
+  direction is implemented.
 - Combat, enemies, health, boss/guardian behavior, or Thornfang.
 - Driftwood Village, rooms/region transitions, authored maps, or a level editor.
 - Production character/environment art, animation sheets, music, or sound.
 - Dialogue system, inventory, persistent clue/world state, checkpoints, or
   save/load.
+- Character health, food/shop, weapon switching UI, material pickups, fixed
+  built tools, and costumes. Their design is specified in the gameplay
+  blueprint but no such feature or production sprite is implemented.
 - Menu, pause/settings, release packaging, or automated gameplay tests.
 
 The concept images and ZIP archives in `assets/` are references, not assets
@@ -93,6 +105,12 @@ loaded by the current game. Consult `docs/ASSET_INDEX.md` and review licenses
 before using third-party assets.
 
 ## 3. Product direction
+
+The chosen full-game camera is now **top-down 2D pixel art with 3D-like depth
+cues** (layered scenery, Y-sorting, occlusion, and explicit elevation links).
+This supersedes the earlier side-scrolling full-game direction. The current
+side-scrolling executable is a legacy prototype to preserve until a replacement
+top-down movement test room is verified.
 
 ### Player promise
 
@@ -166,7 +184,7 @@ recording the reason and date in the decision log below.
 
 | Topic | Current decision |
 |---|---|
-| Genre / camera | 2D side-scrolling exploration adventure |
+| Genre / camera | Top-down 2D pixel-art exploration adventure; 3D-like depth cues, not a 3D engine |
 | Target | Windows PC; single-player, offline |
 | Technology | C11, CMake, Raylib 5.5 |
 | Lead | Ichigo; family symbol connects him to the island |
@@ -177,6 +195,9 @@ recording the reason and date in the decision log below.
 | Excalibur | Temporary final transformation/reward, not an open-world weapon |
 | Controls | Keyboard and controller both supported; keyboard first for tuning |
 | First deliverable | 10–15 minute Forgotten Jungle vertical slice |
+| Campaign outline | 8 regions / 24 connected authored zones; long-term proposal, not current implementation scope |
+| Core movement | Eight-direction walking; stairs/ramps connect explicit elevation layers; no required platformer jump |
+| Tool crafting | Small fixed, quest-built tool set using authored materials; no freeform recipe/grinding system |
 
 ### Weapons (working design)
 
@@ -202,19 +223,29 @@ weapons distinct without making any one a strict power upgrade.
   final temporary transformation.
 - **2026-10-14:** Consolidate active planning into this project memory.
   Older active documents become redirects; the original GDD remains archived.
+- **2026-10-14:** User selected a top-down 2D pixel-art world with eight-way
+  movement and 3D-like depth cues. This supersedes the earlier side-scrolling
+  target for the full game. Preserve the existing side-scrolling build as a
+  known-good prototype while developing a separate top-down test room.
+- **2026-10-14:** User approved character/HP/weapon-switching/food/shop/tool/
+  costume planning and selected a small fixed set of material-built tools,
+  not full recipe crafting. Starting balance values remain proposals pending
+  playtesting; none of these systems is implemented.
 
 ## 6. First playable target: Forgotten Jungle
 
 ### Player experience / route
 
-Target first-playthrough length: approximately 10–15 minutes.
+Target first-playthrough length: approximately 10–15 minutes. This slice is
+now designed for top-down eight-direction walking, explicit ramps/bridges,
+room transitions, and Y-sorted/occluding scenery—not side-scrolling jumps.
 
-1. **Jungle Entrance:** a safe place to learn controls; clear landmark and
-   basic movement.
-2. **Root Path:** more vertical navigation; show thorn barriers that cannot
-   yet be crossed.
+1. **Jungle Entrance:** safe place to learn eight-way movement, interaction,
+   collision, and the clear landmark.
+2. **Root Path:** branching top-down navigation with ramps/bridges; show thorn
+   barriers that cannot yet be crossed.
 3. **Overgrown Clearing:** one small, readable challenge and one optional
-   observation/platforming secret. Combat only if it supports the intended
+   observation/navigation secret. Combat only if it supports the intended
    quiet pacing.
 4. **Shrine Approach:** ancient stone and a mandatory clue that suggests the
    quality of agility and points toward the guardian.
@@ -227,10 +258,10 @@ Target first-playthrough length: approximately 10–15 minutes.
 
 ### Slice acceptance criteria
 
-- Movement remains responsive across normal and high frame times; no falling
-  through floors, getting stuck, or unrecoverable softlocks.
-- New players understand basic movement and discover the main clue without a
-  quest arrow.
+- Eight-way movement remains responsive; diagonals are normalized, collision
+  is stable at normal/high frame times, and elevation transitions are clear.
+- New players understand walking/interacting and discover the main clue
+  without a quest arrow.
 - The earlier thorn gate is visually legible before Thornfang, and becomes
   traversable afterward.
 - The guardian's attacks are readable; success feels earned rather than
@@ -266,14 +297,13 @@ content prematurely.
 
 ### Movement foundation
 
-Existing code has acceleration, ground/air control, drag, gravity, coyote
-time, jump buffering, variable jump height, substep collision handling, and
-camera easing. These need playtesting and tuning, not blind replacement.
-
-Validate: start/stop precision, short/full jump, coyote jump, buffered jump,
-narrow platform landing, head bump, side collision, world bounds, high frame
-time, controller dead zone, and ground/air transition. Change one tuning value
-at a time and record the effect.
+The **existing side-scroller** has acceleration, ground/air control, drag,
+gravity, coyote time, jump buffering, variable jump height, substep collision
+handling, and camera easing. Preserve it as a known-good reference. The
+**selected full game** needs a new top-down controller: eight-way normalized
+walking, stable wall collision, Y-sorted feet anchor, elevation connectors,
+room transitions, camera bounds, keyboard/gamepad parity, and occlusion tests.
+Do not carry over coyote-time/jump mechanics as required top-down controls.
 
 ### World and persistence targets
 
@@ -304,17 +334,21 @@ verify before continuing.
 **Gate:** build and launch succeed from documented commands. Recheck after
 changes to build files or compiler-facing code.
 
-### Phase 1 — Playtest and lock the movement baseline (next)
+### Phase 1 — Prototype the selected movement direction (next)
 
-1. Run the current prototype and test the movement checklist above.
-2. Write down concrete defects (e.g. jump too floaty, edge collision, camera
-   lag) with steps to reproduce; do not tune by vague impression alone.
-3. Fix one movement issue at a time and rebuild/playtest after each fix.
-4. Confirm keyboard controls and available gamepad behavior.
+1. Preserve the existing side-scroll build as a baseline; do not destroy the
+   only working executable/source while evaluating the new camera.
+2. In a bounded test room, implement eight-way normalized input, facing,
+   stable solid-wall collision, room camera bounds, and one explicit
+   ramp/elevation transition.
+3. Add foot-point Y sorting and one foreground occluder to validate the
+   3D-like depth cue.
+4. Playtest keyboard and a connected gamepad; record reproducible movement or
+   collision defects and fix one at a time.
 
-**Gate:** a short platforming course can be completed repeatedly without
-frustrating or game-breaking movement defects. Do not build combat to hide
-movement problems.
+**Gate:** the player can approach obstacles from all eight directions, move
+through the test room and elevation connector without speed bias, jitter,
+penetration, or softlock. Do not start combat or full content before this gate.
 
 ### Phase 2 — Refactor only the first necessary boundary
 
@@ -326,19 +360,18 @@ movement problems.
 **Gate:** same prototype behavior, clean build, no new warnings/errors from the
 change. Defer further modules until another responsibility is actually needed.
 
-### Phase 3 — Block out a small jungle route
+### Phase 3 — Block out the top-down Jungle route
 
-1. Replace the long single test strip with a compact, intentionally traversed
-   jungle path or connected test rooms.
-2. Block out entrance, root path, clearing, shrine approach, arena, shrine,
+1. Build a compact, intentionally traversed set of connected top-down zones.
+2. Block out Jungle Entrance, Root Path, Overgrown Clearing, Shrine/Arena,
    and return shortcut with placeholders.
 3. Place a visible thorn gate early and make the route geometry support
    backtracking.
-4. Tune camera boundaries/room transitions and add reliable respawn/checkpoint
-   behavior for the blockout.
+4. Add clear stairs/ramps where elevation changes; tune Y-sort/occlusion,
+   camera boundaries, room transitions, and reliable checkpoint respawn.
 
-**Gate:** route is navigable end-to-end, all jumps are reachable, and no
-softlock exists. Do not add the full island map.
+**Gate:** route is navigable end-to-end with no ambiguous elevation, blocked
+exits, or softlocks. Do not add the full island map.
 
 ### Phase 4 — Interaction and clue prototype
 
@@ -397,11 +430,14 @@ Do not use the old six-month estimates as commitments.
 - Palette: deep teal and ink shade, layered moss/jade foliage, warm pale amber,
   aged stone, sea mist, restrained gold/relic glow.
 - Composition: foreground, playable midground, and distant background with
-  layered parallax. Show a landmark before the player reaches it. Protect
-  player silhouette/readability.
+  layered parallax. In top-down scenes, use foot-point Y sorting, canopy/roof
+  occlusion, and explicit elevation transitions. Show a landmark before the
+  player reaches it. Protect player silhouette/readability.
 - Ichigo: tousled dark hair, short travel coat, red scarf responding to wind
-  and motion, compact travel gear. Prioritize idle/run/jump/fall/land/inspect
-  before elaborate combat animation.
+  and motion, compact travel gear. Prioritize idle, eight-direction walk,
+  interact/inspect, push/pull, hurt, and weapon-use states before elaborate
+  combat animation. Jump/fall/land remain legacy prototype animations unless a
+  later design requires a top-down vault.
 - Keep contrast/glow for meaningful clues and interactions; avoid filling
   every screen with visual noise.
 - Use a consistent licensed art style. Concept sheets are references; do not
@@ -480,19 +516,20 @@ Memory updated: yes/no
 
 ## 12. Current next work item
 
-**Run and playtest the existing coast prototype, then record concrete
-movement/camera issues.** Do not start combat or build all regions yet.
+**Create and playtest a separate top-down movement test room** with normalized
+eight-direction movement, camera bounds, solid wall collision, and one visible
+ramp/elevation transition. Preserve the legacy side-scroller until this is
+verified. Do not start combat or build all regions yet.
 
 Checklist for that session:
 
-1. Build/launch with `README.md` commands.
-2. Test normal and long jumps, coyote/buffered jumps, narrow platforms,
-   underside/side collisions, world edges, and falling/respawn.
-3. Check camera behavior while running, jumping, landing, and at map bounds.
-4. Test movement and jump with keyboard and a connected controller if
-   available.
-5. Write down any defect with reproducible steps and fix only the top verified
-   issue in a follow-up task.
+1. Keep the current build runnable as the known-good legacy prototype.
+2. Prototype on a separate branch or safely staged code path; do not delete
+   the only working version before the new direction builds.
+3. Test cardinal/diagonal speed, wall sliding, corners, narrow passages,
+   elevation transition, occlusion, world bounds, and frame-time stability.
+4. Test keyboard and a connected controller if available.
+5. Record reproducible issues; fix only the top verified issue in a follow-up.
 
 **Completion record:** On 2026-10-14, the Windows target was clean-configured
 and built with MSYS2 MinGW64 and launched successfully. Interactive playtesting
@@ -514,6 +551,11 @@ reduced to redirects to prevent multiple sources of truth:
 Other references:
 
 - `ASSET_INDEX.md` — current concept art and ZIP archive inventory.
+- `MASTER_GAMEPLAY_BLUEPRINT.md` — current detailed top-down game proposal:
+  campaign zones, player tasks/progression, inventory/weapons/map, obstacles,
+  enemy/guardian concepts, exploration subtasks/rewards for every zone,
+  character/health/weapon switching/food/shop/fixed tool-building/costume
+  proposals, and feature implementation stages.
 - `source/ORIGINAL_GAME_DESIGN.txt` and older source documents — historical
   ideas and technical reference; they contain earlier scope and combat
   assumptions that may conflict with the current exploration-first direction.

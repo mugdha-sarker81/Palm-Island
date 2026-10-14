@@ -3,6 +3,13 @@
 - Before coding, read `docs/PROJECT_MEMORY.md` sections **Current Status**,
   **Locked Decisions**, and **Next Work Item**. Read only other sections
   needed for the assigned task; avoid loading the archived GDD by default.
+- For campaign, movement, task, inventory, weapon, map, obstacle, or enemy
+  planning/implementation, read the matching section of
+  `docs/MASTER_GAMEPLAY_BLUEPRINT.md`.
+- Treat proposed HP, damage, food, material counts, and shop prices there as
+  untested starting points, not final balance. Keep crafting limited to the
+  approved small fixed tool set; do not add generic recipes or material
+  grinding.
 - Treat `docs/PROJECT_MEMORY.md` as the current source of truth. Archived
   planning documents and old GDD material do not override it.
 - Work in small, playable increments. Do not attempt to implement the whole

@@ -10,10 +10,16 @@ and understanding the island—not grinding or constant combat.
 > has a long code-drawn coast, basic platform movement, parallax scenery, one
 > ancient marker interaction, and a field-note message. It does not yet have
 > enemies, combat, Thornfang, authored levels, dialogue, audio, or saving.
+>
+> **Direction change:** the planned full game is now top-down 2D pixel art
+> with eight-direction movement and 3D-like depth cues (layering, occlusion,
+> and stairs/ramps between elevation layers). The current side-scrolling build
+> is a legacy movement prototype; it has not been converted yet.
 
 ## Start here
 
 - **AI/developer project memory and build plan:** [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md)
+- **Detailed campaign and gameplay blueprint:** [`docs/MASTER_GAMEPLAY_BLUEPRINT.md`](docs/MASTER_GAMEPLAY_BLUEPRINT.md)
 - **Rules for coding assistants:** [`AGENTS.md`](AGENTS.md)
 - **Concept-art/source asset notes:** [`docs/ASSET_INDEX.md`](docs/ASSET_INDEX.md)
 - **Archived original design:** [`docs/source/ORIGINAL_GAME_DESIGN.txt`](docs/source/ORIGINAL_GAME_DESIGN.txt)
@@ -65,6 +71,8 @@ src/main.c                Current prototype implementation
 assets/concept_art/       Visual references
 assets/source_packs/      Bundled reference archives
 docs/PROJECT_MEMORY.md    Current canonical design, status, and work plan
+docs/MASTER_GAMEPLAY_BLUEPRINT.md
+                          Detailed map-by-map gameplay feature plan
 docs/ASSET_INDEX.md       Asset reference and usage notes
 docs/source/              Historical source documents
 build/                    Generated files; do not edit by hand
