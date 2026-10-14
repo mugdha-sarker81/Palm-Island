@@ -72,8 +72,10 @@ the original GDD remains historical reference material.
   configure emitted an upstream CMake minimum-version deprecation warning;
   the game sources compiled without warnings.
 - Use MSYS2 MinGW64, not the unrelated legacy `C:\MinGW` compiler. If the
-  generator differs from the existing CMake cache, remove the generated
-  `build` directory and configure it again.
+  generator differs from the existing CMake cache, rename the generated
+  `build` directory (for example, `build-backup`) and configure again.
+- On Windows, use `build.bat` to configure/build or `run.bat` to build and
+  launch; the scripts set the standard MSYS2 MinGW64 PATH automatically.
 - This workspace is a Git clone of `mugdha-sarker81/Palm-Island` on `main`,
   tracking `origin/main`.
 - No automated gameplay test suite is configured.

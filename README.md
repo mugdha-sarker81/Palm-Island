@@ -33,28 +33,16 @@ requirements until approved.
 
 ## Build and run on Windows
 
-Requirements: CMake 3.16+, MSYS2 MinGW64 toolchain, and internet access for
-the first Raylib download. Open PowerShell in this project folder:
+Requirements: CMake, MSYS2 MinGW64, and internet access for the first build
+(CMake downloads Raylib 5.5 automatically).
 
-```powershell
-$env:Path = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;$env:Path"
-cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --parallel 4
-.\build\PalmIsland.exe
-```
+- **Build and run:** double-click `run.bat`, or run `.\run.bat` from PowerShell.
+- **Build only:** double-click `build.bat`, or run `.\build.bat`.
 
-If CMake reports that the build directory was configured with another
-generator, remove only the generated `build` directory and configure again:
-
-```powershell
-Remove-Item -Recurse -Force build
-cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --parallel 4
-.\build\PalmIsland.exe
-```
-
-The `build` directory is generated and ignored by Git. The first configure
-downloads Raylib 5.5 into `build/_deps`; subsequent builds reuse it.
+The scripts add the standard MSYS2 MinGW64 tools to PATH and build into the
+ignored `build/` folder. If CMake reports that `build/` was configured with a
+different generator, rename that generated folder (for example, to
+`build-backup`) and run the script again.
 
 ## Current executable
 
@@ -75,6 +63,8 @@ against cliffs, water, or walls, nor camera movement or prop sorting.
 ```text
 AGENTS.md                 Assistant behavior and memory entry point
 src/main.c                Window, pixel canvas, fixed-step loop, asset lookup
+build.bat                 Configure and build for Windows
+run.bat                   Build, then launch the game
 src/tuning.h              Centralized movement, loop, canvas, and animation tuning
 src/player.[ch]            Eight-way movement, facing, animation (collision planned: M3)
 src/room.[ch]              Tile-room drawing (solid tiles/ramp logic planned: M3/M6)
