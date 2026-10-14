@@ -6,6 +6,12 @@
 - For campaign, movement, task, inventory, weapon, map, obstacle, or enemy
   planning/implementation, read the matching section of
   `docs/MASTER_GAMEPLAY_BLUEPRINT.md`.
+- For movement, camera, combat feel, interaction feedback, effects, audio
+  feedback, or "make it cooler/smoother" tasks, read
+  `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`. Treat its numbers as starting
+  targets to verify in playtests, keep tunables in `src/tuning.h`, and change
+  one tuning value per pass. Signature mechanics are proposals; get approval
+  before implementing them and do not start them before the Feel Gate passes.
 - Treat proposed HP, damage, food, material counts, and shop prices there as
   untested starting points, not final balance. Keep crafting limited to the
   approved small fixed tool set; do not add generic recipes or material

@@ -20,13 +20,15 @@ and understanding the island—not grinding or constant combat.
 
 - **AI/developer project memory and build plan:** [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md)
 - **Detailed campaign and gameplay blueprint:** [`docs/MASTER_GAMEPLAY_BLUEPRINT.md`](docs/MASTER_GAMEPLAY_BLUEPRINT.md)
+- **Movement feel, measurable tests, and signature-mechanic proposals:** [`docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`](docs/GAME_FEEL_AND_SIGNATURE_PLAN.md)
 - **Rules for coding assistants:** [`AGENTS.md`](AGENTS.md)
 - **Concept-art/source asset notes:** [`docs/ASSET_INDEX.md`](docs/ASSET_INDEX.md)
 - **Archived original design:** [`docs/source/ORIGINAL_GAME_DESIGN.txt`](docs/source/ORIGINAL_GAME_DESIGN.txt)
 
-The project memory is the single current source of truth for the vision,
-decisions, progress, and next steps. The older planning files in `docs/` are
-kept as short redirects so they do not compete with it.
+The project memory is canonical for current status, decisions, and next steps.
+The gameplay blueprint and game-feel plan provide detailed supporting
+specifications; proposals in those documents do not become implementation
+requirements until approved.
 
 ## Build and run on Windows
 
@@ -64,6 +66,7 @@ implemented yet. Close the window or press Esc to exit.
 ```text
 AGENTS.md                 Assistant behavior and memory entry point
 src/main.c                Minimal runnable application scaffold
+src/tuning.h               Planned centralized movement/camera tuning values
 src/player.[ch]            Planned player movement and collision module
 src/room.[ch]              Planned test-room geometry and elevation connectors
 src/input.[ch]             Planned keyboard/controller input mapping
@@ -78,6 +81,8 @@ tools/generate_assets.py  Starter art generator
 docs/PROJECT_MEMORY.md    Current canonical design, status, and work plan
 docs/MASTER_GAMEPLAY_BLUEPRINT.md
                           Detailed map-by-map gameplay feature plan
+docs/GAME_FEEL_AND_SIGNATURE_PLAN.md
+                          Movement targets, Feel Gate, and unapproved mechanic proposals
 docs/ASSET_INDEX.md       Asset reference and usage notes
 docs/source/              Historical source documents
 build/                    Generated files; do not edit by hand

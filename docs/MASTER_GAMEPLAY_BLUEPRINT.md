@@ -70,10 +70,10 @@ other regions. A complete 24-zone campaign is a long-term solo project.
 
 - Use a **top-down 2D camera**. A 3D-like feeling comes from layered art,
   shadows, height cues, and foreground occlusion—not a 3D engine.
-- Render to a low-resolution virtual canvas (initial prototype proposal:
-  480×270) and scale to the window with nearest-neighbor filtering. Keep tile,
-  sprite, and UI pixel grids consistent; verify integer scaling and letterbox
-  behavior on common desktop resolutions.
+- Render to a **320×180 virtual canvas** to match the starter art kit's 16×16
+  tiles and 14×20 player sprite. Use point filtering and integer scaling
+  (4× at 1280×720), with letterboxing at other window sizes. Keep tile, sprite,
+  and UI pixel grids consistent.
 - Start with 16×16 logical ground tiles; larger trees, buildings, cliffs, and
   props occupy multiple tiles. Decide exact sprite/tile size after a visual
   movement prototype, before mass asset production.
@@ -121,6 +121,7 @@ other regions. A complete 24-zone campaign is a long-term solo project.
 |---|---|---|
 | Move | WASD / arrows | Left stick / D-pad |
 | Interact / talk / inspect | E | South face button |
+| Attune (proposed; hold to sense nearby clues) | F | Left trigger |
 | Primary weapon action | J or left mouse | West face button / right trigger |
 | Dodge / quick step | Space or Shift | East face button |
 | Open inventory | I / Tab | Y / North face button |
@@ -128,9 +129,10 @@ other regions. A complete 24-zone campaign is a long-term solo project.
 | Journal / tasks | Q | Menu/Start |
 | Pause | Esc | Menu/Start |
 
-These are proposed bindings. Test keyboard and controller before locking them;
-support remapping later if feasible. Context-sensitive interaction should show
-the correct current binding.
+These are proposed bindings. Attune is a proposed signature mechanic from
+`docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`, not approved for implementation yet.
+Test keyboard and controller before locking bindings; support remapping later
+if feasible. Context-sensitive interaction should show the current binding.
 
 ## 4. Player tasks, sub-tasks, and progression
 

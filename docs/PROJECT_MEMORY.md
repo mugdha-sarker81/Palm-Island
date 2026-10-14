@@ -8,10 +8,11 @@ The map-by-map implementation blueprint is maintained in
 exploration/subtask sequence for all 24 proposed zones.
 
 **Last reconciled:** 2026-10-14
-**Current milestone:** playable movement-and-atmosphere prototype
-**Next milestone:** prototype the selected top-down movement direction in a
-separate test room, then make the Forgotten Jungle vertical slice—not the whole
-island.
+**Current milestone:** minimal Raylib scaffold; top-down movement is not
+implemented
+**Next milestone:** build and playtest the top-down movement room one visible
+increment at a time, then make the Forgotten Jungle vertical slice—not the
+whole island.
 
 > Update this document when implementation status, a locked decision, or the
 > next task changes. Keep the current status factual. Do not mark design ideas
@@ -33,8 +34,11 @@ one playable Forgotten Jungle slice before making the full island.
 2. This file's **Current Status**, **Locked Decisions**, and **Next Work Item**.
 3. `docs/MASTER_GAMEPLAY_BLUEPRINT.md` only when working on game features,
    campaign maps, player movement, progression, or zone exploration flow.
-4. The exact code/files touched by the assigned task.
-5. One relevant design detail section if needed.
+4. `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md` only for movement, camera, combat
+   feel, interaction feedback, effects/audio feedback, or "make it
+   cooler/smoother" tasks.
+5. The exact code/files touched by the assigned task.
+6. One relevant design detail section if needed.
 
 Do not reread every plan or the archived source GDD for an ordinary coding
 task. The other active design documents have been consolidated into this file;
@@ -63,16 +67,14 @@ the original GDD remains historical reference material.
 - Language/build: C11 + CMake; Raylib 5.5 is downloaded into the ignored
   `build/_deps` folder during first configure.
 - A clean configure/build succeeded on 2026-10-14 using the MSYS2 MinGW64
-  toolchain (`C:\msys64\mingw64\bin`) and CMake's `MinGW Makefiles` generator.
-- The resulting `build\PalmIsland.exe` was launched and remained running.
+  toolchain (`C:\msys64\mingw64\bin`) and CMake's `MinGW Makefiles` generator
+  for the previous side-scrolling prototype. The replacement scaffold has not
+  yet been build-verified.
 - Use MSYS2 MinGW64, not the unrelated legacy `C:\MinGW` compiler. If the
   generator differs from the existing CMake cache, remove the generated
   `build` directory and configure it again.
-- GitHub repository `mugdha-sarker81/Palm-Island` has commit history. This
-  local Downloads folder is an exported copy without `.git` metadata, so local
-  `git status`, commits, and pushes cannot run here. For normal future work,
-  use a real clone of the GitHub repository and copy/migrate any newer local
-  changes deliberately.
+- This workspace is a Git clone of `mugdha-sarker81/Palm-Island` on `main`,
+  tracking `origin/main`.
 - No automated gameplay test suite is configured.
 
 ### Current code state
@@ -198,6 +200,8 @@ recording the reason and date in the decision log below.
 | Campaign outline | 8 regions / 24 connected authored zones; long-term proposal, not current implementation scope |
 | Core movement | Eight-direction walking; stairs/ramps connect explicit elevation layers; no required platformer jump |
 | Tool crafting | Small fixed, quest-built tool set using authored materials; no freeform recipe/grinding system |
+| Pixel canvas | 320×180 virtual canvas; 16×16 tiles; integer 4× at 1280×720 with point filtering and letterboxing at other sizes |
+| Simulation target | Fixed 120 Hz update with an accumulator; render at display rate with bounded catch-up |
 
 ### Weapons (working design)
 
@@ -230,6 +234,12 @@ weapons distinct without making any one a strict power upgrade.
   implementation. Replace it with a minimal runnable scaffold and plan the
   top-down movement-room source modules; do not build a full game architecture
   before those responsibilities are implemented.
+- **2026-10-14:** Added `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md` as the detailed
+  feel and tuning reference. Use its movement/camera values as test-room
+  starting targets, not final balance. Adopt a 320×180 canvas to match the
+  starter art and target a fixed 120 Hz simulation with display-rate rendering.
+  Signature mechanics remain proposals and require approval before
+  implementation.
 - **2026-10-14:** User approved character/HP/weapon-switching/food/shop/tool/
   costume planning and selected a small fixed set of material-built tools,
   not full recipe crafting. Starting balance values remain proposals pending
@@ -288,7 +298,8 @@ test room, not a requirement to create empty modules in advance.
 | File | Responsibility |
 |---|---|
 | `src/main.c` | Raylib startup/shutdown and top-level frame loop; delegate gameplay work |
-| `src/input.h/.c` | Read keyboard/gamepad controls and produce normalized movement intent |
+| `src/tuning.h` | Centralized movement/camera/feel constants; tune one value per playtest pass |
+| `src/input.h/.c` | Poll keyboard/gamepad once per frame and produce movement/action intent |
 | `src/player.h/.c` | Player state, facing, eight-way movement, and solid collision |
 | `src/room.h/.c` | Test-room layout, blocked geometry, world bounds, and explicit ramp/elevation connector |
 | `src/camera.h/.c` | Follow the player while clamping the view to room bounds |
@@ -328,14 +339,14 @@ Use the order below. Each numbered task is a separate bounded AI work session
 unless it genuinely fits with its direct prerequisite. Stop at the gate and
 verify before continuing.
 
-### Phase 0 — Reliable baseline (currently achieved)
+### Phase 0 — Reliable baseline
 
 - Configure and build Raylib + Palm Island with MSYS2 MinGW64.
 - Launch the executable and verify it remains open.
 - Keep generated CMake files under `build/`.
 
-**Gate:** build and launch succeed from documented commands. Recheck after
-changes to build files or compiler-facing code.
+**Gate:** the previous side-scrolling target passed this gate; the replacement
+scaffold still needs its own clean build and launch verification.
 
 ### Phase 1 — Prototype the selected movement direction (next)
 
@@ -345,12 +356,35 @@ changes to build files or compiler-facing code.
    ramp/elevation transition.
 3. Add foot-point Y sorting and one foreground occluder to validate the
    3D-like depth cue.
-4. Playtest keyboard and a connected gamepad; record reproducible movement or
-   collision defects and fix one at a time.
+4. Use the starting values in `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`; keep
+   tunables in `src/tuning.h` and make one tuning change per playtest pass.
+5. Add an F3 debug overlay for frame time, feet collider, and active tuning;
+   playtest keyboard and controller.
 
-**Gate:** the player can approach obstacles from all eight directions, move
-through the test room and elevation connector without speed bias, jitter,
-penetration, or softlock. Do not start combat or full content before this gate.
+**Gate (Feel Gate):** pass all ten measurable checks in
+`docs/GAME_FEEL_AND_SIGNATURE_PLAN.md` section 7, including diagonal speed
+within 1%, wall sliding, 16 px doorway entry, stopping within 0.08 s, stable
+camera/frame timing, keyboard/controller parity, correct depth sorting, a safe
+ramp, and an unprompted two-minute wander test. Record results here before
+starting the Jungle blockout, combat, or signature mechanics.
+
+### Phase 1 micro-tasks
+
+Do one bounded task per session; build and verify before continuing:
+
+| # | Task | Visible result |
+|---|---|---|
+| M1 | Add 320×180 render target, point filtering, integer scale/letterbox, and a tile-room blockout | Crisp ground in the window |
+| M2 | Load the player sheet and implement normalized eight-way movement using `tuning.h` | Diagonal speed matches cardinal |
+| M3 | Add a 10×6 feet collider, axis-separated collision, and 4 px corner assist | Wall sliding and reliable doorway entry |
+| M4 | Add bounded camera follow, look-ahead, and render-time pixel snapping | No camera shimmer |
+| M5 | Add foot-Y sorting for palm/pillar props and one foreground occluder | Player passes behind and in front correctly |
+| M6 | Add the explicit ramp/elevation connector | Visible, safe elevation change |
+| M7 | Add controller dead-zone and analog-magnitude behavior | Controller matches keyboard movement |
+| M8 | Add F3 debug data and run the Feel Gate | Measured pass/fail is recorded |
+
+Dimensions, speeds, and collision/camera numbers in the feel plan are starting
+hypotheses; tune them by playtesting rather than treating them as final balance.
 
 ### Phase 2 — Add only necessary boundaries
 
@@ -517,11 +551,10 @@ Memory updated: yes/no
 
 ## 12. Current next work item
 
-**Replace the blank scaffold with a playable top-down movement test room** in
-the planned small modules: normalized eight-direction movement, camera bounds,
-solid wall collision, and one visible ramp/elevation transition. Add only the
-files needed as their behavior is implemented. Do not start combat or build
-all regions yet.
+**Build the top-down movement room incrementally**, starting with micro-task
+M1 (320×180 pixel-scaled room), then proceed through M2–M8 only after each
+result builds and is checked. Use the Feel Gate before starting combat, the
+Jungle blockout, or any signature mechanic.
 
 Checklist for that session:
 
@@ -554,12 +587,16 @@ reduced to redirects to prevent multiple sources of truth:
 
 Other references:
 
-- `ASSET_INDEX.md` — current concept art and ZIP archive inventory.
+- `ASSET_INDEX.md` — concept art, starter sprites/tiles, generator, and source
+  archive inventory.
 - `MASTER_GAMEPLAY_BLUEPRINT.md` — current detailed top-down game proposal:
   campaign zones, player tasks/progression, inventory/weapons/map, obstacles,
   enemy/guardian concepts, exploration subtasks/rewards for every zone,
   character/health/weapon switching/food/shop/fixed tool-building/costume
   proposals, and feature implementation stages.
+- `GAME_FEEL_AND_SIGNATURE_PLAN.md` — movement/camera starting targets,
+  measurable Feel Gate, polish tiers, and signature-mechanic proposals. The
+  proposals require approval; the tuning values require playtesting.
 - `source/ORIGINAL_GAME_DESIGN.txt` and older source documents — historical
   ideas and technical reference; they contain earlier scope and combat
   assumptions that may conflict with the current exploration-first direction.

@@ -22,7 +22,7 @@ The two copies previously named `Fantasy Action-Platformer Design Sheet.png` and
 | `assets/tilesets/tileset_16.png` | 16×16 ground, cliff, ramp, water, and thorn tiles | Top-down test-room prototype |
 | `assets/sprites/player_sheet_14x20.png` | Four directions with four animation frames each | Player movement prototype |
 | `assets/sprites/props/` | Palm, bush, marker, and pillar sprites | Test-room props |
-| `assets/previews/preview_scene.png` | Lit 4× scene preview | Visual reference |
+| `assets/previews/preview_scene.png` | 1280×768 lit scene preview (320×192 source) | Visual reference; taller than the selected 320×180 runtime canvas |
 
 These generated assets are not wired into `src/main.c`. See the art guide for
 their palette and layout conventions.
@@ -44,4 +44,8 @@ These ZIP files are reference/source packages, not files loaded by the prototype
 
 ## Design source documents
 
-Original and supplementary design documents are retained in `docs/source/`. The current game plan and level-design documents in `docs/` are the working versions.
+Movement tuning targets, feel tests, and proposed signature mechanics are
+documented in `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`. Original and
+supplementary design documents are retained in `docs/source/`. The project
+memory, gameplay blueprint, and feel plan in `docs/` are the current working
+references.
