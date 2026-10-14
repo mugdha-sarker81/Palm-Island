@@ -20,9 +20,12 @@ The two copies previously named `Fantasy Action-Platformer Design Sheet.png` and
 | Location | Contents | Intended use |
 |---|---|---|
 | `assets/tilesets/tileset_16.png` | 16×16 ground, cliff, ramp, water, and thorn tiles | Top-down test-room prototype |
+| `assets/tilesets/tile_wood_plank.png` | Single wood-plank tile | Jungle/village blockout placeholder |
 | `assets/sprites/player_sheet_14x20.png` | Four directions with four animation frames each | Player movement prototype |
-| `assets/sprites/props/` | Palm, bush, marker, and pillar sprites | Test-room props |
+| `assets/sprites/props/` | Palm, bush, marker, pillar, rock, root bridge, shrine door states, tall grass, thorn gate states, and village hut sprites | Test-room and upcoming blockout props |
 | `assets/previews/preview_scene.png` | 1280×768 lit scene preview (320×192 source) | Visual reference; taller than the selected 320×180 runtime canvas |
+| `assets/previews/phase3_preview_4x.png` | 4× pixel-art preview showing proposed blockout props | Phase 3 visual reference; not a runtime scene |
+| `assets/previews/palm_island_map_1280x720.png` | 4× labeled overview map of Palm Island | World-layout reference; not a runtime scene |
 
 The player sheet, tileset, palm, pillar, and bush are loaded in the
 movement-room prototype. The palm and pillar use foot/base Y sorting; the bush
@@ -36,6 +39,12 @@ guide for palette and layout conventions.
 previews into the folders above. Run it from any working directory with Python,
 NumPy, and Pillow installed. Its pixel-art source definitions remain editable
 in the script; generated files are not production-ready art.
+
+`tools/make_map.py` generates labeled and unlabeled 320×180 world-map PNGs and
+4× nearest-neighbor versions. Run it from the repository root with an output
+directory, for example `python tools/make_map.py assets/previews`. It requires
+NumPy, Pillow, and SciPy; the generated maps are visual references, not runtime
+game assets.
 
 ## Source packs
 

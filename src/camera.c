@@ -30,6 +30,20 @@ static Vector2 Smooth(Vector2 current, Vector2 target, float dt)
     };
 }
 
+static Vector2 ClampLookAhead(Vector2 lookAhead)
+{
+    float len = sqrtf(lookAhead.x * lookAhead.x + lookAhead.y * lookAhead.y);
+    if (len > CAMERA_LOOK_AHEAD) {
+        float scale = CAMERA_LOOK_AHEAD / len;
+        lookAhead.x *= scale;
+        lookAhead.y *= scale;
+        len = CAMERA_LOOK_AHEAD;
+    }
+
+    if (len < 0.25f) return (Vector2){0.0f, 0.0f};
+    return lookAhead;
+}
+
 void Camera_Init(CameraFollow *camera, Vector2 playerPosition, Rectangle roomBounds,
                  Vector2 viewport)
 {
@@ -52,7 +66,7 @@ void Camera_Update(CameraFollow *camera, Vector2 playerPosition, Vector2 playerV
         desiredLookAhead = (Vector2){playerVelocity.x * scale, playerVelocity.y * scale};
     }
 
-    camera->lookAhead = Smooth(camera->lookAhead, desiredLookAhead, dt);
+    camera->lookAhead = ClampLookAhead(Smooth(camera->lookAhead, desiredLookAhead, dt));
     Vector2 desiredCenter = {
         playerPosition.x + camera->lookAhead.x,
         playerPosition.y + camera->lookAhead.y

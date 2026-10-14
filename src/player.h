@@ -23,7 +23,7 @@ typedef struct Player {
 
 void  Player_Init(Player *p, Vector2 feet);
 /* Advance by one fixed simulation step with room collision. */
-void  Player_Update(Player *p, const Input *in, float dt);
+void  Player_Update(Player *p, const Input *in, float dt, RoomArea area);
 Rectangle Player_FeetCollider(const Player *p);
 float Player_Speed(const Player *p);
 /* Draw shadow and sprite. Snaps to whole pixels only here. */

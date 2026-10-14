@@ -16,6 +16,14 @@ static Vector2 KeyboardMove(void)
     return v;
 }
 
+static float RemapAnalogMagnitude(float magnitude)
+{
+    if (magnitude <= STICK_DEADZONE) return 0.0f;
+    float scaled = (magnitude - STICK_DEADZONE) / (1.0f - STICK_DEADZONE);
+    if (scaled > 1.0f) scaled = 1.0f;
+    return scaled;
+}
+
 static Vector2 GamepadMove(void)
 {
     Vector2 v = {0.0f, 0.0f};
@@ -26,11 +34,10 @@ static Vector2 GamepadMove(void)
     float x = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
     float y = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
     float len = sqrtf(x * x + y * y);
-    if (len > STICK_DEADZONE) {
-        float scaled = (len - STICK_DEADZONE) / (1.0f - STICK_DEADZONE);
-        if (scaled > 1.0f) scaled = 1.0f;
-        v.x = (x / len) * scaled;
-        v.y = (y / len) * scaled;
+    float magnitude = RemapAnalogMagnitude(len);
+    if (magnitude > 0.0f) {
+        v.x = (x / len) * magnitude;
+        v.y = (y / len) * magnitude;
         return v;
     }
 
@@ -48,7 +55,17 @@ void Input_Poll(Input *in)
 {
     Vector2 pad = GamepadMove();
     Vector2 key = KeyboardMove();
+    in->move = (Vector2){0.0f, 0.0f};
+    in->magnitude = 0.0f;
+    in->usingGamepad = false;
+
     /* Whichever device is actually being pushed wins; gamepad first. */
-    if (pad.x != 0.0f || pad.y != 0.0f) in->move = pad;
-    else                                in->move = key;
+    if (pad.x != 0.0f || pad.y != 0.0f) {
+        in->move = pad;
+        in->usingGamepad = true;
+    } else {
+        in->move = key;
+    }
+
+    in->magnitude = sqrtf(in->move.x * in->move.x + in->move.y * in->move.y);
 }

@@ -7,15 +7,16 @@ and understanding the island—not grinding or constant combat.
 
 > **Honest status:** this is not the complete game or the planned Forgotten
 > Jungle vertical slice. The previous side-scrolling prototype was removed.
-> The current executable is a small top-down movement room with an integer-
-> scaled tile map and eight-way player movement. Collision, camera, props,
-> authored levels, enemies, combat, dialogue, audio, and saving are not
-> implemented.
+> The current executable is a top-down movement prototype with two linked
+> Forgotten Jungle blockout areas: the Entrance and Root Path. It has
+> placeholder terrain and props, player collision, a scrolling camera, ramps,
+> a closed thorn gate, and fade transitions between the rooms. Interaction,
+> enemies, combat, dialogue, audio, and saving are not implemented.
 >
 > **Direction:** the game is planned as top-down 2D pixel art with
 > eight-direction movement and 3D-like depth cues (layering, occlusion, and
-> stairs/ramps between elevation layers). The movement room is underway;
-> obstacle collision and camera bounds are next.
+> stairs/ramps between elevation layers). The Feel Gate is reported passed;
+> the Jungle Entrance is the first blockout room.
 
 ## Start here
 
@@ -46,21 +47,19 @@ different generator, rename that generated folder (for example, to
 
 ## Current executable
 
-The current executable loads the starter tile and player art into a 320×180
-render target, displays it with integer scaling/letterboxing, and supports
-eight-way walking with a fixed-step simulation. The 640×368 prototype room
-keeps the shrine area intact at its center and adds walkable space around it;
-the bounded, smoothed camera follows Ichigo and scrolls through that larger
-room. A 10×6 feet collider blocks cliffs, water, shrine stone, and room edges;
-the original 32 px stair opening remains unchanged and can be entered without
-pixel-perfect horizontal alignment. Palm trunks and the pillar base block the
-feet collider; their canopies remain walk-through so Ichigo can pass visually
-behind them. Palm and pillar props are sorted with the player by foot/base Y,
-and a bush draws as a foreground occluder. The two-tile shrine stair connector
-changes between ground and upper elevation, with elevation-aware collision and
-draw ordering. F3 shows the collider and current elevation while debug mode is
-active. These behaviors are unit-tested but visual feel still needs in-game
-playtesting.
+The current executable loads the starter player and tiles into a 320×180 render
+target, displays it with integer scaling/letterboxing, and supports eight-way
+walking with a fixed-step simulation. The 640×368 Jungle Entrance blockout
+loops around a solid root cluster and leads north toward a shrine-door
+landmark. It connects by fade transition to the 640×368 Root Path blockout,
+which has a closed thorn gate, a branching bypass route, a root bridge prop,
+an optional marker, occluding palms, foreground tall grass, and a short ramp.
+The bounded, smoothed camera follows Ichigo and resets at a room transition.
+Solid prop bases and walls block the 10×6 feet collider; prop drawing is sorted
+by foot/base Y. F3 shows the live input source/magnitude, frame time, player
+speed, position, and elevation. Interactions, checkpoints, enemies, combat,
+and progression are not implemented. The user reports that the Feel Gate
+passed; the two-room blockout still needs a visual playtest.
 
 ## Optional movement tests
 
@@ -90,7 +89,7 @@ build.bat                 Configure and build for Windows
 run.bat                   Build, then launch the game
 src/tuning.h              Centralized movement, collision, camera, and canvas tuning
 src/player.[ch]            Eight-way movement, feet collider, collision, animation
-src/room.[ch]              Tile-room drawing and solid terrain queries (ramp: M6)
+src/room.[ch]              Entrance/Root Path layouts, transitions, props, collision, ramps
 src/input.[ch]             Keyboard and gamepad movement input
 src/camera.[ch]            Bounded smoothed camera follow, look-ahead, pixel snap
 tests/                     Opt-in movement collision and camera behavior tests
@@ -100,7 +99,8 @@ assets/sprites/           Starter player and prop sprites
 assets/tilesets/          Starter 16x16 tileset
 assets/previews/          Rendered scene previews
 assets/source_packs/      Bundled reference archives
-tools/generate_assets.py  Starter art generator
+tools/generate_assets.py  Starter sprite/tileset generator
+tools/make_map.py         World-map reference generator
 docs/PROJECT_MEMORY.md    Current canonical design, status, and work plan
 docs/MASTER_GAMEPLAY_BLUEPRINT.md
                           Detailed map-by-map gameplay feature plan

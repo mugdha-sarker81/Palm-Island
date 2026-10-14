@@ -51,6 +51,23 @@ static Rectangle CanvasDestination(void)
     return (Rectangle){ floorf((sw - w) * 0.5f), floorf((sh - h) * 0.5f), w, h };
 }
 
+static void BuildRenderProps(RenderItem renderProps[RENDER_PROP_COUNT],
+                             RoomArea area)
+{
+    const RoomProp *roomProps = Room_Props(area);
+    for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+        renderProps[i] = (RenderItem){
+            .type = RENDER_ITEM_PROP,
+            .position = roomProps[i].drawPosition,
+            .feetY = roomProps[i].feetY,
+            .elevation = roomProps[i].elevation,
+            .stableOrder = (unsigned int)(i + 1),
+            .foreground = roomProps[i].foreground,
+            .texture = (Texture2D){0}
+        };
+    }
+}
+
 int main(void)
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
@@ -62,43 +79,43 @@ int main(void)
     Room room = {0};
     Player player;
     Texture2D sheet = {0};
-    Texture2D propTextures[RENDER_PROP_COUNT] = {0};
-    const RoomProp *roomProps = Room_Props();
+    Texture2D propTextures[ROOM_SPRITE_COUNT] = {0};
     bool assetsOk = FindAssetRoot();
     if (assetsOk) {
         assetsOk = Room_Load(&room, AssetPath("tilesets/tileset_16.png"));
         sheet = LoadTexture(AssetPath("sprites/player_sheet_14x20.png"));
         if (sheet.id == 0) assetsOk = false;
-        propTextures[0] = LoadTexture(AssetPath("sprites/props/prop_palm.png"));
-        propTextures[1] = LoadTexture(AssetPath("sprites/props/prop_pillar.png"));
-        propTextures[2] = LoadTexture(AssetPath("sprites/props/prop_bush.png"));
-        for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+        const char *propPaths[ROOM_SPRITE_COUNT] = {
+            "sprites/props/prop_palm.png",
+            "sprites/props/prop_rock.png",
+            "sprites/props/prop_marker.png",
+            "sprites/props/prop_tall_grass.png",
+            "sprites/props/prop_shrine_door_closed.png",
+            "sprites/props/prop_root_bridge.png",
+            "sprites/props/prop_thorn_gate_closed.png"
+        };
+        for (int i = 0; i < ROOM_SPRITE_COUNT; i++) {
+            propTextures[i] = LoadTexture(AssetPath(propPaths[i]));
             if (propTextures[i].id == 0) assetsOk = false;
         }
     }
 
     RenderItem props[RENDER_PROP_COUNT];
+    BuildRenderProps(props, room.area);
+    const RoomProp *roomProps = Room_Props(room.area);
     for (int i = 0; i < RENDER_PROP_COUNT; i++) {
-        props[i] = (RenderItem){
-            .type = RENDER_ITEM_PROP,
-            .position = roomProps[i].drawPosition,
-            .feetY = roomProps[i].feetY,
-            .elevation = roomProps[i].elevation,
-            .stableOrder = (unsigned int)(i + 1),
-            .foreground = roomProps[i].foreground,
-            .texture = propTextures[i]
-        };
+        props[i].texture = propTextures[roomProps[i].sprite];
     }
 
     RenderTexture2D canvas = LoadRenderTexture(VIRTUAL_W, VIRTUAL_H);
     SetTextureFilter(canvas.texture, TEXTURE_FILTER_POINT);
     if (room.tileset.id != 0) SetTextureFilter(room.tileset, TEXTURE_FILTER_POINT);
     if (sheet.id != 0)        SetTextureFilter(sheet, TEXTURE_FILTER_POINT);
-    for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+    for (int i = 0; i < ROOM_SPRITE_COUNT; i++) {
         if (propTextures[i].id != 0) SetTextureFilter(propTextures[i], TEXTURE_FILTER_POINT);
     }
 
-    Player_Init(&player, Room_SpawnPoint());
+    Player_Init(&player, Room_SpawnPoint(room.area));
     CameraFollow camera;
     Camera_Init(&camera, player.pos, Room_Bounds(),
                 (Vector2){(float)VIRTUAL_W, (float)VIRTUAL_H});
@@ -106,6 +123,11 @@ int main(void)
     bool debug = false;
     double accumulator = 0.0;
     float worldTime = 0.0f;
+    enum { TRANSITION_NONE, TRANSITION_FADE_OUT, TRANSITION_FADE_IN };
+    int transitionPhase = TRANSITION_NONE;
+    float transitionTime = 0.0f;
+    RoomArea destinationArea = room.area;
+    Vector2 destinationSpawn = player.pos;
 
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_F3)) debug = !debug;
@@ -120,8 +142,34 @@ int main(void)
         int steps = 0;
         while (accumulator >= SIM_DT && steps < MAX_SIM_STEPS) {
             if (assetsOk) {
-                Player_Update(&player, &input, SIM_DT);
-                Camera_Update(&camera, player.pos, player.vel, SIM_DT);
+                if (transitionPhase == TRANSITION_NONE) {
+                    Player_Update(&player, &input, SIM_DT, room.area);
+                    Camera_Update(&camera, player.pos, player.vel, SIM_DT);
+                    if (Room_GetTransition(&room, player.pos, &destinationArea,
+                                           &destinationSpawn)) {
+                        transitionPhase = TRANSITION_FADE_OUT;
+                        transitionTime = 0.0f;
+                    }
+                } else {
+                    transitionTime += SIM_DT;
+                    if (transitionTime >= 0.2f) {
+                        transitionTime = 0.0f;
+                        if (transitionPhase == TRANSITION_FADE_OUT) {
+                            Room_SetArea(&room, destinationArea);
+                            Player_Init(&player, destinationSpawn);
+                            Camera_Init(&camera, player.pos, Room_Bounds(),
+                                        (Vector2){(float)VIRTUAL_W, (float)VIRTUAL_H});
+                            BuildRenderProps(props, room.area);
+                            roomProps = Room_Props(room.area);
+                            for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+                                props[i].texture = propTextures[roomProps[i].sprite];
+                            }
+                            transitionPhase = TRANSITION_FADE_IN;
+                        } else {
+                            transitionPhase = TRANSITION_NONE;
+                        }
+                    }
+                }
             }
             worldTime += SIM_DT;
             accumulator -= SIM_DT;
@@ -137,6 +185,14 @@ int main(void)
             Room_Draw(&room, worldTime);
             Render_DrawDepthScene(&player, sheet, props, debug);
             EndMode2D();
+            if (transitionPhase != TRANSITION_NONE) {
+                float alpha = transitionTime / 0.2f;
+                if (transitionPhase == TRANSITION_FADE_IN) alpha = 1.0f - alpha;
+                if (alpha < 0.0f) alpha = 0.0f;
+                if (alpha > 1.0f) alpha = 1.0f;
+                DrawRectangle(0, 0, VIRTUAL_W, VIRTUAL_H,
+                              Fade(BLACK, alpha));
+            }
         } else {
             DrawText("Assets not found.", 8, 8, 10, WHITE);
             DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);
@@ -152,15 +208,16 @@ int main(void)
         if (debug) {
             DrawText(TextFormat("FPS %d  frame %.2f ms", GetFPS(), GetFrameTime() * 1000.0f), 10, 10, 20, RAYWHITE);
             DrawText(TextFormat("speed %.2f px/s  (walk %.0f)", Player_Speed(&player), WALK_SPEED), 10, 34, 20, RAYWHITE);
-            DrawText(TextFormat("feet %.1f, %.1f", player.pos.x, player.pos.y), 10, 58, 20, RAYWHITE);
+            DrawText(TextFormat("input %.2f %s", input.magnitude, input.usingGamepad ? "gamepad" : "keys"), 10, 58, 20, RAYWHITE);
+            DrawText(TextFormat("feet %.1f, %.1f", player.pos.x, player.pos.y), 10, 82, 20, RAYWHITE);
             DrawText(player.elevation == ROOM_ELEVATION_UPPER ? "elevation upper" : "elevation ground",
-                     10, 82, 20, RAYWHITE);
+                     10, 106, 20, RAYWHITE);
         }
         EndDrawing();
     }
 
     if (sheet.id != 0) UnloadTexture(sheet);
-    for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+    for (int i = 0; i < ROOM_SPRITE_COUNT; i++) {
         if (propTextures[i].id != 0) UnloadTexture(propTextures[i]);
     }
     Room_Unload(&room);

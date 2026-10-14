@@ -8,12 +8,17 @@ The map-by-map implementation blueprint is maintained in
 exploration/subtask sequence for all 24 proposed zones.
 
 **Last reconciled:** 2026-10-14
-**Current milestone:** M1–M6 are integrated in a 640×368 scrolling test room.
-Initial automated Feel Gate measurements pass diagonal speed (0.000%
-difference), wall-slide speed (53.740 px/s; 70.7% of walk speed), and stopping
-(0.050 s, 1.583 px); the complete gate still requires interactive playtesting.
-**Next milestone:** complete the remaining automated and hands-on Feel Gate
-checks before blocking out the Forgotten Jungle slice.
+**Current milestone:** M1–M6 movement systems support two linked 640×368
+Forgotten Jungle blockout areas: Jungle Entrance and Root Path. The user
+reports all ten Feel Gate checks pass. Automated baseline measurements include
+diagonal speed (0.000% difference), wall-slide speed (53.740 px/s; 70.7% of
+walk speed), and stopping (0.050 s, 1.583 px).
+**Next milestone:** verify the player-facing route and transitions between
+Jungle Entrance and Root Path, then continue the Forgotten Jungle blockout.
+**Next work item:** launch with `run.bat` and playtest both rooms, including
+the closed thorn gate's bypass, both fade transitions, the Root Path ramp and
+bridge, and prop depth. Record route/readability issues before making another
+area. Do not add combat, Thornfang, or signature mechanics.
 
 > Update this document when implementation status, a locked decision, or the
 > next task changes. Keep the current status factual. Do not mark design ideas
@@ -85,52 +90,57 @@ the original GDD remains historical reference material.
 ### Current code state
 
 - The previous side-scrolling coast implementation has been removed.
-- M1–M2 now provide a 320×180 point-filtered render target with integer
-  letterboxed scaling; a 20×11 tile room; player art; normalized eight-way
-  keyboard/gamepad movement intent; acceleration/deceleration, facing
-  hysteresis, walk animation, fixed-step simulation, and an F3 debug overlay.
-  F11 toggles borderless windowed mode; Esc exits.
-- `src/room.c` draws ground, path, shrine, stairs, cliffs, and animated water.
-  The original 20×11 shrine-room block is centered in a 40×23 (640×368 px)
-  walkable test room with grass and cross-path extensions so camera scrolling
-  can be exercised in every direction.
-- M3 adds a 10×6 feet collider, solid collision against shrine stone, cliff
-  faces, water, and room bounds, axis-separated movement with substeps no
-  larger than 4 px, a 4 px corner assist, and an F3 collider outline. The
-  original 32 px two-tile stair opening is preserved; tests verify its fit and
-  straight-on entry from slightly off-center positions on either side. Other
-  focused checks cover tile/bounds collision, obstacle blocking, wall slide,
-  and corner assist.
+- M1–M2 provide a 320×180 point-filtered render target with integer
+  letterboxing; normalized eight-way keyboard/gamepad movement intent;
+  acceleration/deceleration, facing hysteresis, walk animation, a fixed-step
+  simulation, and an F3 debug overlay. F11 toggles borderless windowed mode;
+  Esc exits.
+- The current 40×23 (640×368 px) maps are the Jungle Entrance and Root Path
+  blockouts. The Entrance has a safe loop around a root cluster and a northern
+  shrine-door landmark. Root Path has a branching upper bypass around a solid
+  thorn wall, a closed gate, a root bridge prop, a side marker, palms, tall
+  grass, and a short optional ramp. Both areas use placeholder terrain and
+  props.
+- A paired north/south room connection switches between the two areas with
+  fade-out/fade-in and destination spawn/camera reset. The route, closed-gate
+  collision, paired transition conditions, and ramp behavior are covered by
+  focused tests; the new transitions and Root Path still need hands-on visual
+  playtesting.
+- M3 provides a 10×6 feet collider, solid collision against the root cluster,
+  landmark, tree trunks, and room bounds, axis-separated movement with
+  substeps no larger than 4 px, and a 4 px corner assist.
 - M4 adds a bounded camera module with 6/s exponential follow, smoothed
   velocity-based look-ahead up to 14 px, room-size-aware centering, and
   render-time integer target rounding. The camera now scrolls through the
   expanded 640×368 room and clamps at its edges. Focused camera tests cover
   small-room centering, follow smoothing, look-ahead easing, room bounds,
   hard initialization snap, and render rounding.
-- M5 loads the prototype palm (40×56), pillar (16×40), and bush (20×16).
-  The player, palm, and pillar are sorted back-to-front by feet/base Y with a
-  stable tie-break; the bush is drawn in a final foreground pass. Palm-trunk
-  and pillar-base colliders are shared with room collision; their canopies
-  remain walk-through for depth overlap. Focused tests cover prop blocking,
-  canopy overlap, depth order, equal-Y ordering, and foreground precedence.
-  Interactive visual appearance still needs playtesting.
-- M6 makes the existing 32 px shrine stair opening an explicit ramp connector.
-  Crossing its midpoint changes the player between ground and upper elevation;
-  only the aligned upper landing is traversable on that layer. Collision and
-  draw ordering respect elevation, while the original stair width and room
-  bounds remain unchanged. Automated checks cover ascent, descent, side
-  blocking, landing collision, and elevation draw order; visual playtesting is
-  still needed.
+- M5's depth sorter orders the player and props by foot/base Y with a stable
+  tie-break, with foreground props drawn last. Palm-trunk colliders are shared
+  with room collision; canopies remain walk-through for depth overlap. The
+  entrance uses these rules for palms and foreground tall grass.
+- M6's two-tile ramp/elevation connector is reused as a short optional ramp on
+  the entrance's eastern loop. Crossing its midpoint changes elevation; only
+  the aligned upper landing is traversable on that layer. Automated movement
+  tests cover ascent, descent, and side blocking.
 - Uploaded M1–M2 screenshots are retained in `docs/media/m1_m2/` as reference
   captures; they were not captured during the Windows verification.
-- Interactive movement, camera feel, prop occlusion, and ramp elevation have
-  not yet been playtested.
+- The user reports that the full Feel Gate, including interactive movement,
+  camera feel, prop occlusion, ramp safety, controller/input checks, and the
+  two-minute wander test, passed on 2026-10-14. The pass is user-reported;
+  detailed measurements and a recording were not supplied.
+- Latest Windows verification: `.\build.bat` succeeded and
+  `ctest --test-dir build --output-on-failure` passed all three tests
+  (`movement_collision`, `camera_follow`, and `render_depth`). The movement
+  suite verifies the Root Path bypass reaches the north portal without
+  colliding and that the gate remains solid.
 
 ### Not implemented yet
 
 - The complete game or the 10–15 minute vertical slice.
-- The complete selected top-down game and Forgotten Jungle slice; the current
-  executable only implements the initial movement-room milestones.
+- The rest of the Forgotten Jungle slice: Overgrown Clearing, Shrine
+  Approach/Arena, interactions, clue state, checkpoints, and authored exits
+  beyond the current Jungle Entrance–Root Path connection.
 - Combat, enemies, health, boss/guardian behavior, or Thornfang.
 - Driftwood Village, rooms/region transitions, authored maps, or a level editor.
 - Production character/environment art, animation sheets, music, or sound.
@@ -280,6 +290,9 @@ weapons distinct without making any one a strict power upgrade.
   starter art and target a fixed 120 Hz simulation with display-rate rendering.
   Signature mechanics remain proposals and require approval before
   implementation.
+- **2026-10-14:** Completed the controller dead-zone and analog-magnitude pass
+  in the movement input layer; debug output now surfaces the live input
+  magnitude and whether the source is keyboard or gamepad to aid the Feel Gate.
 - **2026-10-14:** User approved character/HP/weapon-switching/food/shop/tool/
   costume planning and selected a small fixed set of material-built tools,
   not full recipe crafting. Starting balance values remain proposals pending
@@ -601,26 +614,27 @@ Memory updated: yes/no
 
 ## 12. Current next work item
 
-**Playtest M1–M6 and complete the movement Feel Gate** before starting the
-Forgotten Jungle blockout, combat, or any signature mechanic. Automated
-movement, camera, and render-order tests pass, including bidirectional stair
-transitions and elevation-aware collision/draw order; the ramp, camera feel,
-and prop occlusion still need interactive verification.
+**Playtest the two linked blockout areas** in the Windows build. Confirm the
+Entrance loop and shrine landmark are legible; the Root Path side route clearly
+bypasses the closed thorn gate; the two fades and spawn/camera resets are
+seamless; and the palms, tall grass, bridge, and ramp read and collide
+correctly. Automated build/tests pass, but this visual playtest remains
+outstanding. Do not add combat, the guardian, Thornfang, or signature mechanics.
 
 ### Feel Gate status (2026-10-14)
 
 | # | Check | Status | Evidence / remaining verification |
 |---|---|---|---|
-| 1 | Diagonal speed | Automated pass | 76.000 vs 76.000 px/s; 0.000% difference |
-| 2 | Wall slide | Automated threshold pass | 53.740 px/s tangential (70.7% of 76 px/s); visual sticking/jitter remains untested |
-| 3 | Corners | Partial | Existing stair-entry tests cover slightly off-center straight approaches; 16 px doorway at all eight angles is not verified |
-| 4 | Stopping | Automated numeric pass | 0.050 s and 1.583 px drift; visible tile-slide judgment remains untested |
-| 5 | Camera | Partial | Bounds, smoothing, hard initialization, and integer render snapping are unit-tested; visual shimmer and stop behavior need playtesting |
-| 6 | Frame time | Pending | Needs runtime checks at 60 Hz, 144 Hz, and after a deliberate 200 ms stall |
-| 7 | Input | Pending | Keyboard/controller parity and controller drift require a physical controller playtest |
-| 8 | Depth | Partial | Stable ordering is unit-tested; visual palm/pillar pass-behind/in-front behavior needs playtesting |
-| 9 | Ramp | Partial | Automated ascent, descent, side blocking, and layer collision pass; visual clarity and exploitation need playtesting |
-| 10 | Two-minute wander | Pending | Requires an unprompted human tester |
+| 1 | Diagonal speed | Pass | Automated: 76.000 vs 76.000 px/s; 0.000% difference |
+| 2 | Wall slide | Pass | Automated: 53.740 px/s tangential (70.7% of 76 px/s); user reports full feel check passed |
+| 3 | Corners | Pass | User reports the doorway/corner check passed, including the all-angle approach requirement |
+| 4 | Stopping | Pass | Automated: 0.050 s and 1.583 px drift; user reports full feel check passed |
+| 5 | Camera | Pass | Unit checks cover bounds, smoothing, initialization, and render rounding; user reports visual check passed |
+| 6 | Frame time | Pass | User reports the frame-time check passed; exact 60/144 Hz and stall measurements were not supplied |
+| 7 | Input | Pass | User reports keyboard/controller parity and stick-at-rest check passed |
+| 8 | Depth | Pass | Unit checks cover stable ordering; user reports visual palm/pillar occlusion check passed |
+| 9 | Ramp | Pass | Automated transition/collision checks plus user-reported visual and safety check |
+| 10 | Two-minute wander | Pass | User reports the unprompted wander test passed |
 
 Checklist for the Feel Gate playtest:
 
@@ -631,13 +645,19 @@ Checklist for the Feel Gate playtest:
 3. Record which checks pass, fail, or need adjustment before starting the
    Forgotten Jungle blockout.
 
-**Completion record:** On 2026-10-14, M1–M2 were clean-configured and built
+**Completion record:** On 2026-10-14, the user reported that all ten Feel Gate
+checks passed, including the hands-on and human tests. This closes the gate
+for planning purposes; detailed results for the manual checks were not
+provided. The earlier automated baseline measurements for diagonal speed,
+wall slide, and stopping are recorded above.
+
+On 2026-10-14, M1–M2 were clean-configured and built
 with MSYS2 MinGW64. The executable launched and remained open with the expected
 window title. Raylib configure emitted an upstream CMake deprecation warning;
 game sources built without warnings. Uploaded screenshots are reference
 captures, not screenshots from this Windows verification. Interactive
 movement, controller input, and visual asset loading were not independently
-checked here; Feel Gate checks remain pending.
+checked in that earlier assistant verification.
 
 ## 13. Consolidation and reference map
 

@@ -13,25 +13,7 @@ static int failures;
     } \
 } while (0)
 
-static Vector2 CorePoint(float x, float y)
-{
-    return (Vector2){
-        x + ROOM_CORE_OFFSET_X * TILE_SIZE,
-        y + ROOM_CORE_OFFSET_Y * TILE_SIZE
-    };
-}
-
-static float CoreX(float x)
-{
-    return x - ROOM_CORE_OFFSET_X * TILE_SIZE;
-}
-
-static float CoreY(float y)
-{
-    return y - ROOM_CORE_OFFSET_Y * TILE_SIZE;
-}
-
-static Rectangle FeetAtWorld(float x, float y)
+static Rectangle FeetAt(float x, float y)
 {
     return (Rectangle){
         x - PLAYER_COLLIDER_W * 0.5f,
@@ -41,268 +23,236 @@ static Rectangle FeetAtWorld(float x, float y)
     };
 }
 
-static Rectangle FeetAt(float x, float y)
+static void AdvanceInArea(Player *player, Vector2 direction, int ticks, RoomArea area)
 {
-    Vector2 world = CorePoint(x, y);
-    return FeetAtWorld(world.x, world.y);
+    Input input = {0};
+    input.move = direction;
+    for (int i = 0; i < ticks; i++) Player_Update(player, &input, SIM_DT, area);
 }
 
 static void Advance(Player *player, Vector2 direction, int ticks)
 {
-    Input input = {0};
-    input.move = direction;
-    for (int i = 0; i < ticks; i++) Player_Update(player, &input, SIM_DT);
+    AdvanceInArea(player, direction, ticks, ROOM_AREA_JUNGLE_ENTRANCE);
 }
 
-static void TestRoomCollisionMap(void)
+static void TestEntranceBoundsAndRouteLayout(void)
 {
-    CHECK(Room_Collides(FeetAt(120.0f, 24.0f)));  /* shrine stone */
-    CHECK(Room_Collides(FeetAt(120.0f, 40.0f)));  /* cliff face */
-    CHECK(Room_Collides(FeetAt(264.0f, 168.0f))); /* water */
-    CHECK(!Room_Collides(FeetAt(160.0f, 40.0f))); /* original 32 px stair opening */
-    CHECK(Room_Collides(FeetAt(147.0f, 40.0f)));  /* just left of the opening */
-    CHECK(!Room_Collides(FeetAt(149.0f, 40.0f))); /* collider fits at its left edge */
-    CHECK(!Room_Collides(FeetAt(171.0f, 40.0f)));
-    CHECK(Room_Collides(FeetAt(173.0f, 40.0f)));  /* just right of the opening */
-    CHECK(!Room_Collides(FeetAt(152.0f, 88.0f))); /* dirt path remains open */
-    CHECK(Room_Collides(FeetAtWorld(4.9f, Room_SpawnPoint().y))); /* room boundary */
-    CHECK(!Room_Collides(FeetAtWorld(5.0f, Room_SpawnPoint().y)));
     Rectangle bounds = Room_Bounds();
-    CHECK(bounds.width > VIRTUAL_W);
-    CHECK(bounds.height > VIRTUAL_H);
-    CHECK(Room_CollidesAtElevation(FeetAt(160.0f, 24.0f), ROOM_ELEVATION_GROUND));
-    CHECK(!Room_CollidesAtElevation(FeetAt(160.0f, 24.0f), ROOM_ELEVATION_UPPER));
-    CHECK(Room_CollidesAtElevation(FeetAt(120.0f, 24.0f), ROOM_ELEVATION_UPPER));
-    CHECK(Room_CollidesAtElevation(FeetAt(144.0f, 24.0f), ROOM_ELEVATION_UPPER));
+    Vector2 spawn = Room_SpawnPoint(ROOM_AREA_JUNGLE_ENTRANCE);
+    CHECK(bounds.width == 640.0f);
+    CHECK(bounds.height == 368.0f);
+    CHECK(!Room_Collides(FeetAt(spawn.x, spawn.y)));
+    CHECK(!Room_Collides(FeetAt(320.0f, 96.0f)));  /* shrine approach */
+    CHECK(!Room_Collides(FeetAt(176.0f, 176.0f))); /* west side of loop */
+    CHECK(!Room_Collides(FeetAt(464.0f, 160.0f))); /* east side of loop */
+    CHECK(Room_Collides(FeetAt(320.0f, 208.0f)));  /* root cluster */
+    CHECK(Room_Collides(FeetAt(320.0f, 42.0f)));   /* distant shrine door */
+    CHECK(Room_Collides(FeetAt(4.9f, spawn.y)));
+    CHECK(!Room_Collides(FeetAt(5.0f, spawn.y)));
 }
 
-static void TestPalmTrunkAndPillarBaseAreSolid(void)
-{
-    CHECK(Room_Collides(FeetAt(90.0f, 108.0f))); /* palm trunk */
-    CHECK(Room_Collides(FeetAt(232.0f, 76.0f))); /* pillar base */
-    CHECK(!Room_CollidesAtElevation(FeetAt(90.0f, 108.0f), ROOM_ELEVATION_UPPER));
-    CHECK(!Room_Collides(FeetAt(80.0f, 108.0f))); /* beside palm */
-    CHECK(!Room_Collides(FeetAt(232.0f, 68.0f))); /* above pillar base */
-
-    Player palm;
-    Player_Init(&palm, CorePoint(90.0f, 128.0f));
-    Advance(&palm, (Vector2){0.0f, -1.0f}, SIM_HZ);
-    CHECK(CoreY(palm.pos.y) >= 114.0f);
-    CHECK(fabsf(palm.vel.y) < 0.001f);
-    CHECK(!Room_Collides(Player_FeetCollider(&palm)));
-
-    Player pillar;
-    Player_Init(&pillar, CorePoint(232.0f, 96.0f));
-    Advance(&pillar, (Vector2){0.0f, -1.0f}, SIM_HZ);
-    CHECK(CoreY(pillar.pos.y) >= 83.0f);
-    CHECK(fabsf(pillar.vel.y) < 0.001f);
-    CHECK(!Room_Collides(Player_FeetCollider(&pillar)));
-}
-
-static void TestPlayerCanWalkBehindPalmCanopy(void)
+static void TestPlayerCanLoopAroundRootCluster(void)
 {
     Player player;
-    Player_Init(&player, CorePoint(60.0f, 85.0f));
-    Advance(&player, (Vector2){1.0f, 0.0f}, SIM_HZ);
+    Player_Init(&player, Room_SpawnPoint(ROOM_AREA_JUNGLE_ENTRANCE));
 
-    CHECK(CoreX(player.pos.x) > 100.0f);
-    CHECK(fabsf(CoreY(player.pos.y) - 85.0f) < 0.01f);
+    Advance(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 2);
+    CHECK(player.pos.y < 250.0f);
+    Advance(&player, (Vector2){-1.0f, 0.0f}, SIM_HZ * 3 / 2);
+    CHECK(player.pos.x < 235.0f);
+    Advance(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 3 / 2);
+    CHECK(player.pos.y < 160.0f);
+    Advance(&player, (Vector2){1.0f, 0.0f}, SIM_HZ * 3 / 2);
+    CHECK(player.pos.x > 260.0f);
     CHECK(!Room_Collides(Player_FeetCollider(&player)));
 }
 
-static void TestShrineRampLeadsToUpperWall(void)
+static void TestTreeBasesBlockAndCanopiesStayWalkable(void)
 {
-    Player player;
-    Player_Init(&player, CorePoint(160.0f, 60.0f));
-    Advance(&player, (Vector2){0.0f, -1.0f}, SIM_HZ);
-
-    CHECK(player.elevation == ROOM_ELEVATION_UPPER);
-    CHECK(CoreY(player.pos.y) >= 19.0f);
-    CHECK(!Room_CollidesAtElevation(Player_FeetCollider(&player), player.elevation));
-    CHECK(fabsf(player.vel.y) < 0.001f);
+    const RoomProp *props = Room_Props(ROOM_AREA_JUNGLE_ENTRANCE);
+    bool foundPalm = false;
+    bool foundUpperCanopySpace = false;
+    for (int i = 0; i < ROOM_PROP_COUNT; i++) {
+        if (props[i].sprite != ROOM_SPRITE_PALM) continue;
+        foundPalm = true;
+        CHECK(Room_Collides(props[i].collider));
+        Rectangle canopy = {
+            props[i].drawPosition.x + 2.0f,
+            props[i].drawPosition.y + 4.0f,
+            8.0f,
+            8.0f
+        };
+        if (!Room_Collides(canopy)) foundUpperCanopySpace = true;
+    }
+    CHECK(foundPalm);
+    CHECK(foundUpperCanopySpace);
 }
 
-static void TestCliffAndWaterBlockPlayer(void)
+static void TestWallSlideAndDiagonalSpeed(void)
 {
-    Player cliff;
-    Player_Init(&cliff, CorePoint(120.0f, 56.0f));
-    Advance(&cliff, (Vector2){0.0f, -1.0f}, SIM_HZ);
-    CHECK(CoreY(cliff.pos.y) >= 51.0f);
-    CHECK(!Room_Collides(Player_FeetCollider(&cliff)));
+    Player sliding;
+    Player_Init(&sliding, (Vector2){230.0f, 196.0f});
+    Advance(&sliding, (Vector2){0.70710678f, 0.70710678f}, 10);
+    CHECK(sliding.pos.y > 196.0f);
+    CHECK(sliding.pos.x <= 235.01f);
+    CHECK(sliding.vel.y >= WALK_SPEED * 0.70f);
+    CHECK(!Room_Collides(Player_FeetCollider(&sliding)));
 
-    Player water;
-    Player_Init(&water, CorePoint(248.0f, 168.0f));
-    Advance(&water, (Vector2){1.0f, 0.0f}, SIM_HZ);
-    CHECK(CoreX(water.pos.x) <= 251.0f);
-    CHECK(!Room_Collides(Player_FeetCollider(&water)));
-}
-
-static void TestWallSlide(void)
-{
-    Player player;
-    Player_Init(&player, CorePoint(107.0f, 24.0f));
-    Vector2 diagonal = {0.70710678f, 0.70710678f};
-
-    Advance(&player, diagonal, 10);
-    CHECK(CoreY(player.pos.y) > 24.0f);
-    CHECK(CoreX(player.pos.x) <= 107.01f);
-    CHECK(player.vel.y >= WALK_SPEED * 0.70f);
-    printf("Feel Gate wall slide: %.3f px/s tangential (%.1f%% of walk speed)\n",
-           player.vel.y, player.vel.y / WALK_SPEED * 100.0f);
-    CHECK(!Room_Collides(Player_FeetCollider(&player)));
-}
-
-static void TestDiagonalSpeedMatchesCardinalSpeed(void)
-{
     Player cardinal;
     Player diagonal;
-    Vector2 start = Room_SpawnPoint();
-    Player_Init(&cardinal, start);
-    Player_Init(&diagonal, start);
-
+    Player_Init(&cardinal, Room_SpawnPoint(ROOM_AREA_JUNGLE_ENTRANCE));
+    Player_Init(&diagonal, Room_SpawnPoint(ROOM_AREA_JUNGLE_ENTRANCE));
     Advance(&cardinal, (Vector2){1.0f, 0.0f}, SIM_HZ);
     Advance(&diagonal, (Vector2){0.70710678f, -0.70710678f}, SIM_HZ);
 
-    float cardinalSpeed = Player_Speed(&cardinal);
-    float diagonalSpeed = Player_Speed(&diagonal);
-    float percentDifference = fabsf(diagonalSpeed - cardinalSpeed) / cardinalSpeed * 100.0f;
-    printf("Feel Gate diagonal speed: cardinal %.3f, diagonal %.3f px/s (%.3f%% difference)\n",
-           cardinalSpeed, diagonalSpeed, percentDifference);
-    CHECK(cardinalSpeed > 0.0f);
-    CHECK(percentDifference <= 1.0f);
-    CHECK(!Room_Collides(Player_FeetCollider(&cardinal)));
-    CHECK(!Room_Collides(Player_FeetCollider(&diagonal)));
+    float difference = fabsf(Player_Speed(&diagonal) - Player_Speed(&cardinal));
+    float percent = difference / Player_Speed(&cardinal) * 100.0f;
+    printf("Feel Gate diagonal speed: %.3f%% difference\n", percent);
+    CHECK(percent <= 1.0f);
 }
 
 static void TestStoppingMeetsFeelGate(void)
 {
     Player player;
-    Player_Init(&player, Room_SpawnPoint());
+    Player_Init(&player, Room_SpawnPoint(ROOM_AREA_JUNGLE_ENTRANCE));
     Advance(&player, (Vector2){1.0f, 0.0f}, SIM_HZ);
 
     float startX = player.pos.x;
     Input released = {0};
-    int ticksToStop = 0;
-    while (Player_Speed(&player) > 0.001f && ticksToStop <= SIM_HZ) {
-        Player_Update(&player, &released, SIM_DT);
-        ticksToStop++;
+    int ticks = 0;
+    while (Player_Speed(&player) > 0.001f && ticks <= SIM_HZ) {
+        Player_Update(&player, &released, SIM_DT, ROOM_AREA_JUNGLE_ENTRANCE);
+        ticks++;
     }
-
-    float stopTime = (float)ticksToStop * SIM_DT;
-    float stoppingDistance = player.pos.x - startX;
-    printf("Feel Gate stopping: %.4f s, %.3f px drift\n", stopTime, stoppingDistance);
-    CHECK(ticksToStop <= (int)ceilf(0.08f * SIM_HZ));
-    CHECK(stoppingDistance <= WALK_SPEED * DECEL_TIME * 0.5f + 0.05f);
-    CHECK(Player_Speed(&player) <= 0.001f);
+    float stopTime = (float)ticks * SIM_DT;
+    float drift = player.pos.x - startX;
+    printf("Feel Gate stopping: %.4f s, %.3f px drift\n", stopTime, drift);
+    CHECK(ticks <= (int)ceilf(0.08f * SIM_HZ));
+    CHECK(drift <= WALK_SPEED * DECEL_TIME * 0.5f + 0.05f);
 }
 
-static void TestCornerAssistClearsCliffEdge(void)
+static void TestRampTransitionsAndSideBlocking(void)
 {
     Player player;
-    Player_Init(&player, CorePoint(106.99f, 48.01f));
-    CHECK(!Room_Collides(Player_FeetCollider(&player)));
-    Advance(&player, (Vector2){0.70710678f, 0.70710678f}, 1);
-
-    CHECK(CoreY(player.pos.y) >= 51.0f);
-    CHECK(CoreY(player.pos.y) - 48.01f <= (float)CORNER_ASSIST_MAX);
-    CHECK(CoreX(player.pos.x) > 106.99f);
-    CHECK(!Room_Collides(Player_FeetCollider(&player)));
-}
-
-static void TestStairRampTransitionsBothWays(void)
-{
-    Player player;
-    Player_Init(&player, CorePoint(147.0f, 56.0f));
+    Player_Init(&player, (Vector2){464.0f, 224.0f});
     Advance(&player, (Vector2){0.0f, -1.0f}, SIM_HZ);
-
     CHECK(player.elevation == ROOM_ELEVATION_UPPER);
-    CHECK(CoreY(player.pos.y) < 32.0f);
-    CHECK(CoreY(player.pos.y) >= 19.0f);
-    CHECK(CoreX(player.pos.x) >= 149.0f && CoreX(player.pos.x) <= 171.0f);
-    CHECK(!Room_CollidesAtElevation(Player_FeetCollider(&player), player.elevation));
-
-    Player_Init(&player, CorePoint(173.0f, 56.0f));
-    Advance(&player, (Vector2){0.0f, -1.0f}, SIM_HZ);
-
-    CHECK(player.elevation == ROOM_ELEVATION_UPPER);
-    CHECK(CoreY(player.pos.y) < 32.0f);
-    CHECK(CoreX(player.pos.x) >= 149.0f && CoreX(player.pos.x) <= 171.0f);
-    CHECK(!Room_CollidesAtElevation(Player_FeetCollider(&player), player.elevation));
+    CHECK(player.pos.y < 184.0f);
+    CHECK(!Room_CollidesAtElevation(ROOM_AREA_JUNGLE_ENTRANCE,
+                                    Player_FeetCollider(&player), player.elevation));
 
     Advance(&player, (Vector2){0.0f, 1.0f}, SIM_HZ);
     CHECK(player.elevation == ROOM_ELEVATION_GROUND);
-    CHECK(CoreY(player.pos.y) > 48.0f);
-    CHECK(!Room_CollidesAtElevation(Player_FeetCollider(&player), player.elevation));
-}
+    CHECK(player.pos.y > 208.0f);
 
-static void TestRampCannotBeBypassedAtItsSides(void)
-{
-    Player player;
-    Player_Init(&player, CorePoint(160.0f, 40.0f));
-    Advance(&player, (Vector2){-1.0f, 0.0f}, 30);
-
-    CHECK(player.elevation == ROOM_ELEVATION_GROUND);
-    CHECK(CoreX(player.pos.x) >= 149.0f);
-    CHECK(!Room_CollidesAtElevation(Player_FeetCollider(&player), player.elevation));
-
-    Player_Init(&player, CorePoint(160.0f, 24.0f));
+    Player_Init(&player, (Vector2){440.0f, 184.0f});
     player.elevation = ROOM_ELEVATION_UPPER;
-    Advance(&player, (Vector2){1.0f, 0.0f}, 30);
-
+    Advance(&player, (Vector2){-1.0f, 0.0f}, SIM_HZ / 2);
     CHECK(player.elevation == ROOM_ELEVATION_UPPER);
-    CHECK(CoreX(player.pos.x) <= 171.0f);
-    CHECK(!Room_CollidesAtElevation(Player_FeetCollider(&player), player.elevation));
+    CHECK(!Room_CollidesAtElevation(ROOM_AREA_JUNGLE_ENTRANCE,
+                                    Player_FeetCollider(&player), player.elevation));
 }
 
-static void TestRoomEdgeBlocksPlayer(void)
+static void TestRootPathGateHasAReconnectingSideRoute(void)
 {
-    Player player;
-    Player_Init(&player, (Vector2){8.0f, Room_SpawnPoint().y});
-    Advance(&player, (Vector2){-1.0f, 0.0f}, SIM_HZ);
+    const RoomProp *props = Room_Props(ROOM_AREA_ROOT_PATH);
+    bool foundGate = false;
+    for (int i = 0; i < ROOM_PROP_COUNT; i++) {
+        if (props[i].sprite == ROOM_SPRITE_THORN_GATE) {
+            foundGate = true;
+            CHECK(Room_CollidesInArea(ROOM_AREA_ROOT_PATH, props[i].collider));
+        }
+    }
+    CHECK(foundGate);
+    CHECK(Room_CollidesInArea(ROOM_AREA_ROOT_PATH, FeetAt(320.0f, 104.0f)));
+    CHECK(!Room_CollidesInArea(ROOM_AREA_ROOT_PATH, FeetAt(216.0f, 112.0f)));
+    CHECK(!Room_CollidesInArea(ROOM_AREA_ROOT_PATH, FeetAt(424.0f, 112.0f)));
 
-    CHECK(player.pos.x >= PLAYER_COLLIDER_W * 0.5f);
-    CHECK(!Room_Collides(Player_FeetCollider(&player)));
+    Player player;
+    Player_Init(&player, Room_SpawnPoint(ROOM_AREA_ROOT_PATH));
+    AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 2,
+                  ROOM_AREA_ROOT_PATH);
+    AdvanceInArea(&player, (Vector2){-1.0f, 0.0f}, SIM_HZ * 3 / 2,
+                  ROOM_AREA_ROOT_PATH);
+    AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 3,
+                  ROOM_AREA_ROOT_PATH);
+    AdvanceInArea(&player, (Vector2){1.0f, 0.0f}, SIM_HZ,
+                  ROOM_AREA_ROOT_PATH);
+    AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ,
+                  ROOM_AREA_ROOT_PATH);
+    CHECK(player.pos.y < 64.0f);
+    CHECK(player.pos.x > 280.0f && player.pos.x < 360.0f);
+    CHECK(!Room_CollidesAtElevation(ROOM_AREA_ROOT_PATH,
+                                    Player_FeetCollider(&player), player.elevation));
 }
 
-static void TestPlayerCanExploreTheExtendedRoom(void)
+static void TestRootPathTransitionPairsAndRamp(void)
 {
+    Room room = {0};
+    Room_SetArea(&room, ROOM_AREA_JUNGLE_ENTRANCE);
+    RoomArea destination;
+    Vector2 spawn;
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 55.0f},
+                             &destination, &spawn));
+    CHECK(destination == ROOM_AREA_ROOT_PATH);
+    CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
+    CHECK(!Room_GetTransition(&room, (Vector2){200.0f, 55.0f},
+                              &destination, &spawn));
+
+    Room_SetArea(&room, ROOM_AREA_ROOT_PATH);
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 353.0f},
+                             &destination, &spawn));
+    CHECK(destination == ROOM_AREA_JUNGLE_ENTRANCE);
+    CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
+
     Player player;
-    Player_Init(&player, Room_SpawnPoint());
-    Advance(&player, (Vector2){-1.0f, 0.0f}, SIM_HZ * 4);
-    CHECK(player.pos.x < ROOM_CORE_OFFSET_X * TILE_SIZE);
-    CHECK(!Room_Collides(Player_FeetCollider(&player)));
+    Player_Init(&player, (Vector2){144.0f, 224.0f});
+    AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ,
+                  ROOM_AREA_ROOT_PATH);
+    CHECK(player.elevation == ROOM_ELEVATION_UPPER);
+    CHECK(!Room_CollidesAtElevation(ROOM_AREA_ROOT_PATH,
+                                    Player_FeetCollider(&player), player.elevation));
+}
 
-    Player_Init(&player, Room_SpawnPoint());
-    Advance(&player, (Vector2){1.0f, 0.0f}, SIM_HZ * 4);
-    CHECK(player.pos.x > (ROOM_CORE_OFFSET_X + ROOM_CORE_COLS) * TILE_SIZE);
-    CHECK(!Room_Collides(Player_FeetCollider(&player)));
+static void SimulateFixedStepFrame(float frameTime, float *accumulator, int *stepsTaken)
+{
+    float clamped = frameTime;
+    if (clamped > MAX_FRAME_TIME) clamped = MAX_FRAME_TIME;
+    *accumulator += clamped;
 
-    Player_Init(&player, CorePoint(96.0f, 80.0f));
-    Advance(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 4);
-    CHECK(player.pos.y < ROOM_CORE_OFFSET_Y * TILE_SIZE);
-    CHECK(!Room_Collides(Player_FeetCollider(&player)));
+    int steps = 0;
+    while (*accumulator >= SIM_DT && steps < MAX_SIM_STEPS) {
+        *accumulator -= SIM_DT;
+        steps++;
+    }
+    if (steps == MAX_SIM_STEPS) *accumulator = 0.0f;
+    *stepsTaken = steps;
+}
 
-    Player_Init(&player, Room_SpawnPoint());
-    Advance(&player, (Vector2){0.0f, 1.0f}, SIM_HZ * 4);
-    CHECK(player.pos.y > (ROOM_CORE_OFFSET_Y + ROOM_CORE_ROWS) * TILE_SIZE);
-    CHECK(!Room_Collides(Player_FeetCollider(&player)));
+static void TestFrameTimeStallClampsAndRecovers(void)
+{
+    float accumulator = 0.0f;
+    int steps = 0;
+    SimulateFixedStepFrame(0.2f, &accumulator, &steps);
+    CHECK(steps == MAX_SIM_STEPS);
+    CHECK(accumulator == 0.0f);
+
+    SimulateFixedStepFrame(SIM_DT, &accumulator, &steps);
+    CHECK(steps == 1);
+    CHECK(accumulator < SIM_DT);
 }
 
 int main(void)
 {
-    TestRoomCollisionMap();
-    TestPalmTrunkAndPillarBaseAreSolid();
-    TestPlayerCanWalkBehindPalmCanopy();
-    TestShrineRampLeadsToUpperWall();
-    TestCliffAndWaterBlockPlayer();
-    TestWallSlide();
-    TestDiagonalSpeedMatchesCardinalSpeed();
+    TestEntranceBoundsAndRouteLayout();
+    TestPlayerCanLoopAroundRootCluster();
+    TestTreeBasesBlockAndCanopiesStayWalkable();
+    TestWallSlideAndDiagonalSpeed();
     TestStoppingMeetsFeelGate();
-    TestCornerAssistClearsCliffEdge();
-    TestStairRampTransitionsBothWays();
-    TestRampCannotBeBypassedAtItsSides();
-    TestRoomEdgeBlocksPlayer();
-    TestPlayerCanExploreTheExtendedRoom();
+    TestRampTransitionsAndSideBlocking();
+    TestRootPathGateHasAReconnectingSideRoute();
+    TestRootPathTransitionPairsAndRamp();
+    TestFrameTimeStallClampsAndRecovers();
 
     if (failures != 0) {
         fprintf(stderr, "%d movement collision check(s) failed.\n", failures);

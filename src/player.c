@@ -55,15 +55,15 @@ Rectangle Player_FeetCollider(const Player *p)
     };
 }
 
-static bool TryMoveTo(Player *p, Vector2 feet)
+static bool TryMoveTo(Player *p, Vector2 feet, RoomArea area)
 {
     RoomElevation candidateElevation = p->elevation;
-    Room_TryRampTransition(p->pos, feet, &candidateElevation);
+    Room_TryRampTransition(area, p->pos, feet, &candidateElevation);
 
     Player candidate = *p;
     candidate.pos = feet;
     candidate.elevation = candidateElevation;
-    if (Room_CollidesAtElevation(Player_FeetCollider(&candidate),
+    if (Room_CollidesAtElevation(area, Player_FeetCollider(&candidate),
                                  candidateElevation)) return false;
 
     p->pos = feet;
@@ -72,7 +72,7 @@ static bool TryMoveTo(Player *p, Vector2 feet)
 }
 
 static bool TryCornerAssist(Player *p, float blockedStep, float perpendicularStep,
-                            bool blockedAxisIsX, float *assistOffset)
+                            bool blockedAxisIsX, float *assistOffset, RoomArea area)
 {
     float preferredDirection = perpendicularStep > 0.0f ? 1.0f : -1.0f;
     int directionCount = perpendicularStep == 0.0f ? 2 : 1;
@@ -86,7 +86,7 @@ static bool TryCornerAssist(Player *p, float blockedStep, float perpendicularSte
             if (blockedAxisIsX) candidate.x += blockedStep;
             else                candidate.y += blockedStep;
 
-            if (TryMoveTo(p, candidate)) {
+            if (TryMoveTo(p, candidate, area)) {
                 *assistOffset = direction * (float)offset;
                 return true;
             }
@@ -102,7 +102,7 @@ static float RemainingStep(float step, float assist)
     return step - assist;
 }
 
-void Player_Update(Player *p, const Input *in, float dt)
+void Player_Update(Player *p, const Input *in, float dt, RoomArea area)
 {
     float inLen = Length(in->move);
     bool moving = inLen > 0.0f;
@@ -141,8 +141,8 @@ void Player_Update(Player *p, const Input *in, float dt)
         float assist = 0.0f;
 
         Vector2 candidate = {p->pos.x + xStep, p->pos.y};
-        if (!TryMoveTo(p, candidate)) {
-            if (TryCornerAssist(p, xStep, yStep, true, &assist)) {
+        if (!TryMoveTo(p, candidate, area)) {
+            if (TryCornerAssist(p, xStep, yStep, true, &assist, area)) {
                 yStep = RemainingStep(yStep, assist);
             } else {
                 blockedX = true;
@@ -152,8 +152,8 @@ void Player_Update(Player *p, const Input *in, float dt)
         }
 
         candidate = (Vector2){p->pos.x, p->pos.y + yStep};
-        if (!TryMoveTo(p, candidate)) {
-            if (TryCornerAssist(p, yStep, xStep, false, &assist)) {
+        if (!TryMoveTo(p, candidate, area)) {
+            if (TryCornerAssist(p, yStep, xStep, false, &assist, area)) {
                 xStep = RemainingStep(xStep, assist);
             } else {
                 blockedY = true;
