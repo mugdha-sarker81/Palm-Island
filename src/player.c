@@ -28,6 +28,7 @@ void Player_Init(Player *p, Vector2 feet)
 {
     p->pos = feet;
     p->vel = (Vector2){0.0f, 0.0f};
+    p->elevation = ROOM_ELEVATION_GROUND;
     p->facing = FACING_DOWN;
     p->animTime = 0.0f;
 }
@@ -54,11 +55,20 @@ Rectangle Player_FeetCollider(const Player *p)
     };
 }
 
-static bool CanOccupy(Vector2 feet)
+static bool TryMoveTo(Player *p, Vector2 feet)
 {
-    Player candidate = {0};
+    RoomElevation candidateElevation = p->elevation;
+    Room_TryRampTransition(p->pos, feet, &candidateElevation);
+
+    Player candidate = *p;
     candidate.pos = feet;
-    return !Room_Collides(Player_FeetCollider(&candidate));
+    candidate.elevation = candidateElevation;
+    if (Room_CollidesAtElevation(Player_FeetCollider(&candidate),
+                                 candidateElevation)) return false;
+
+    p->pos = feet;
+    p->elevation = candidateElevation;
+    return true;
 }
 
 static bool TryCornerAssist(Player *p, float blockedStep, float perpendicularStep,
@@ -76,9 +86,8 @@ static bool TryCornerAssist(Player *p, float blockedStep, float perpendicularSte
             if (blockedAxisIsX) candidate.x += blockedStep;
             else                candidate.y += blockedStep;
 
-            if (CanOccupy(candidate)) {
+            if (TryMoveTo(p, candidate)) {
                 *assistOffset = direction * (float)offset;
-                p->pos = candidate;
                 return true;
             }
         }
@@ -132,7 +141,7 @@ void Player_Update(Player *p, const Input *in, float dt)
         float assist = 0.0f;
 
         Vector2 candidate = {p->pos.x + xStep, p->pos.y};
-        if (!CanOccupy(candidate)) {
+        if (!TryMoveTo(p, candidate)) {
             if (TryCornerAssist(p, xStep, yStep, true, &assist)) {
                 yStep = RemainingStep(yStep, assist);
             } else {
@@ -140,12 +149,10 @@ void Player_Update(Player *p, const Input *in, float dt)
                 stepX = 0.0f;
                 xStep = 0.0f;
             }
-        } else {
-            p->pos = candidate;
         }
 
         candidate = (Vector2){p->pos.x, p->pos.y + yStep};
-        if (!CanOccupy(candidate)) {
+        if (!TryMoveTo(p, candidate)) {
             if (TryCornerAssist(p, yStep, xStep, false, &assist)) {
                 xStep = RemainingStep(xStep, assist);
             } else {
@@ -153,8 +160,6 @@ void Player_Update(Player *p, const Input *in, float dt)
                 stepY = 0.0f;
                 yStep = 0.0f;
             }
-        } else {
-            p->pos = candidate;
         }
     }
 

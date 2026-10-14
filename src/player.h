@@ -3,6 +3,7 @@
 
 #include "raylib.h"
 #include "input.h"
+#include "room.h"
 
 /* Row order in assets/sprites/player_sheet_14x20.png */
 typedef enum Facing {
@@ -15,6 +16,7 @@ typedef enum Facing {
 typedef struct Player {
     Vector2 pos;     /* feet point (bottom-centre), the world anchor */
     Vector2 vel;     /* px/s */
+    RoomElevation elevation;
     Facing facing;
     float animTime;  /* seconds spent walking since last stop */
 } Player;

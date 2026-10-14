@@ -48,16 +48,19 @@ different generator, rename that generated folder (for example, to
 
 The current executable loads the starter tile and player art into a 320×180
 render target, displays it with integer scaling/letterboxing, and supports
-eight-way walking with a fixed-step simulation. A 10×6 feet collider blocks
-cliffs, water, shrine stone, and room edges; the original 32 px stair opening
-remains unchanged and can be entered without pixel-perfect horizontal
-alignment. Palm trunks and the pillar base block the feet collider; their
-canopies remain walk-through so Ichigo can pass visually behind them. Palm and
-pillar props are sorted with the player by foot/base Y, and a bush draws as a
-foreground occluder. A bounded, smoothed camera with movement look-ahead is
-integrated; this 320×176 room is smaller than the 320×180 view, so it stays
-centered. F3 shows the collider while debug mode is active. These behaviors are
-unit-tested but visual feel still needs in-game playtesting.
+eight-way walking with a fixed-step simulation. The 640×368 prototype room
+keeps the shrine area intact at its center and adds walkable space around it;
+the bounded, smoothed camera follows Ichigo and scrolls through that larger
+room. A 10×6 feet collider blocks cliffs, water, shrine stone, and room edges;
+the original 32 px stair opening remains unchanged and can be entered without
+pixel-perfect horizontal alignment. Palm trunks and the pillar base block the
+feet collider; their canopies remain walk-through so Ichigo can pass visually
+behind them. Palm and pillar props are sorted with the player by foot/base Y,
+and a bush draws as a foreground occluder. The two-tile shrine stair connector
+changes between ground and upper elevation, with elevation-aware collision and
+draw ordering. F3 shows the collider and current elevation while debug mode is
+active. These behaviors are unit-tested but visual feel still needs in-game
+playtesting.
 
 ## Optional movement tests
 

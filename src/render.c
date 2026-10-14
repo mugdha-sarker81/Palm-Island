@@ -4,6 +4,9 @@
 static bool ComesAfter(const RenderItem *left, const RenderItem *right)
 {
     if (left->foreground != right->foreground) return left->foreground;
+    if (left->elevation != right->elevation) {
+        return left->elevation > right->elevation;
+    }
     if (left->feetY != right->feetY) return left->feetY > right->feetY;
     return left->stableOrder > right->stableOrder;
 }
@@ -40,6 +43,7 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
         .type = RENDER_ITEM_PLAYER,
         .position = player->pos,
         .feetY = player->pos.y,
+        .elevation = player->elevation,
         .stableOrder = 0,
         .foreground = false
     };

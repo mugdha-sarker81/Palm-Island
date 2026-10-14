@@ -83,6 +83,7 @@ int main(void)
             .type = RENDER_ITEM_PROP,
             .position = roomProps[i].drawPosition,
             .feetY = roomProps[i].feetY,
+            .elevation = roomProps[i].elevation,
             .stableOrder = (unsigned int)(i + 1),
             .foreground = roomProps[i].foreground,
             .texture = propTextures[i]
@@ -152,6 +153,8 @@ int main(void)
             DrawText(TextFormat("FPS %d  frame %.2f ms", GetFPS(), GetFrameTime() * 1000.0f), 10, 10, 20, RAYWHITE);
             DrawText(TextFormat("speed %.2f px/s  (walk %.0f)", Player_Speed(&player), WALK_SPEED), 10, 34, 20, RAYWHITE);
             DrawText(TextFormat("feet %.1f, %.1f", player.pos.x, player.pos.y), 10, 58, 20, RAYWHITE);
+            DrawText(player.elevation == ROOM_ELEVATION_UPPER ? "elevation upper" : "elevation ground",
+                     10, 82, 20, RAYWHITE);
         }
         EndDrawing();
     }

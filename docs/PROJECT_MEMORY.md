@@ -8,11 +8,11 @@ The map-by-map implementation blueprint is maintained in
 exploration/subtask sequence for all 24 proposed zones.
 
 **Last reconciled:** 2026-10-14
-**Current milestone:** top-down movement room, M1–M5 integrated; collision,
-camera, and draw-order tests pass, but interactive visual playtesting remains
-**Next milestone:** add the explicit ramp/elevation connector (M6), then
-complete and playtest the movement Feel Gate before blocking out the Forgotten
-Jungle slice.
+**Current milestone:** top-down movement room, M1–M6 integrated in a
+640×368 scrolling test room and covered by focused tests; interactive movement,
+camera, prop occlusion, and ramp feel remain to be playtested
+**Next milestone:** playtest M1–M6 against the movement Feel Gate before
+blocking out the Forgotten Jungle slice.
 
 > Update this document when implementation status, a locked decision, or the
 > next task changes. Keep the current status factual. Do not mark design ideas
@@ -90,6 +90,9 @@ the original GDD remains historical reference material.
   hysteresis, walk animation, fixed-step simulation, and an F3 debug overlay.
   F11 toggles borderless windowed mode; Esc exits.
 - `src/room.c` draws ground, path, shrine, stairs, cliffs, and animated water.
+  The original 20×11 shrine-room block is centered in a 40×23 (640×368 px)
+  walkable test room with grass and cross-path extensions so camera scrolling
+  can be exercised in every direction.
 - M3 adds a 10×6 feet collider, solid collision against shrine stone, cliff
   faces, water, and room bounds, axis-separated movement with substeps no
   larger than 4 px, a 4 px corner assist, and an F3 collider outline. The
@@ -99,10 +102,10 @@ the original GDD remains historical reference material.
   and corner assist.
 - M4 adds a bounded camera module with 6/s exponential follow, smoothed
   velocity-based look-ahead up to 14 px, room-size-aware centering, and
-  render-time integer target rounding. The existing 320×176 room remains
-  unchanged and centered in the 320×180 view. Focused camera tests cover
-  centering, follow smoothing, look-ahead easing, room bounds, hard
-  initialization snap, and render rounding.
+  render-time integer target rounding. The camera now scrolls through the
+  expanded 640×368 room and clamps at its edges. Focused camera tests cover
+  small-room centering, follow smoothing, look-ahead easing, room bounds,
+  hard initialization snap, and render rounding.
 - M5 loads the prototype palm (40×56), pillar (16×40), and bush (20×16).
   The player, palm, and pillar are sorted back-to-front by feet/base Y with a
   stable tie-break; the bush is drawn in a final foreground pass. Palm-trunk
@@ -110,10 +113,17 @@ the original GDD remains historical reference material.
   remain walk-through for depth overlap. Focused tests cover prop blocking,
   canopy overlap, depth order, equal-Y ordering, and foreground precedence.
   Interactive visual appearance still needs playtesting.
+- M6 makes the existing 32 px shrine stair opening an explicit ramp connector.
+  Crossing its midpoint changes the player between ground and upper elevation;
+  only the aligned upper landing is traversable on that layer. Collision and
+  draw ordering respect elevation, while the original stair width and room
+  bounds remain unchanged. Automated checks cover ascent, descent, side
+  blocking, landing collision, and elevation draw order; visual playtesting is
+  still needed.
 - Uploaded M1–M2 screenshots are retained in `docs/media/m1_m2/` as reference
   captures; they were not captured during the Windows verification.
-- Interactive movement, camera feel, and prop occlusion have not yet been
-  playtested. Ramp elevation behavior is not implemented yet.
+- Interactive movement, camera feel, prop occlusion, and ramp elevation have
+  not yet been playtested.
 
 ### Not implemented yet
 
@@ -273,6 +283,15 @@ weapons distinct without making any one a strict power upgrade.
   costume planning and selected a small fixed set of material-built tools,
   not full recipe crafting. Starting balance values remain proposals pending
   playtesting; none of these systems is implemented.
+- **2026-10-14:** Implement M6 using the existing two-tile shrine stair as an
+  explicit ground-to-upper connector. Elevation changes at its midpoint; the
+  aligned two-tile upper landing is walkable only on the upper layer. Keep the
+  solution specific to this room and do not introduce free jumping or a
+  general elevation framework.
+- **2026-10-14:** Expand the movement test room to 40×23 tiles around the
+  existing 20×11 shrine area so the bounded camera can scroll and players can
+  explore beyond the initial viewport. Preserve the existing shrine layout,
+  stair opening, prop positions relative to that layout, and collision rules.
 
 ## 6. First playable target: Forgotten Jungle
 
@@ -581,23 +600,20 @@ Memory updated: yes/no
 
 ## 12. Current next work item
 
-**Continue the top-down movement room with micro-task M6**: add the explicit
-ramp/elevation connector. Preserve M3 collision, the original two-tile stair
-opening, and M4 camera bounds/render snapping. M3–M5 builds and focused CTests
-pass, but movement/camera feel and rendered prop occlusion have not yet been
-interactively playtested. Continue to use the Feel Gate before starting
-combat, the Jungle blockout, or any signature mechanic.
+**Playtest M1–M6 and complete the movement Feel Gate** before starting the
+Forgotten Jungle blockout, combat, or any signature mechanic. Automated
+movement, camera, and render-order tests pass, including bidirectional stair
+transitions and elevation-aware collision/draw order; the ramp, camera feel,
+and prop occlusion still need interactive verification.
 
 Checklist for the M6 session:
 
-1. Keep the movement-room buildable throughout this work.
-2. Implement the planned modules incrementally; avoid empty files and unrelated
-   systems.
-3. Keep the ramp connector explicit in room data; do not introduce a free jump
-   or a general elevation framework.
-4. Build and verify the ramp is readable, traversable in the intended
-   direction(s), and cannot bypass solid terrain or leave the room.
-5. Record reproducible issues; fix only the top verified issue in a follow-up.
+1. Run the game with keyboard and controller where available; verify the camera
+   scrolls in all directions and stays inside room bounds.
+2. Check all ten measurable Feel Gate requirements in
+   `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md` section 7.
+3. Record which checks pass, fail, or need adjustment before starting the
+   Forgotten Jungle blockout.
 
 **Completion record:** On 2026-10-14, M1–M2 were clean-configured and built
 with MSYS2 MinGW64. The executable launched and remained open with the expected

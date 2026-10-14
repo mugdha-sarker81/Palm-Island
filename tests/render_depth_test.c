@@ -61,11 +61,28 @@ static void TestForegroundItemsDrawAfterDepthItems(void)
     CHECK(items[3].foreground);
 }
 
+static void TestUpperElevationDrawsAfterGroundElevation(void)
+{
+    RenderItem items[] = {
+        {.feetY = 120.0f, .elevation = ROOM_ELEVATION_GROUND, .stableOrder = 1},
+        {.feetY = 24.0f, .elevation = ROOM_ELEVATION_UPPER, .stableOrder = 2},
+        {.feetY = 10.0f, .elevation = ROOM_ELEVATION_GROUND, .stableOrder = 3,
+         .foreground = true}
+    };
+
+    Render_SortItems(items, sizeof(items) / sizeof(items[0]));
+
+    CHECK(items[0].stableOrder == 1);
+    CHECK(items[1].stableOrder == 2);
+    CHECK(items[2].stableOrder == 3);
+}
+
 int main(void)
 {
     TestBackToFrontAndStableTies();
     TestPlayerSortsBetweenPropAnchors();
     TestForegroundItemsDrawAfterDepthItems();
+    TestUpperElevationDrawsAfterGroundElevation();
 
     if (failures != 0) {
         fprintf(stderr, "%d render-depth check(s) failed.\n", failures);

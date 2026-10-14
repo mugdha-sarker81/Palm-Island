@@ -80,6 +80,7 @@ if(PALM_BUILD_TESTS)
     add_executable(PalmIslandCameraTests
         tests/camera_follow_test.c
         src/camera.c
+        src/room.c
     )
     target_include_directories(PalmIslandCameraTests PRIVATE src)
     target_link_libraries(PalmIslandCameraTests PRIVATE raylib)

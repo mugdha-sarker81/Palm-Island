@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "room.h"
 #include "tuning.h"
 #include <math.h>
 #include <stdio.h>
@@ -86,6 +87,28 @@ static void TestRoomBoundsClampCamera(void)
     CHECK(fabsf(camera.center.y - 90.0f) < EPSILON);
 }
 
+static void TestActualRoomAllowsCameraScrolling(void)
+{
+    Rectangle bounds = Room_Bounds();
+    Vector2 spawn = Room_SpawnPoint();
+    CameraFollow camera;
+
+    CHECK(bounds.width > VIEWPORT.x);
+    CHECK(bounds.height > VIEWPORT.y);
+    Camera_Init(&camera, spawn, bounds, VIEWPORT);
+    CHECK(fabsf(camera.center.x - spawn.x) < EPSILON);
+    CHECK(fabsf(camera.center.y - spawn.y) < EPSILON);
+
+    Vector2 distantPlayer = {spawn.x + 180.0f, spawn.y + 100.0f};
+    for (int i = 0; i < SIM_HZ * 2; i++) {
+        Camera_Update(&camera, distantPlayer, (Vector2){WALK_SPEED, WALK_SPEED}, SIM_DT);
+    }
+    CHECK(camera.center.x > spawn.x);
+    CHECK(camera.center.y > spawn.y);
+    CHECK(camera.center.x <= bounds.width - VIEWPORT.x * 0.5f);
+    CHECK(camera.center.y <= bounds.height - VIEWPORT.y * 0.5f);
+}
+
 static void TestInitializationHardSnapsAndRenderRounds(void)
 {
     CameraFollow camera;
@@ -108,6 +131,7 @@ int main(void)
     TestFollowSmoothsTowardPlayer();
     TestLookAheadEasesInAndOut();
     TestRoomBoundsClampCamera();
+    TestActualRoomAllowsCameraScrolling();
     TestInitializationHardSnapsAndRenderRounds();
 
     if (failures != 0) {

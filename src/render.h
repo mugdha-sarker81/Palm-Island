@@ -14,6 +14,7 @@ typedef struct RenderItem {
     RenderItemType type;
     Vector2 position;
     float feetY;
+    RoomElevation elevation;
     unsigned int stableOrder;
     bool foreground;
     Texture2D texture;
