@@ -11,7 +11,7 @@ enum { T_G = 0, T_J = 2, T_D = 4, T_A = 6, T_S = 8, T_N = 9, T_R = 10, T_W0 = 11
 static const char *LAYOUT[ROOM_ROWS] = {
     "JJGGJJJSSSSSSJJGGGJJ",
     "JGGGGJJSSSSSSJJGGGGJ",
-    "JGGGGJJNNRNNNJGGGGGJ",
+    "JGGGGJJNNRRNNJGGGGGJ",
     "GGGGGGGGGDDGGGGGGGGG",
     "GGGGGGGGGDDGGGGGGGGG",
     "GGGGGGGDDDDDDGGGGGGG",
@@ -110,5 +110,5 @@ bool Room_Collides(Rectangle collider)
 Vector2 Room_SpawnPoint(void)
 {
     /* Centre of the dirt path in front of the shrine stairs. */
-    return (Vector2){(float)(9 * TILE_SIZE + TILE_SIZE / 2), (float)(5 * TILE_SIZE + TILE_SIZE / 2)};
+    return (Vector2){(float)(10 * TILE_SIZE), (float)(5 * TILE_SIZE + TILE_SIZE / 2)};
 }

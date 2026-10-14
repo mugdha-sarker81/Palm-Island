@@ -35,11 +35,11 @@ static void TestRoomCollisionMap(void)
     CHECK(Room_Collides(FeetAt(120.0f, 24.0f)));  /* shrine stone */
     CHECK(Room_Collides(FeetAt(120.0f, 40.0f)));  /* cliff face */
     CHECK(Room_Collides(FeetAt(264.0f, 168.0f))); /* water */
-    CHECK(!Room_Collides(FeetAt(152.0f, 40.0f))); /* stair/ramp remains open */
-    CHECK(Room_Collides(FeetAt(148.0f, 40.0f)));  /* 16 px opening: left edge */
-    CHECK(!Room_Collides(FeetAt(149.0f, 40.0f))); /* 10 px collider fits */
-    CHECK(!Room_Collides(FeetAt(155.0f, 40.0f)));
-    CHECK(Room_Collides(FeetAt(156.0f, 40.0f)));  /* 16 px opening: right edge */
+    CHECK(!Room_Collides(FeetAt(160.0f, 40.0f))); /* original 32 px stair opening */
+    CHECK(Room_Collides(FeetAt(147.0f, 40.0f)));  /* just left of the opening */
+    CHECK(!Room_Collides(FeetAt(149.0f, 40.0f))); /* collider fits at its left edge */
+    CHECK(!Room_Collides(FeetAt(171.0f, 40.0f)));
+    CHECK(Room_Collides(FeetAt(173.0f, 40.0f)));  /* just right of the opening */
     CHECK(!Room_Collides(FeetAt(152.0f, 88.0f))); /* dirt path remains open */
     CHECK(Room_Collides(FeetAt(4.9f, 80.0f)));    /* room boundary */
     CHECK(!Room_Collides(FeetAt(5.0f, 80.0f)));
@@ -104,14 +104,14 @@ static void TestStairOpeningApproach(void)
     Advance(&player, (Vector2){0.0f, -1.0f}, 45);
 
     CHECK(player.pos.y < 45.0f);
-    CHECK(player.pos.x >= 149.0f && player.pos.x <= 155.0f);
+    CHECK(player.pos.x >= 149.0f && player.pos.x <= 171.0f);
     CHECK(!Room_Collides(Player_FeetCollider(&player)));
 
-    Player_Init(&player, (Vector2){157.0f, 56.0f});
+    Player_Init(&player, (Vector2){173.0f, 56.0f});
     Advance(&player, (Vector2){0.0f, -1.0f}, 45);
 
     CHECK(player.pos.y < 45.0f);
-    CHECK(player.pos.x >= 149.0f && player.pos.x <= 155.0f);
+    CHECK(player.pos.x >= 149.0f && player.pos.x <= 171.0f);
     CHECK(!Room_Collides(Player_FeetCollider(&player)));
 }
 

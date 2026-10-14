@@ -49,10 +49,10 @@ different generator, rename that generated folder (for example, to
 The current executable loads the starter tile and player art into a 320×180
 render target, displays it with integer scaling/letterboxing, and supports
 eight-way walking with a fixed-step simulation. A 10×6 feet collider blocks
-cliffs, water, shrine stone, and room edges; the 16 px stair opening remains
-walkable without pixel-perfect horizontal alignment. F3 shows the collider
-while debug mode is active. Camera movement and prop sorting are not
-implemented yet.
+cliffs, water, shrine stone, and room edges; the original 32 px stair opening
+remains unchanged and can be entered without pixel-perfect horizontal
+alignment. F3 shows the collider while debug mode is active. Camera movement
+and prop sorting are not implemented yet.
 
 ## Optional movement tests
 

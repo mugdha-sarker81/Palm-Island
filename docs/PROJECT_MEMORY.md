@@ -91,10 +91,11 @@ the original GDD remains historical reference material.
 - `src/room.c` draws ground, path, shrine, stairs, cliffs, and animated water.
 - M3 adds a 10×6 feet collider, solid collision against shrine stone, cliff
   faces, water, and room bounds, axis-separated movement with substeps no
-  larger than 4 px, a 4 px corner assist, and an F3 collider outline. The stair
-  opening is one 16 px tile wide; tests verify its fit and straight-on entry
-  from slightly off-center positions on either side. Other focused checks cover
-  tile/bounds collision, obstacle blocking, wall slide, and corner assist.
+  larger than 4 px, a 4 px corner assist, and an F3 collider outline. The
+  original 32 px two-tile stair opening is preserved; tests verify its fit and
+  straight-on entry from slightly off-center positions on either side. Other
+  focused checks cover tile/bounds collision, obstacle blocking, wall slide,
+  and corner assist.
 - Uploaded M1–M2 screenshots are retained in `docs/media/m1_m2/` as reference
   captures; they were not captured during the Windows verification.
 - Interactive movement feel has not yet been playtested. Camera follow, prop
