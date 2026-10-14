@@ -3,6 +3,7 @@
 #include "input.h"
 #include "player.h"
 #include "room.h"
+#include "interaction.h"
 #include "camera.h"
 #include "render.h"
 #include <math.h>
@@ -68,6 +69,71 @@ static void BuildRenderProps(RenderItem renderProps[RENDER_PROP_COUNT],
     }
 }
 
+static Vector2 FacingDirection(Facing facing)
+{
+    switch (facing) {
+        case FACING_LEFT: return (Vector2){-1.0f, 0.0f};
+        case FACING_RIGHT: return (Vector2){1.0f, 0.0f};
+        case FACING_UP: return (Vector2){0.0f, -1.0f};
+        case FACING_DOWN:
+        default: return (Vector2){0.0f, 1.0f};
+    }
+}
+
+static bool InteractionWasSeen(const InteractionState *state,
+                               const RoomInteractable *target)
+{
+    switch (target->kind) {
+        case ROOM_INTERACTABLE_ROOT_WEAVE: return state->rootWeaveSeen;
+        case ROOM_INTERACTABLE_ROOT_MARKER: return state->rootMarkerActivated;
+        case ROOM_INTERACTABLE_CLEARING_NOTE: return state->clearingNoteSeen;
+        case ROOM_INTERACTABLE_ROOTS_MURAL: return state->rootsMuralSeen;
+        default: return false;
+    }
+}
+
+static void DrawInteractionUI(const RoomInteractable *target, float promptFade,
+                              const InteractionState *state)
+{
+    const Color panelColor = {11, 26, 34, 245};
+    const Color edgeColor = {127, 196, 192, 255};
+
+    if (state->panelOpen && target != NULL) {
+        DrawRectangle(8, 124, 304, 48, Fade(panelColor, 0.96f));
+        DrawRectangleLines(8, 124, 304, 48, edgeColor);
+        DrawText(target->title, 14, 129, 10, (Color){245, 214, 124, 255});
+        const char *text = target->kind == ROOM_INTERACTABLE_ROOT_MARKER &&
+                           state->rootMarkerActivated &&
+                           target->activatedText != NULL
+                               ? target->activatedText : target->text;
+        DrawText(text, 14, 142, 8, RAYWHITE);
+        DrawText("E / A Close", 254, 161, 8,
+                 (Color){127, 196, 192, 255});
+    } else if (target != NULL && promptFade > 0.0f) {
+        DrawRectangle(8, 154, 304, 18, Fade(panelColor, 0.94f * promptFade));
+        DrawRectangleLines(8, 154, 304, 18,
+                           Fade(edgeColor, promptFade));
+        bool alreadyUsed = InteractionWasSeen(state, target);
+        const char *action = target->kind == ROOM_INTERACTABLE_ROOT_MARKER
+                                 ? (alreadyUsed ? "Review" : "Activate")
+                                 : (alreadyUsed ? "Review" : "Read");
+        DrawText(TextFormat("E / A %s %s", action,
+                            target->title),
+                 14, 158, 8, Fade(RAYWHITE, promptFade));
+    }
+}
+
+static void DrawRootMarkerRoute(void)
+{
+    const Color routeColor = {100, 219, 143, 220};
+    DrawLineEx((Vector2){216.0f, 144.0f}, (Vector2){216.0f, 56.0f},
+               2.0f, routeColor);
+    DrawLineEx((Vector2){216.0f, 56.0f}, (Vector2){320.0f, 56.0f},
+               2.0f, routeColor);
+    DrawLineEx((Vector2){320.0f, 56.0f}, (Vector2){320.0f, 24.0f},
+               2.0f, routeColor);
+}
+
 int main(void)
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
@@ -91,6 +157,7 @@ int main(void)
             "sprites/props/prop_marker.png",
             "sprites/props/prop_tall_grass.png",
             "sprites/props/prop_shrine_door_closed.png",
+            "sprites/props/prop_shrine_door_open.png",
             "sprites/props/prop_root_bridge.png",
             "sprites/props/prop_thorn_gate_closed.png"
         };
@@ -128,6 +195,11 @@ int main(void)
     float transitionTime = 0.0f;
     RoomArea destinationArea = room.area;
     Vector2 destinationSpawn = player.pos;
+    float interactBuffer = 0.0f;
+    float promptFade = 0.0f;
+    InteractionState interaction = {0};
+    const RoomInteractable *activeInteractable = NULL;
+    const RoomInteractable *promptInteractable = NULL;
 
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_F3)) debug = !debug;
@@ -138,6 +210,11 @@ int main(void)
         if (frame > MAX_FRAME_TIME) frame = MAX_FRAME_TIME;
         accumulator += frame;
         Input_Poll(&input);
+        if (transitionPhase == TRANSITION_NONE && input.interactPressed) {
+            interactBuffer = INTERACT_INPUT_BUFFER;
+        } else if (transitionPhase != TRANSITION_NONE) {
+            interactBuffer = 0.0f;
+        }
 
         int steps = 0;
         while (accumulator >= SIM_DT && steps < MAX_SIM_STEPS) {
@@ -145,12 +222,50 @@ int main(void)
                 if (transitionPhase == TRANSITION_NONE) {
                     Player_Update(&player, &input, SIM_DT, room.area);
                     Camera_Update(&camera, player.pos, player.vel, SIM_DT);
+                    Vector2 facingDirection = FacingDirection(player.facing);
+                    activeInteractable = Room_FindInteractable(
+                        room.area, player.pos, facingDirection,
+                        INTERACT_PROMPT_RANGE);
+                    if (activeInteractable != NULL) {
+                        promptInteractable = activeInteractable;
+                        promptFade += SIM_DT / INTERACT_PROMPT_FADE;
+                        if (promptFade > 1.0f) promptFade = 1.0f;
+                    } else {
+                        promptFade -= SIM_DT / INTERACT_PROMPT_FADE;
+                        if (promptFade <= 0.0f) {
+                            promptFade = 0.0f;
+                            promptInteractable = NULL;
+                        }
+                        InteractionState_Close(&interaction);
+                    }
+
+                    if (interactBuffer > 0.0f) {
+                        const RoomInteractable *inRange = Room_FindInteractable(
+                            room.area, player.pos, facingDirection,
+                            INTERACT_RANGE);
+                        if (inRange != NULL) {
+                            InteractionState_Activate(&interaction, inRange);
+                            interactBuffer = 0.0f;
+                        } else {
+                            interactBuffer -= SIM_DT;
+                            if (interactBuffer < 0.0f) interactBuffer = 0.0f;
+                        }
+                    }
+
                     if (Room_GetTransition(&room, player.pos, &destinationArea,
                                            &destinationSpawn)) {
                         transitionPhase = TRANSITION_FADE_OUT;
                         transitionTime = 0.0f;
+                        InteractionState_Close(&interaction);
+                        activeInteractable = NULL;
+                        promptInteractable = NULL;
+                        promptFade = 0.0f;
                     }
                 } else {
+                    InteractionState_Close(&interaction);
+                    activeInteractable = NULL;
+                    promptInteractable = NULL;
+                    promptFade = 0.0f;
                     transitionTime += SIM_DT;
                     if (transitionTime >= 0.2f) {
                         transitionTime = 0.0f;
@@ -183,6 +298,10 @@ int main(void)
         if (assetsOk) {
             BeginMode2D(Camera_Render(&camera));
             Room_Draw(&room, worldTime);
+            if (room.area == ROOM_AREA_ROOT_PATH &&
+                interaction.rootMarkerActivated) {
+                DrawRootMarkerRoute();
+            }
             Render_DrawDepthScene(&player, sheet, props, debug);
             EndMode2D();
             if (transitionPhase != TRANSITION_NONE) {
@@ -193,6 +312,8 @@ int main(void)
                 DrawRectangle(0, 0, VIRTUAL_W, VIRTUAL_H,
                               Fade(BLACK, alpha));
             }
+            DrawInteractionUI(promptInteractable, promptFade,
+                              &interaction);
         } else {
             DrawText("Assets not found.", 8, 8, 10, WHITE);
             DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);

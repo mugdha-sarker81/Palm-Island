@@ -8,6 +8,7 @@ typedef struct Input {
     Vector2 move;
     float magnitude;
     bool usingGamepad;
+    bool interactPressed;
 } Input;
 
 /* Poll keyboard and gamepad once per rendered frame. */

@@ -9,7 +9,10 @@
 
 typedef enum RoomArea {
     ROOM_AREA_JUNGLE_ENTRANCE,
-    ROOM_AREA_ROOT_PATH
+    ROOM_AREA_ROOT_PATH,
+    ROOM_AREA_OVERGROWN_CLEARING,
+    ROOM_AREA_SHRINE_APPROACH,
+    ROOM_AREA_THORNBACK_ARENA
 } RoomArea;
 
 typedef enum RoomSprite {
@@ -18,6 +21,7 @@ typedef enum RoomSprite {
     ROOM_SPRITE_MARKER,
     ROOM_SPRITE_TALL_GRASS,
     ROOM_SPRITE_SHRINE_DOOR,
+    ROOM_SPRITE_SHRINE_DOOR_OPEN,
     ROOM_SPRITE_ROOT_BRIDGE,
     ROOM_SPRITE_THORN_GATE,
     ROOM_SPRITE_COUNT
@@ -34,6 +38,13 @@ typedef enum RoomPropId {
     ROOM_PROP_BUSH
 } RoomPropId;
 
+typedef enum RoomInteractableKind {
+    ROOM_INTERACTABLE_ROOT_WEAVE,
+    ROOM_INTERACTABLE_ROOT_MARKER,
+    ROOM_INTERACTABLE_CLEARING_NOTE,
+    ROOM_INTERACTABLE_ROOTS_MURAL
+} RoomInteractableKind;
+
 typedef struct RoomProp {
     Vector2 drawPosition;
     float feetY;
@@ -42,6 +53,15 @@ typedef struct RoomProp {
     bool foreground;
     RoomSprite sprite;
 } RoomProp;
+
+typedef struct RoomInteractable {
+    const char *id;
+    const char *title;
+    const char *text;
+    const char *activatedText;
+    Rectangle interactBox;
+    RoomInteractableKind kind;
+} RoomInteractable;
 
 typedef struct Room {
     Texture2D tileset;   /* assets/tilesets/tileset_16.png (8 columns x 2 rows) */
@@ -56,6 +76,10 @@ void      Room_Draw(const Room *r, float time);
 Rectangle Room_Bounds(void);
 Vector2   Room_SpawnPoint(RoomArea area);
 const RoomProp *Room_Props(RoomArea area);
+/* Returns the area's inspect target when it is in front and within range. */
+const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
+                                               Vector2 facingDirection,
+                                               float maxDistance);
 /* Returns the paired spawn for a simple in-room connection, if reached. */
 bool      Room_GetTransition(const Room *r, Vector2 feet, RoomArea *destination,
                              Vector2 *spawnPoint);

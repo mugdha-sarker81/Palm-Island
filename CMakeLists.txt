@@ -52,6 +52,7 @@ add_subdirectory("${RAYLIB_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/raylib-build")
 add_executable(PalmIsland
     src/main.c
     src/input.c
+    src/interaction.c
     src/player.c
     src/room.c
     src/camera.c
@@ -67,6 +68,7 @@ if(PALM_BUILD_TESTS)
     enable_testing()
     add_executable(PalmIslandMovementTests
         tests/movement_collision_test.c
+        src/interaction.c
         src/player.c
         src/room.c
     )

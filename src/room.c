@@ -1,5 +1,6 @@
 #include "room.h"
 #include "tuning.h"
+#include <math.h>
 #include <stddef.h>
 
 enum {
@@ -78,9 +79,122 @@ static const RoomProp ROOT_PATH_PROPS[ROOM_PROP_COUNT] = {
      ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_THORN_GATE}
 };
 
+static const RoomProp CLEARING_PROPS[ROOM_PROP_COUNT] = {
+    {{112.0f, 80.0f}, 136.0f, {129.0f, 124.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_PALM},
+    {{480.0f, 80.0f}, 136.0f, {497.0f, 124.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_PALM},
+    {{112.0f, 224.0f}, 280.0f, {129.0f, 268.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_PALM},
+    {{480.0f, 224.0f}, 280.0f, {497.0f, 268.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_PALM},
+    {{208.0f, 112.0f}, 144.0f, {224.0f, 136.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{384.0f, 112.0f}, 144.0f, {400.0f, 136.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{208.0f, 224.0f}, 256.0f, {224.0f, 248.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{384.0f, 224.0f}, 256.0f, {400.0f, 248.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{64.0f, 176.0f}, 192.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER},
+    {{320.0f, 256.0f}, 276.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_TALL_GRASS}
+};
+
+static const RoomProp SHRINE_APPROACH_PROPS[ROOM_PROP_COUNT] = {
+    {{112.0f, 80.0f}, 136.0f, {129.0f, 124.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_PALM},
+    {{480.0f, 80.0f}, 136.0f, {497.0f, 124.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_PALM},
+    {{112.0f, 256.0f}, 312.0f, {129.0f, 300.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_PALM},
+    {{480.0f, 256.0f}, 312.0f, {497.0f, 300.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_PALM},
+    {{208.0f, 176.0f}, 208.0f, {224.0f, 200.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{384.0f, 176.0f}, 208.0f, {400.0f, 200.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{304.0f, 88.0f}, 112.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER},
+    {{176.0f, 296.0f}, 316.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_TALL_GRASS},
+    {{432.0f, 296.0f}, 316.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_TALL_GRASS},
+    {{304.0f, 16.0f}, 48.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_SHRINE_DOOR_OPEN}
+};
+
+static const RoomProp THORNBACK_ARENA_PROPS[ROOM_PROP_COUNT] = {
+    {{112.0f, 88.0f}, 144.0f, {129.0f, 132.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{480.0f, 88.0f}, 144.0f, {497.0f, 132.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{112.0f, 256.0f}, 312.0f, {129.0f, 300.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{480.0f, 256.0f}, 312.0f, {497.0f, 300.0f, 8.0f, 8.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{208.0f, 112.0f}, 144.0f, {224.0f, 136.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{384.0f, 112.0f}, 144.0f, {400.0f, 136.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{208.0f, 240.0f}, 272.0f, {224.0f, 264.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{384.0f, 240.0f}, 272.0f, {400.0f, 264.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{176.0f, 176.0f}, 200.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER},
+    {{432.0f, 176.0f}, 200.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER}
+};
+
+static const RoomInteractable ROOT_MARKINGS = {
+    .id = "jungle.root_markings_seen",
+    .title = "Living Thorn Weave",
+    .text = "Roots curl away from the thorn wall.\nThey trace a route around the gate.",
+    .interactBox = {304.0f, 144.0f, 32.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_ROOT_WEAVE
+};
+
+static const RoomInteractable ROOT_MARKER = {
+    .id = "jungle.root_marker_activated",
+    .title = "Root Marker",
+    .text = "A pulse follows the roots, tracing the safe bypass.",
+    .activatedText = "The roots still glow along the bypass.",
+    .interactBox = {208.0f, 136.0f, 16.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_ROOT_MARKER
+};
+
+static const RoomInteractable CLEARING_NOTE = {
+    .id = "jungle.clearing_camp_note_seen",
+    .title = "Explorer's Note",
+    .text = "The roots curl west around the thorn wall.\nSomeone marked the quiet path here.",
+    .interactBox = {56.0f, 176.0f, 16.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_CLEARING_NOTE
+};
+
+static const RoomInteractable ROOTS_MURAL = {
+    .id = "jungle.map_of_roots_seen",
+    .title = "Map of Roots",
+    .text = "The roots bend, they do not break.\nTheir curve marks a safe way through.",
+    .interactBox = {296.0f, 96.0f, 48.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_ROOTS_MURAL
+};
+
+static const RoomRamp *RampForArea(RoomArea area)
+{
+    if (area == ROOM_AREA_JUNGLE_ENTRANCE) return &ENTRANCE_RAMP;
+    if (area == ROOM_AREA_ROOT_PATH) return &ROOT_PATH_RAMP;
+    return NULL;
+}
+
 static const RoomProp *PropsForArea(RoomArea area)
 {
-    return area == ROOM_AREA_ROOT_PATH ? ROOT_PATH_PROPS : ENTRANCE_PROPS;
+    if (area == ROOM_AREA_ROOT_PATH) return ROOT_PATH_PROPS;
+    if (area == ROOM_AREA_OVERGROWN_CLEARING) return CLEARING_PROPS;
+    if (area == ROOM_AREA_SHRINE_APPROACH) return SHRINE_APPROACH_PROPS;
+    if (area == ROOM_AREA_THORNBACK_ARENA) return THORNBACK_ARENA_PROPS;
+    return ENTRANCE_PROPS;
 }
 
 bool Room_Load(Room *r, const char *tilesetPath)
@@ -163,9 +277,84 @@ static char RootPathTileAt(int x, int y)
     return ((x * 11 + y * 5) % 4 == 0) ? 'G' : 'J';
 }
 
+static bool ClearingPath(int x, int y)
+{
+    bool southTrail = x >= 18 && x <= 21 && y >= 18;
+    bool lowerJunction = y >= 17 && y <= 20 && x >= 8 && x <= 31;
+    bool westTrail = x >= 8 && x <= 10 && y >= 5 && y <= 17;
+    bool eastTrail = x >= 29 && x <= 31 && y >= 5 && y <= 17;
+    bool upperJunction = y >= 4 && y <= 5 && x >= 8 && x <= 31;
+    bool northTrail = x >= 18 && x <= 21 && y <= 4;
+    bool exposedTrail = x >= 18 && x <= 21 && y >= 5 && y <= 17;
+    bool nookTrail = x >= 4 && x <= 8 && y >= 12 && y <= 14;
+    return southTrail || lowerJunction || westTrail || eastTrail ||
+           upperJunction || northTrail || exposedTrail || nookTrail;
+}
+
+static char ClearingTileAt(int x, int y)
+{
+    if ((x >= 13 && x <= 16 && y >= 8 && y <= 14) ||
+        (x >= 23 && x <= 26 && y >= 8 && y <= 14)) return 'N';
+    if (ClearingPath(x, y)) {
+        bool outerPath = (x >= 8 && x <= 10) || (x >= 29 && x <= 31) ||
+                         (y >= 17 && y <= 20 && x >= 8 && x <= 31);
+        return outerPath ? 'G' : 'D';
+    }
+    if (x >= 2 && x <= 3 && y >= 11 && y <= 15) return 'N';
+    return ((x * 7 + y * 13) % 5 == 0) ? 'G' : 'J';
+}
+
+static bool ShrineApproachPath(int x, int y)
+{
+    bool southTrail = x >= 18 && x <= 21 && y >= 18;
+    bool lowerPlaza = y >= 16 && y <= 19 && x >= 10 && x <= 29;
+    bool westWalk = x >= 10 && x <= 12 && y >= 7 && y <= 16;
+    bool eastWalk = x >= 27 && x <= 29 && y >= 7 && y <= 16;
+    bool upperPlaza = y >= 6 && y <= 9 && x >= 10 && x <= 29;
+    bool shrineWalk = x >= 18 && x <= 21 && y >= 3 && y <= 6;
+    bool muralCourt = x >= 16 && x <= 23 && y >= 10 && y <= 15;
+    return southTrail || lowerPlaza || westWalk || eastWalk ||
+           upperPlaza || shrineWalk || muralCourt;
+}
+
+static char ShrineApproachTileAt(int x, int y)
+{
+    if (y <= 2) return x >= 18 && x <= 21 ? 'D' : 'S';
+    if ((x >= 14 && x <= 16 && y >= 11 && y <= 14) ||
+        (x >= 23 && x <= 25 && y >= 11 && y <= 14)) return 'N';
+    if (ShrineApproachPath(x, y)) {
+        bool courtyard = y >= 6 && y <= 19;
+        return courtyard ? 'D' : 'G';
+    }
+    return ((x * 5 + y * 11) % 4 == 0) ? 'G' : 'J';
+}
+
+static bool ThornbackArenaPath(int x, int y)
+{
+    bool westPerimeter = x >= 4 && x <= 8 && y >= 3 && y <= 19;
+    bool eastPerimeter = x >= 31 && x <= 35 && y >= 3 && y <= 19;
+    bool southPerimeter = y >= 16 && y <= 19 && x >= 4 && x <= 35;
+    bool northPerimeter = y >= 3 && y <= 6 && x >= 4 && x <= 35;
+    bool centerBowl = x >= 12 && x <= 27 && y >= 7 && y <= 15;
+    bool entrance = x >= 18 && x <= 21 && y >= 19;
+    return westPerimeter || eastPerimeter || southPerimeter ||
+           northPerimeter || centerBowl || entrance;
+}
+
+static char ThornbackArenaTileAt(int x, int y)
+{
+    if (ThornbackArenaPath(x, y)) {
+        return (x >= 12 && x <= 27 && y >= 7 && y <= 15) ? 'D' : 'G';
+    }
+    return ((x * 11 + y * 7) % 4 == 0) ? 'J' : 'G';
+}
+
 static char RoomTileAt(RoomArea area, int x, int y)
 {
     if (area == ROOM_AREA_ROOT_PATH) return RootPathTileAt(x, y);
+    if (area == ROOM_AREA_OVERGROWN_CLEARING) return ClearingTileAt(x, y);
+    if (area == ROOM_AREA_SHRINE_APPROACH) return ShrineApproachTileAt(x, y);
+    if (area == ROOM_AREA_THORNBACK_ARENA) return ThornbackArenaTileAt(x, y);
     return EntranceTileAt(x, y);
 }
 
@@ -196,9 +385,68 @@ const RoomProp *Room_Props(RoomArea area)
     return PropsForArea(area);
 }
 
+const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
+                                               Vector2 facingDirection,
+                                               float maxDistance)
+{
+    if (maxDistance < 0.0f) return NULL;
+    const RoomInteractable *targets[2];
+    size_t targetCount = 0;
+    if (area == ROOM_AREA_ROOT_PATH) {
+        targets[targetCount++] = &ROOT_MARKINGS;
+        targets[targetCount++] = &ROOT_MARKER;
+    } else if (area == ROOM_AREA_OVERGROWN_CLEARING) {
+        targets[targetCount++] = &CLEARING_NOTE;
+    } else if (area == ROOM_AREA_SHRINE_APPROACH) {
+        targets[targetCount++] = &ROOTS_MURAL;
+    } else {
+        return NULL;
+    }
+    const RoomInteractable *nearest = NULL;
+    float nearestDistanceSquared = maxDistance * maxDistance;
+    for (size_t i = 0; i < targetCount; i++) {
+        const RoomInteractable *target = targets[i];
+        float closestX = fmaxf(target->interactBox.x,
+                               fminf(feet.x, target->interactBox.x +
+                                               target->interactBox.width));
+        float closestY = fmaxf(target->interactBox.y,
+                               fminf(feet.y, target->interactBox.y +
+                                               target->interactBox.height));
+        Vector2 delta = {closestX - feet.x, closestY - feet.y};
+        float distanceSquared = delta.x * delta.x + delta.y * delta.y;
+        if (distanceSquared > nearestDistanceSquared) continue;
+
+        Vector2 targetCenter = {
+            target->interactBox.x + target->interactBox.width * 0.5f,
+            target->interactBox.y + target->interactBox.height * 0.5f
+        };
+        Vector2 facingDelta = {targetCenter.x - feet.x,
+                               targetCenter.y - feet.y};
+        float facingDistance = sqrtf(facingDelta.x * facingDelta.x +
+                                     facingDelta.y * facingDelta.y);
+        float facingLength = sqrtf(facingDirection.x * facingDirection.x +
+                                   facingDirection.y * facingDirection.y);
+        if (facingDistance > 0.0f && facingLength > 0.0f) {
+            float facingDot = (facingDirection.x * facingDelta.x +
+                               facingDirection.y * facingDelta.y) /
+                              (facingLength * facingDistance);
+            if (facingDot < INTERACT_FACING_DOT) continue;
+        }
+
+        if (nearest == NULL || distanceSquared < nearestDistanceSquared) {
+            nearest = target;
+            nearestDistanceSquared = distanceSquared;
+        }
+    }
+    return nearest;
+}
+
 Vector2 Room_SpawnPoint(RoomArea area)
 {
     if (area == ROOM_AREA_ROOT_PATH) return (Vector2){320.0f, 336.0f};
+    if (area == ROOM_AREA_OVERGROWN_CLEARING) return (Vector2){320.0f, 336.0f};
+    if (area == ROOM_AREA_SHRINE_APPROACH) return (Vector2){320.0f, 336.0f};
+    if (area == ROOM_AREA_THORNBACK_ARENA) return (Vector2){320.0f, 336.0f};
     return (Vector2){320.0f, 336.0f};
 }
 
@@ -218,6 +466,42 @@ bool Room_GetTransition(const Room *r, Vector2 feet, RoomArea *destination,
         *spawnPoint = Room_SpawnPoint(*destination);
         return true;
     }
+    if (r->area == ROOM_AREA_ROOT_PATH &&
+        feet.x >= 288.0f && feet.x <= 352.0f && feet.y <= 16.0f) {
+        *destination = ROOM_AREA_OVERGROWN_CLEARING;
+        *spawnPoint = Room_SpawnPoint(*destination);
+        return true;
+    }
+    if (r->area == ROOM_AREA_OVERGROWN_CLEARING &&
+        feet.x >= 288.0f && feet.x <= 352.0f && feet.y >= 352.0f) {
+        *destination = ROOM_AREA_ROOT_PATH;
+        *spawnPoint = (Vector2){320.0f, 32.0f};
+        return true;
+    }
+    if (r->area == ROOM_AREA_OVERGROWN_CLEARING &&
+        feet.x >= 288.0f && feet.x <= 352.0f && feet.y <= 16.0f) {
+        *destination = ROOM_AREA_SHRINE_APPROACH;
+        *spawnPoint = Room_SpawnPoint(*destination);
+        return true;
+    }
+    if (r->area == ROOM_AREA_SHRINE_APPROACH &&
+        feet.x >= 288.0f && feet.x <= 352.0f && feet.y >= 352.0f) {
+        *destination = ROOM_AREA_OVERGROWN_CLEARING;
+        *spawnPoint = (Vector2){320.0f, 32.0f};
+        return true;
+    }
+    if (r->area == ROOM_AREA_SHRINE_APPROACH &&
+        feet.x >= 288.0f && feet.x <= 352.0f && feet.y <= 16.0f) {
+        *destination = ROOM_AREA_THORNBACK_ARENA;
+        *spawnPoint = Room_SpawnPoint(*destination);
+        return true;
+    }
+    if (r->area == ROOM_AREA_THORNBACK_ARENA &&
+        feet.x >= 288.0f && feet.x <= 352.0f && feet.y >= 352.0f) {
+        *destination = ROOM_AREA_SHRINE_APPROACH;
+        *spawnPoint = (Vector2){320.0f, 32.0f};
+        return true;
+    }
     return false;
 }
 
@@ -228,8 +512,8 @@ static bool IsSolid(char tile)
 
 static bool IsUpperLandingTile(RoomArea area, int x, int y)
 {
-    const RoomRamp *ramp = area == ROOM_AREA_ROOT_PATH
-                               ? &ROOT_PATH_RAMP : &ENTRANCE_RAMP;
+    const RoomRamp *ramp = RampForArea(area);
+    if (ramp == NULL) return false;
     int left = (int)(ramp->upperLanding.x / TILE_SIZE);
     int top = (int)(ramp->upperLanding.y / TILE_SIZE);
     int right = (int)((ramp->upperLanding.x + ramp->upperLanding.width) / TILE_SIZE);
@@ -291,8 +575,8 @@ void Room_TryRampTransition(RoomArea area, Vector2 from, Vector2 to,
                             RoomElevation *elevation)
 {
     if (elevation == NULL) return;
-    const RoomRamp *ramp = area == ROOM_AREA_ROOT_PATH
-                               ? &ROOT_PATH_RAMP : &ENTRANCE_RAMP;
+    const RoomRamp *ramp = RampForArea(area);
+    if (ramp == NULL) return;
     float minFeetX = ramp->bounds.x + PLAYER_COLLIDER_W * 0.5f;
     float maxFeetX = ramp->bounds.x + ramp->bounds.width -
                      PLAYER_COLLIDER_W * 0.5f;

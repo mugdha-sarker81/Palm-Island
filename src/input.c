@@ -55,9 +55,13 @@ void Input_Poll(Input *in)
 {
     Vector2 pad = GamepadMove();
     Vector2 key = KeyboardMove();
+    bool keyboardInteract = IsKeyPressed(KEY_E);
+    bool gamepadInteract = IsGamepadAvailable(0) &&
+                           IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
     in->move = (Vector2){0.0f, 0.0f};
     in->magnitude = 0.0f;
     in->usingGamepad = false;
+    in->interactPressed = keyboardInteract || gamepadInteract;
 
     /* Whichever device is actually being pushed wins; gamepad first. */
     if (pad.x != 0.0f || pad.y != 0.0f) {

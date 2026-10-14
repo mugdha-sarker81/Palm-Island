@@ -2,7 +2,8 @@
 
 This page inventories concept references, generated starter art, and bundled
 source archives. The starter sprites and tileset are prototypes, not production
-art; the current movement room loads the player sheet and tileset.
+art. The current prototype loads the player sheet, tileset, and the closed-gate,
+closed-shrine, palm, rock, marker, tall-grass, and root-bridge props.
 
 ## Concept art
 
@@ -28,11 +29,11 @@ The two copies previously named `Fantasy Action-Platformer Design Sheet.png` and
 | `assets/previews/palm_island_map_1280x720.png` | 4× labeled overview map of Palm Island | World-layout reference; not a runtime scene |
 | `assets/previews/palm_island_mission_map_1780x720.png` | Island map with a numbered narrative route, weapons, and route legend | Mission-flow concept/reference; not implemented gameplay |
 
-The player sheet, tileset, palm, pillar, and bush are loaded in the
-movement-room prototype. The palm and pillar use foot/base Y sorting; the bush
-is a foreground occluder. Palm-trunk and pillar-base collision is enabled;
-upper canopy areas remain walk-through. The marker remains unused. See the art
-guide for palette and layout conventions.
+The open gate/shrine variants, village hut, bush, and pillar are currently
+reference assets, not props used by the three-area prototype. Runtime palms and
+other solid prop bases participate in collision; props are drawn by foot/base
+Y with foreground grass in the foreground pass. The marker is available in the
+Root Path blockout. See the art guide for palette and layout conventions.
 
 ## Generator
 
