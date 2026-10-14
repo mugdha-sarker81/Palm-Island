@@ -26,6 +26,7 @@ The two copies previously named `Fantasy Action-Platformer Design Sheet.png` and
 | `assets/previews/preview_scene.png` | 1280×768 lit scene preview (320×192 source) | Visual reference; taller than the selected 320×180 runtime canvas |
 | `assets/previews/phase3_preview_4x.png` | 4× pixel-art preview showing proposed blockout props | Phase 3 visual reference; not a runtime scene |
 | `assets/previews/palm_island_map_1280x720.png` | 4× labeled overview map of Palm Island | World-layout reference; not a runtime scene |
+| `assets/previews/palm_island_mission_map_1780x720.png` | Island map with a numbered narrative route, weapons, and route legend | Mission-flow concept/reference; not implemented gameplay |
 
 The player sheet, tileset, palm, pillar, and bush are loaded in the
 movement-room prototype. The palm and pillar use foot/base Y sorting; the bush
