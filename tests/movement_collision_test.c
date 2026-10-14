@@ -147,7 +147,53 @@ static void TestWallSlide(void)
     CHECK(CoreY(player.pos.y) > 24.0f);
     CHECK(CoreX(player.pos.x) <= 107.01f);
     CHECK(player.vel.y >= WALK_SPEED * 0.70f);
+    printf("Feel Gate wall slide: %.3f px/s tangential (%.1f%% of walk speed)\n",
+           player.vel.y, player.vel.y / WALK_SPEED * 100.0f);
     CHECK(!Room_Collides(Player_FeetCollider(&player)));
+}
+
+static void TestDiagonalSpeedMatchesCardinalSpeed(void)
+{
+    Player cardinal;
+    Player diagonal;
+    Vector2 start = Room_SpawnPoint();
+    Player_Init(&cardinal, start);
+    Player_Init(&diagonal, start);
+
+    Advance(&cardinal, (Vector2){1.0f, 0.0f}, SIM_HZ);
+    Advance(&diagonal, (Vector2){0.70710678f, -0.70710678f}, SIM_HZ);
+
+    float cardinalSpeed = Player_Speed(&cardinal);
+    float diagonalSpeed = Player_Speed(&diagonal);
+    float percentDifference = fabsf(diagonalSpeed - cardinalSpeed) / cardinalSpeed * 100.0f;
+    printf("Feel Gate diagonal speed: cardinal %.3f, diagonal %.3f px/s (%.3f%% difference)\n",
+           cardinalSpeed, diagonalSpeed, percentDifference);
+    CHECK(cardinalSpeed > 0.0f);
+    CHECK(percentDifference <= 1.0f);
+    CHECK(!Room_Collides(Player_FeetCollider(&cardinal)));
+    CHECK(!Room_Collides(Player_FeetCollider(&diagonal)));
+}
+
+static void TestStoppingMeetsFeelGate(void)
+{
+    Player player;
+    Player_Init(&player, Room_SpawnPoint());
+    Advance(&player, (Vector2){1.0f, 0.0f}, SIM_HZ);
+
+    float startX = player.pos.x;
+    Input released = {0};
+    int ticksToStop = 0;
+    while (Player_Speed(&player) > 0.001f && ticksToStop <= SIM_HZ) {
+        Player_Update(&player, &released, SIM_DT);
+        ticksToStop++;
+    }
+
+    float stopTime = (float)ticksToStop * SIM_DT;
+    float stoppingDistance = player.pos.x - startX;
+    printf("Feel Gate stopping: %.4f s, %.3f px drift\n", stopTime, stoppingDistance);
+    CHECK(ticksToStop <= (int)ceilf(0.08f * SIM_HZ));
+    CHECK(stoppingDistance <= WALK_SPEED * DECEL_TIME * 0.5f + 0.05f);
+    CHECK(Player_Speed(&player) <= 0.001f);
 }
 
 static void TestCornerAssistClearsCliffEdge(void)
@@ -250,6 +296,8 @@ int main(void)
     TestShrineRampLeadsToUpperWall();
     TestCliffAndWaterBlockPlayer();
     TestWallSlide();
+    TestDiagonalSpeedMatchesCardinalSpeed();
+    TestStoppingMeetsFeelGate();
     TestCornerAssistClearsCliffEdge();
     TestStairRampTransitionsBothWays();
     TestRampCannotBeBypassedAtItsSides();

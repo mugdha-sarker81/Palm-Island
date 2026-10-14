@@ -8,11 +8,12 @@ The map-by-map implementation blueprint is maintained in
 exploration/subtask sequence for all 24 proposed zones.
 
 **Last reconciled:** 2026-10-14
-**Current milestone:** top-down movement room, M1–M6 integrated in a
-640×368 scrolling test room and covered by focused tests; interactive movement,
-camera, prop occlusion, and ramp feel remain to be playtested
-**Next milestone:** playtest M1–M6 against the movement Feel Gate before
-blocking out the Forgotten Jungle slice.
+**Current milestone:** M1–M6 are integrated in a 640×368 scrolling test room.
+Initial automated Feel Gate measurements pass diagonal speed (0.000%
+difference), wall-slide speed (53.740 px/s; 70.7% of walk speed), and stopping
+(0.050 s, 1.583 px); the complete gate still requires interactive playtesting.
+**Next milestone:** complete the remaining automated and hands-on Feel Gate
+checks before blocking out the Forgotten Jungle slice.
 
 > Update this document when implementation status, a locked decision, or the
 > next task changes. Keep the current status factual. Do not mark design ideas
@@ -606,7 +607,22 @@ movement, camera, and render-order tests pass, including bidirectional stair
 transitions and elevation-aware collision/draw order; the ramp, camera feel,
 and prop occlusion still need interactive verification.
 
-Checklist for the M6 session:
+### Feel Gate status (2026-10-14)
+
+| # | Check | Status | Evidence / remaining verification |
+|---|---|---|---|
+| 1 | Diagonal speed | Automated pass | 76.000 vs 76.000 px/s; 0.000% difference |
+| 2 | Wall slide | Automated threshold pass | 53.740 px/s tangential (70.7% of 76 px/s); visual sticking/jitter remains untested |
+| 3 | Corners | Partial | Existing stair-entry tests cover slightly off-center straight approaches; 16 px doorway at all eight angles is not verified |
+| 4 | Stopping | Automated numeric pass | 0.050 s and 1.583 px drift; visible tile-slide judgment remains untested |
+| 5 | Camera | Partial | Bounds, smoothing, hard initialization, and integer render snapping are unit-tested; visual shimmer and stop behavior need playtesting |
+| 6 | Frame time | Pending | Needs runtime checks at 60 Hz, 144 Hz, and after a deliberate 200 ms stall |
+| 7 | Input | Pending | Keyboard/controller parity and controller drift require a physical controller playtest |
+| 8 | Depth | Partial | Stable ordering is unit-tested; visual palm/pillar pass-behind/in-front behavior needs playtesting |
+| 9 | Ramp | Partial | Automated ascent, descent, side blocking, and layer collision pass; visual clarity and exploitation need playtesting |
+| 10 | Two-minute wander | Pending | Requires an unprompted human tester |
+
+Checklist for the Feel Gate playtest:
 
 1. Run the game with keyboard and controller where available; verify the camera
    scrolls in all directions and stays inside room bounds.
