@@ -49,5 +49,13 @@ endif()
 
 add_subdirectory("${RAYLIB_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/raylib-build")
 
-add_executable(PalmIsland src/main.c)
+add_executable(PalmIsland
+    src/main.c
+    src/input.c
+    src/player.c
+    src/room.c
+)
+if(NOT MSVC)
+    target_compile_options(PalmIsland PRIVATE -Wall -Wextra)
+endif()
 target_link_libraries(PalmIsland PRIVATE raylib)

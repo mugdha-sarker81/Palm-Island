@@ -8,11 +8,10 @@ The map-by-map implementation blueprint is maintained in
 exploration/subtask sequence for all 24 proposed zones.
 
 **Last reconciled:** 2026-10-14
-**Current milestone:** minimal Raylib scaffold; top-down movement is not
-implemented
-**Next milestone:** build and playtest the top-down movement room one visible
-increment at a time, then make the Forgotten Jungle vertical slice—not the
-whole island.
+**Current milestone:** top-down movement room, M1–M2 integrated; collision and
+camera are not implemented
+**Next milestone:** add feet collision (M3), then complete and playtest the
+movement Feel Gate before blocking out the Forgotten Jungle slice.
 
 > Update this document when implementation status, a locked decision, or the
 > next task changes. Keep the current status factual. Do not mark design ideas
@@ -68,8 +67,10 @@ the original GDD remains historical reference material.
   `build/_deps` folder during first configure.
 - A clean configure/build succeeded on 2026-10-14 using the MSYS2 MinGW64
   toolchain (`C:\msys64\mingw64\bin`) and CMake's `MinGW Makefiles` generator
-  for the previous side-scrolling prototype. The replacement scaffold has not
-  yet been build-verified.
+  for the M1–M2 top-down movement-room build. The Windows executable launched
+  and remained open with the expected `Palm Island` window title. Raylib's
+  configure emitted an upstream CMake minimum-version deprecation warning;
+  the game sources compiled without warnings.
 - Use MSYS2 MinGW64, not the unrelated legacy `C:\MinGW` compiler. If the
   generator differs from the existing CMake cache, remove the generated
   `build` directory and configure it again.
@@ -79,23 +80,29 @@ the original GDD remains historical reference material.
 
 ### Current code state
 
-- The previous side-scrolling coast implementation and its movement, camera,
-  scenery, HUD, and marker interaction have been removed from `src/main.c`.
-- `src/main.c` is now a minimal Raylib window scaffold with a placeholder
-  screen; Escape closes the window.
-- The top-down room, player movement, collision, and asset loading are not
-  implemented yet.
+- The previous side-scrolling coast implementation has been removed.
+- M1–M2 now provide a 320×180 point-filtered render target with integer
+  letterboxed scaling; a 20×11 tile room; player art; normalized eight-way
+  keyboard/gamepad movement intent; acceleration/deceleration, facing
+  hysteresis, walk animation, fixed-step simulation, and an F3 debug overlay.
+  F11 toggles borderless windowed mode; Esc exits.
+- `src/room.c` draws ground, path, shrine, stairs, cliffs, and animated water.
+- Uploaded M1–M2 screenshots are retained in `docs/media/m1_m2/` as reference
+  captures; they were not captured during the Windows verification.
+- Collision against obstacles, camera follow, prop rendering/Y-sorting, and
+  ramp elevation behavior are not implemented yet. Until M3, only room bounds
+  constrain player movement.
 
 ### Not implemented yet
 
 - The complete game or the 10–15 minute vertical slice.
-- The selected top-down eight-direction game; the current executable is only
-  a window scaffold and is not evidence that the new direction is implemented.
+- The complete selected top-down game and Forgotten Jungle slice; the current
+  executable only implements the initial movement-room milestones.
 - Combat, enemies, health, boss/guardian behavior, or Thornfang.
 - Driftwood Village, rooms/region transitions, authored maps, or a level editor.
 - Production character/environment art, animation sheets, music, or sound.
-  Starter pixel-art sprites and a tileset now exist under `assets/`, but are
-  visual prototypes and are not loaded by the game.
+  Starter pixel-art sprites and a tileset exist under `assets/` and are loaded
+  by the movement-room prototype, but remain visual prototypes.
 - Dialogue system, inventory, persistent clue/world state, checkpoints, or
   save/load.
 - Character health, food/shop, weapon switching UI, material pickups, fixed
@@ -103,9 +110,9 @@ the original GDD remains historical reference material.
   blueprint but no such feature or production sprite is implemented.
 - Menu, pause/settings, release packaging, or automated gameplay tests.
 
-The concept images and ZIP archives in `assets/` are references, and the
-starter sprites and tileset are not yet loaded by the current game. Consult
-`docs/ASSET_INDEX.md` and review licenses before using third-party assets.
+The concept images and ZIP archives in `assets/` remain references. The game
+loads the starter player and tile assets; consult `docs/ASSET_INDEX.md` and
+review licenses before using third-party assets.
 
 ## 3. Product direction
 
@@ -345,12 +352,13 @@ verify before continuing.
 - Launch the executable and verify it remains open.
 - Keep generated CMake files under `build/`.
 
-**Gate:** the previous side-scrolling target passed this gate; the replacement
-scaffold still needs its own clean build and launch verification.
+**Gate:** M1–M2 Windows MinGW64 configure/build and launch passed on
+2026-10-14. Configure reported an upstream Raylib CMake deprecation warning;
+the game sources compiled without warnings.
 
 ### Phase 1 — Prototype the selected movement direction (next)
 
-1. Keep the new Raylib scaffold buildable while adding the top-down room.
+1. Keep the top-down movement room buildable as it grows one task at a time.
 2. In a bounded test room, implement eight-way normalized input, facing,
    stable solid-wall collision, room camera bounds, and one explicit
    ramp/elevation transition.
@@ -358,8 +366,8 @@ scaffold still needs its own clean build and launch verification.
    3D-like depth cue.
 4. Use the starting values in `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`; keep
    tunables in `src/tuning.h` and make one tuning change per playtest pass.
-5. Add an F3 debug overlay for frame time, feet collider, and active tuning;
-   playtest keyboard and controller.
+5. Extend the F3 debug overlay with frame time, feet collider, and active
+   tuning; playtest keyboard and controller.
 
 **Gate (Feel Gate):** pass all ten measurable checks in
 `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md` section 7, including diagonal speed
@@ -374,8 +382,8 @@ Do one bounded task per session; build and verify before continuing:
 
 | # | Task | Visible result |
 |---|---|---|
-| M1 | Add 320×180 render target, point filtering, integer scale/letterbox, and a tile-room blockout | Crisp ground in the window |
-| M2 | Load the player sheet and implement normalized eight-way movement using `tuning.h` | Diagonal speed matches cardinal |
+| M1 ✅ | Add 320×180 render target, point filtering, integer scale/letterbox, and a tile-room blockout | Pixel-scaled room; Windows build/launch verified |
+| M2 ✅ | Load the player sheet and implement normalized eight-way movement using `tuning.h` | Movement integrated; interactive speed test pending |
 | M3 | Add a 10×6 feet collider, axis-separated collision, and 4 px corner assist | Wall sliding and reliable doorway entry |
 | M4 | Add bounded camera follow, look-ahead, and render-time pixel snapping | No camera shimmer |
 | M5 | Add foot-Y sorting for palm/pillar props and one foreground occluder | Player passes behind and in front correctly |
@@ -551,14 +559,17 @@ Memory updated: yes/no
 
 ## 12. Current next work item
 
-**Build the top-down movement room incrementally**, starting with micro-task
-M1 (320×180 pixel-scaled room), then proceed through M2–M8 only after each
-result builds and is checked. Use the Feel Gate before starting combat, the
-Jungle blockout, or any signature mechanic.
+**Continue the top-down movement room with micro-task M3**: implement the
+10×6 feet collider, axis-separated solid collision, and 4 px corner assist.
+Keep cliffs, water, and shrine walls solid; keep the ramp walkable. Replace the
+temporary room-edge clamp and then run the collision acceptance cases. M1–M2
+are integrated and the Windows build launches, but movement has not yet been
+interactively tested here. Use the Feel Gate before starting combat, the Jungle
+blockout, or any signature mechanic.
 
 Checklist for that session:
 
-1. Keep the Raylib scaffold buildable throughout the movement-room work.
+1. Keep the movement-room buildable throughout this work.
 2. Implement the planned modules incrementally; avoid empty files and unrelated
    systems.
 3. Test cardinal/diagonal speed, wall sliding, corners, narrow passages,
@@ -566,11 +577,13 @@ Checklist for that session:
 4. Test keyboard and a connected controller if available.
 5. Record reproducible issues; fix only the top verified issue in a follow-up.
 
-**Completion record:** On 2026-10-14, the Windows target was clean-configured
-and the previous side-scroller was launched successfully. The side-scroller
-was removed on 2026-10-14 at the user's direction. The replacement scaffold's
-build and launch still need validation; top-down movement playtesting is not
-recorded.
+**Completion record:** On 2026-10-14, M1–M2 were clean-configured and built
+with MSYS2 MinGW64. The executable launched and remained open with the expected
+window title. Raylib configure emitted an upstream CMake deprecation warning;
+game sources built without warnings. Uploaded screenshots are reference
+captures, not screenshots from this Windows verification. Interactive
+movement, controller input, and visual asset loading were not independently
+checked here; Feel Gate checks remain pending.
 
 ## 13. Consolidation and reference map
 
@@ -597,6 +610,8 @@ Other references:
 - `GAME_FEEL_AND_SIGNATURE_PLAN.md` — movement/camera starting targets,
   measurable Feel Gate, polish tiers, and signature-mechanic proposals. The
   proposals require approval; the tuning values require playtesting.
+- `source/backups/m1_m2-upload/` — original uploaded M1–M2 patch and archive;
+  `media/m1_m2/` — uploaded screenshot references.
 - `source/ORIGINAL_GAME_DESIGN.txt` and older source documents — historical
   ideas and technical reference; they contain earlier scope and combat
   assumptions that may conflict with the current exploration-first direction.

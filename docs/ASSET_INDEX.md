@@ -2,7 +2,7 @@
 
 This page inventories concept references, generated starter art, and bundled
 source archives. The starter sprites and tileset are prototypes, not production
-art, and are not yet loaded by the game.
+art; the current movement room loads the player sheet and tileset.
 
 ## Concept art
 
@@ -24,8 +24,9 @@ The two copies previously named `Fantasy Action-Platformer Design Sheet.png` and
 | `assets/sprites/props/` | Palm, bush, marker, and pillar sprites | Test-room props |
 | `assets/previews/preview_scene.png` | 1280×768 lit scene preview (320×192 source) | Visual reference; taller than the selected 320×180 runtime canvas |
 
-These generated assets are not wired into `src/main.c`. See the art guide for
-their palette and layout conventions.
+The player sheet and tileset are loaded in the movement-room prototype; the
+larger prop sprites are not used yet. See the art guide for palette and layout
+conventions.
 
 ## Generator
 

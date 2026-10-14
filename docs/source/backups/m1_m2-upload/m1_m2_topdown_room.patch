@@ -1,0 +1,798 @@
+From 6cb47a3401cb323b317cb1401a359852843f506e Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 14 Oct 2026 11:53:00 +0000
+Subject: [PATCH] M1-M2: pixel-scaled tile room and eight-way player movement
+
+- 320x180 render target with integer scaling and letterboxing
+- fixed 120 Hz simulation step
+- tile room from assets/tilesets/tileset_16.png
+- normalized eight-way walking with accel/decel, facing hysteresis, walk animation
+- keyboard and gamepad input; F3 debug overlay
+- update project memory and README with verified status
+---
+ CMakeLists.txt         |  10 +++-
+ README.md              |  29 ++++++----
+ docs/PROJECT_MEMORY.md |  93 ++++++++++++++++++++----------
+ src/input.c            |  54 ++++++++++++++++++
+ src/input.h            |  14 +++++
+ src/main.c             | 127 +++++++++++++++++++++++++++++++++++++----
+ src/player.c           | 104 +++++++++++++++++++++++++++++++++
+ src/player.h           |  29 ++++++++++
+ src/room.c             |  79 +++++++++++++++++++++++++
+ src/room.h             |  20 +++++++
+ src/tuning.h           |  37 ++++++++++++
+ 11 files changed, 546 insertions(+), 50 deletions(-)
+ create mode 100644 src/input.c
+ create mode 100644 src/input.h
+ create mode 100644 src/player.c
+ create mode 100644 src/player.h
+ create mode 100644 src/room.c
+ create mode 100644 src/room.h
+ create mode 100644 src/tuning.h
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index da6765e..c7ffd16 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -49,5 +49,13 @@ endif()
+ 
+ add_subdirectory("${RAYLIB_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/raylib-build")
+ 
+-add_executable(PalmIsland src/main.c)
++add_executable(PalmIsland
++    src/main.c
++    src/input.c
++    src/player.c
++    src/room.c
++)
++if(NOT MSVC)
++    target_compile_options(PalmIsland PRIVATE -Wall -Wextra)
++endif()
+ target_link_libraries(PalmIsland PRIVATE raylib)
+diff --git a/README.md b/README.md
+index 09bafdd..4240639 100644
+--- a/README.md
++++ b/README.md
+@@ -7,9 +7,10 @@ and understanding the island—not grinding or constant combat.
+ 
+ > **Honest status:** this is not the complete game or the planned Forgotten
+ > Jungle vertical slice. The previous side-scrolling prototype was removed;
+-> the current executable is a minimal Raylib window scaffold. Top-down
+-> movement, authored levels, enemies, combat, dialogue, audio, and saving are
+-> not implemented.
++> the current executable is a small top-down movement test room (pixel-scaled
++> tile map and an eight-way walking character). Collision, camera, props,
++> authored levels, enemies, combat, dialogue, audio, and saving are not
++> implemented.
+ >
+ > **Direction:** the game is planned as top-down 2D pixel art with
+ > eight-direction movement and 3D-like depth cues (layering, occlusion, and
+@@ -58,18 +59,26 @@ downloads Raylib 5.5 into `build/_deps`; subsequent builds reuse it.
+ ## Current executable
+ 
+ The previous side-scrolling prototype has been removed. The current executable
+-is a minimal Raylib window scaffold; the top-down movement room is not
+-implemented yet. Close the window or press Esc to exit.
++is a top-down movement test room: walk Ichigo around a 320×180 pixel-art scene.
++There is no collision yet, so he can walk through cliffs and water; only the
++room edges stop him.
++
++| Action | Keyboard | Controller |
++|---|---|---|
++| Move (8 directions) | WASD or arrow keys | Left stick / D-pad |
++| Debug overlay (FPS, speed, position) | F3 | — |
++| Borderless windowed | F11 | — |
++| Quit | Esc | — |
+ 
+ ## Project layout
+ 
+ ```text
+ AGENTS.md                 Assistant behavior and memory entry point
+-src/main.c                Minimal runnable application scaffold
+-src/tuning.h               Planned centralized movement/camera tuning values
+-src/player.[ch]            Planned player movement and collision module
+-src/room.[ch]              Planned test-room geometry and elevation connectors
+-src/input.[ch]             Planned keyboard/controller input mapping
++src/main.c                Window, 320x180 canvas, fixed-step loop, asset lookup
++src/tuning.h              Movement, loop, and canvas tuning values
++src/player.[ch]           Eight-way movement, facing, animation (collision planned: M3)
++src/room.[ch]             Tile room drawing (solid tiles and ramp logic planned: M3/M6)
++src/input.[ch]            Keyboard and gamepad movement input
+ src/camera.[ch]            Planned room-bounded camera
+ src/render.[ch]            Planned pixel-art scene rendering and depth ordering
+ assets/concept_art/       Visual references and art guide
+diff --git a/docs/PROJECT_MEMORY.md b/docs/PROJECT_MEMORY.md
+index 4954172..cfee7c5 100644
+--- a/docs/PROJECT_MEMORY.md
++++ b/docs/PROJECT_MEMORY.md
+@@ -8,10 +8,10 @@ The map-by-map implementation blueprint is maintained in
+ exploration/subtask sequence for all 24 proposed zones.
+ 
+ **Last reconciled:** 2026-10-14
+-**Current milestone:** minimal Raylib scaffold; top-down movement is not
+-implemented
+-**Next milestone:** build and playtest the top-down movement room one visible
+-increment at a time, then make the Forgotten Jungle vertical slice—not the
++**Current milestone:** top-down movement room, tasks M1–M2 done (pixel-scaled
++tile room + eight-way walking); collision and camera not yet implemented
++**Next milestone:** continue the movement room with M3 (feet collider), then
++M4–M8 one visible increment at a time, then make the Forgotten Jungle vertical slice—not the
+ whole island.
+ 
+ > Update this document when implementation status, a locked decision, or the
+@@ -68,8 +68,12 @@ the original GDD remains historical reference material.
+   `build/_deps` folder during first configure.
+ - A clean configure/build succeeded on 2026-10-14 using the MSYS2 MinGW64
+   toolchain (`C:\msys64\mingw64\bin`) and CMake's `MinGW Makefiles` generator
+-  for the previous side-scrolling prototype. The replacement scaffold has not
+-  yet been build-verified.
++  for the previous side-scrolling prototype.
++- The M1–M2 build was verified on 2026-10-14 on **Linux** (Ubuntu 24.04,
++  GCC 13, CMake, Raylib 5.5, software OpenGL under Xvfb): clean configure and
++  build with `-Wall -Wextra` and zero warnings; the executable launched, loaded
++  both asset files, and stayed running. It has **not** yet been built or run on
++  the Windows MSYS2 MinGW64 target or with a real GPU, monitor, or controller.
+ - Use MSYS2 MinGW64, not the unrelated legacy `C:\MinGW` compiler. If the
+   generator differs from the existing CMake cache, remove the generated
+   `build` directory and configure it again.
+@@ -79,23 +83,37 @@ the original GDD remains historical reference material.
+ 
+ ### Current code state
+ 
+-- The previous side-scrolling coast implementation and its movement, camera,
+-  scenery, HUD, and marker interaction have been removed from `src/main.c`.
+-- `src/main.c` is now a minimal Raylib window scaffold with a placeholder
+-  screen; Escape closes the window.
+-- The top-down room, player movement, collision, and asset loading are not
+-  implemented yet.
++- The previous side-scrolling prototype was removed earlier; M1–M2 replace the
++  blank scaffold.
++- `src/main.c`: window, 320×180 `RenderTexture` shown with integer scaling and
++  letterboxing (point filter), fixed 120 Hz simulation step with accumulator,
++  asset-folder lookup (repo root, `../`, `../../`, or next to the exe), and a
++  minimal F3 overlay (FPS, speed, feet position). F11 toggles borderless
++  windowed; Esc quits.
++- `src/tuning.h`: movement, loop, canvas, and animation constants.
++- `src/input.[ch]`: WASD/arrows plus gamepad (analog stick with radial dead
++  zone and magnitude, D-pad fallback), normalized, polled once per frame.
++- `src/player.[ch]`: eight-way movement with acceleration/deceleration and
++  turn boost, facing with 60° hysteresis, walk animation from
++  `assets/sprites/player_sheet_14x20.png`, shadow, whole-pixel draw snapping.
++- `src/room.[ch]`: 20×11-tile hard-coded room from
++  `assets/tilesets/tileset_16.png` (grass, jungle floor, dirt, sand, animated
++  water, shrine stone, cliff, stairs).
++- **Known/intentional limits until later tasks:** no collision (the player can
++  walk through cliffs, water, and the shrine wall; only the room edges stop
++  him), no camera (the room is 176 px tall inside a 180 px canvas, so a 4 px
++  strip shows at the bottom), no props or depth sorting, no ramp logic, no
++  interaction.
+ 
+ ### Not implemented yet
+ 
+ - The complete game or the 10–15 minute vertical slice.
+-- The selected top-down eight-direction game; the current executable is only
+-  a window scaffold and is not evidence that the new direction is implemented.
++- The full top-down game: only eight-way walking in one tile room exists.
+ - Combat, enemies, health, boss/guardian behavior, or Thornfang.
+ - Driftwood Village, rooms/region transitions, authored maps, or a level editor.
+ - Production character/environment art, animation sheets, music, or sound.
+-  Starter pixel-art sprites and a tileset now exist under `assets/`, but are
+-  visual prototypes and are not loaded by the game.
++  The starter player sheet and tileset under `assets/` are now loaded, but
++  are visual prototypes. Props (palm, bush, marker, pillar) are not loaded yet.
+ - Dialogue system, inventory, persistent clue/world state, checkpoints, or
+   save/load.
+ - Character health, food/shop, weapon switching UI, material pickups, fixed
+@@ -104,7 +122,8 @@ the original GDD remains historical reference material.
+ - Menu, pause/settings, release packaging, or automated gameplay tests.
+ 
+ The concept images and ZIP archives in `assets/` are references, and the
+-starter sprites and tileset are not yet loaded by the current game. Consult
++starter sprites and tileset are loaded from `assets/sprites/` and
++`assets/tilesets/`. Consult
+ `docs/ASSET_INDEX.md` and review licenses before using third-party assets.
+ 
+ ## 3. Product direction
+@@ -240,6 +259,12 @@ weapons distinct without making any one a strict power upgrade.
+   starter art and target a fixed 120 Hz simulation with display-rate rendering.
+   Signature mechanics remain proposals and require approval before
+   implementation.
++- **2026-10-14:** M1–M2 implementation choices: the room is 20×11 tiles
++  (176 px) until the M4 camera exists; the room-edge clamp and 5 px side margin
++  are temporary until the M3 collider; a minimal F3 overlay was added early so
++  the diagonal-speed check could be read on screen (M8 extends it); assets are
++  found relative to the working directory or exe, never by absolute path; the
++  build uses `-Wall -Wextra`.
+ - **2026-10-14:** User approved character/HP/weapon-switching/food/shop/tool/
+   costume planning and selected a small fixed set of material-built tools,
+   not full recipe crafting. Starting balance values remain proposals pending
+@@ -345,8 +370,9 @@ verify before continuing.
+ - Launch the executable and verify it remains open.
+ - Keep generated CMake files under `build/`.
+ 
+-**Gate:** the previous side-scrolling target passed this gate; the replacement
+-scaffold still needs its own clean build and launch verification.
++**Gate:** the previous side-scrolling target passed this gate. The M1–M2
++build passed a clean Linux build and launch (see Current status); Windows
++MinGW64 verification is still pending.
+ 
+ ### Phase 1 — Prototype the selected movement direction (next)
+ 
+@@ -374,8 +400,8 @@ Do one bounded task per session; build and verify before continuing:
+ 
+ | # | Task | Visible result |
+ |---|---|---|
+-| M1 | Add 320×180 render target, point filtering, integer scale/letterbox, and a tile-room blockout | Crisp ground in the window |
+-| M2 | Load the player sheet and implement normalized eight-way movement using `tuning.h` | Diagonal speed matches cardinal |
++| M1 ✅ | Add 320×180 render target, point filtering, integer scale/letterbox, and a tile-room blockout | Crisp ground in the window |
++| M2 ✅ | Load the player sheet and implement normalized eight-way movement using `tuning.h` | Diagonal speed matches cardinal |
+ | M3 | Add a 10×6 feet collider, axis-separated collision, and 4 px corner assist | Wall sliding and reliable doorway entry |
+ | M4 | Add bounded camera follow, look-ahead, and render-time pixel snapping | No camera shimmer |
+ | M5 | Add foot-Y sorting for palm/pillar props and one foreground occluder | Player passes behind and in front correctly |
+@@ -551,9 +577,12 @@ Memory updated: yes/no
+ 
+ ## 12. Current next work item
+ 
+-**Build the top-down movement room incrementally**, starting with micro-task
+-M1 (320×180 pixel-scaled room), then proceed through M2–M8 only after each
+-result builds and is checked. Use the Feel Gate before starting combat, the
++**Continue the top-down movement room with micro-task M3** (10×6 feet
++collider, axis-separated collision against solid tiles, 4 px corner assist),
++then M4–M8 only after each result builds and is checked. M1 and M2 are done.
++For M3, mark cliff face (`N`), water (`W`), and shrine wall tiles solid, keep
++the ramp (`R`) walkable, and replace the temporary room-edge clamp in
++`Player_Update`. Use the Feel Gate before starting combat, the
+ Jungle blockout, or any signature mechanic.
+ 
+ Checklist for that session:
+@@ -566,11 +595,17 @@ Checklist for that session:
+ 4. Test keyboard and a connected controller if available.
+ 5. Record reproducible issues; fix only the top verified issue in a follow-up.
+ 
+-**Completion record:** On 2026-10-14, the Windows target was clean-configured
+-and the previous side-scroller was launched successfully. The side-scroller
+-was removed on 2026-10-14 at the user's direction. The replacement scaffold's
+-build and launch still need validation; top-down movement playtesting is not
+-recorded.
++**Completion record:** On 2026-10-14, M1–M2 were built and checked on Linux:
++clean build with zero warnings; an ad-hoc headless test of the player module
++passed 18 checks (cardinal and diagonal speed both 76.00 px/s, full speed in
++~0.075 s, stop in 0.050 s, half stick push gives half speed, facing
++hysteresis, room-edge clamping); the game ran under Xvfb with scripted keys,
++and a screenshot showed the tile room, player sprite, and F3 speed readout of
++76.00 px/s while holding W+D. The ad-hoc test file is not committed. **Not
++verified:** Windows MinGW64 build, real-GPU/monitor behavior, gamepad input
++(code path untested), frame-time stability at 144 Hz or after a stall, and
++subjective feel. Feel Gate checks #1 and #4 pass numerically; the rest are
++pending.
+ 
+ ## 13. Consolidation and reference map
+ 
+diff --git a/src/input.c b/src/input.c
+new file mode 100644
+index 0000000..487d27a
+--- /dev/null
++++ b/src/input.c
+@@ -0,0 +1,54 @@
++#include "input.h"
++#include "tuning.h"
++#include <math.h>
++
++static Vector2 KeyboardMove(void)
++{
++    Vector2 v = {0.0f, 0.0f};
++    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))  v.x -= 1.0f;
++    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) v.x += 1.0f;
++    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))    v.y -= 1.0f;
++    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))  v.y += 1.0f;
++
++    /* Normalize so diagonals are not faster. */
++    float len = sqrtf(v.x * v.x + v.y * v.y);
++    if (len > 0.0f) { v.x /= len; v.y /= len; }
++    return v;
++}
++
++static Vector2 GamepadMove(void)
++{
++    Vector2 v = {0.0f, 0.0f};
++    if (!IsGamepadAvailable(0)) return v;
++
++    /* Analog stick with a radial dead zone, remapped so the edge of the
++     * dead zone is 0 and a full push is 1 (keeps gentle pushes slow). */
++    float x = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X);
++    float y = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y);
++    float len = sqrtf(x * x + y * y);
++    if (len > STICK_DEADZONE) {
++        float scaled = (len - STICK_DEADZONE) / (1.0f - STICK_DEADZONE);
++        if (scaled > 1.0f) scaled = 1.0f;
++        v.x = (x / len) * scaled;
++        v.y = (y / len) * scaled;
++        return v;
++    }
++
++    /* D-pad fallback (digital, normalized). */
++    if (IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_LEFT))  v.x -= 1.0f;
++    if (IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) v.x += 1.0f;
++    if (IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_UP))    v.y -= 1.0f;
++    if (IsGamepadButtonDown(0, GAMEPAD_BUTTON_LEFT_FACE_DOWN))  v.y += 1.0f;
++    len = sqrtf(v.x * v.x + v.y * v.y);
++    if (len > 0.0f) { v.x /= len; v.y /= len; }
++    return v;
++}
++
++void Input_Poll(Input *in)
++{
++    Vector2 pad = GamepadMove();
++    Vector2 key = KeyboardMove();
++    /* Whichever device is actually being pushed wins; gamepad first. */
++    if (pad.x != 0.0f || pad.y != 0.0f) in->move = pad;
++    else                                in->move = key;
++}
+diff --git a/src/input.h b/src/input.h
+new file mode 100644
+index 0000000..3c86be0
+--- /dev/null
++++ b/src/input.h
+@@ -0,0 +1,14 @@
++#ifndef PALM_INPUT_H
++#define PALM_INPUT_H
++
++#include "raylib.h"
++
++/* Movement intent for one frame. Magnitude is 0..1 (keyboard is always 0 or 1). */
++typedef struct Input {
++    Vector2 move;
++} Input;
++
++/* Poll keyboard and gamepad once per rendered frame. */
++void Input_Poll(Input *in);
++
++#endif
+diff --git a/src/main.c b/src/main.c
+index c3aabfe..16d7233 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1,24 +1,131 @@
+ #include "raylib.h"
++#include "tuning.h"
++#include "input.h"
++#include "player.h"
++#include "room.h"
++#include <math.h>
++#include <stdio.h>
+ 
+-#define WINDOW_WIDTH 1280
+-#define WINDOW_HEIGHT 720
++/* ---- asset lookup: works from the repo root, build/, or next to the exe ---- */
++static char gAssetRoot[512] = "";
++
++static bool FindAssetRoot(void)
++{
++    char candidate[512];
++    const char *app = GetApplicationDirectory();
++    const char *prefixes[] = { "", "../", "../../", NULL };
++
++    for (int i = 0; prefixes[i]; i++) {
++        snprintf(candidate, sizeof(candidate), "%sassets/tilesets/tileset_16.png", prefixes[i]);
++        if (FileExists(candidate)) {
++            snprintf(gAssetRoot, sizeof(gAssetRoot), "%sassets", prefixes[i]);
++            return true;
++        }
++    }
++    for (int i = 0; prefixes[i]; i++) {
++        snprintf(candidate, sizeof(candidate), "%s%sassets/tilesets/tileset_16.png", app, prefixes[i]);
++        if (FileExists(candidate)) {
++            snprintf(gAssetRoot, sizeof(gAssetRoot), "%s%sassets", app, prefixes[i]);
++            return true;
++        }
++    }
++    return false;
++}
++
++static const char *AssetPath(const char *relative)
++{
++    return TextFormat("%s/%s", gAssetRoot, relative);
++}
++
++/* ---- integer-scaled, letterboxed destination for the 320x180 canvas ---- */
++static Rectangle CanvasDestination(void)
++{
++    int sw = GetScreenWidth(), sh = GetScreenHeight();
++    int scale = sw / VIRTUAL_W;
++    int scaleY = sh / VIRTUAL_H;
++    if (scaleY < scale) scale = scaleY;
++    if (scale < 1) scale = 1;
++    float w = (float)(VIRTUAL_W * scale), h = (float)(VIRTUAL_H * scale);
++    return (Rectangle){ floorf((sw - w) * 0.5f), floorf((sh - h) * 0.5f), w, h };
++}
+ 
+ int main(void)
+ {
+     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
+-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Palm Island");
+-    SetTargetFPS(60);
++    InitWindow(1280, 720, "Palm Island");
++    SetWindowMinSize(VIRTUAL_W, VIRTUAL_H);
++    SetTargetFPS(240); /* safety cap if vsync is unavailable */
++    SetExitKey(KEY_ESCAPE);
++
++    Room room = {0};
++    Player player;
++    Texture2D sheet = {0};
++    bool assetsOk = FindAssetRoot();
++    if (assetsOk) {
++        assetsOk = Room_Load(&room, AssetPath("tilesets/tileset_16.png"));
++        sheet = LoadTexture(AssetPath("sprites/player_sheet_14x20.png"));
++        if (sheet.id == 0) assetsOk = false;
++    }
++
++    RenderTexture2D canvas = LoadRenderTexture(VIRTUAL_W, VIRTUAL_H);
++    SetTextureFilter(canvas.texture, TEXTURE_FILTER_POINT);
++    if (room.tileset.id != 0) SetTextureFilter(room.tileset, TEXTURE_FILTER_POINT);
++    if (sheet.id != 0)        SetTextureFilter(sheet, TEXTURE_FILTER_POINT);
++
++    Player_Init(&player, Room_SpawnPoint());
++    Input input = {0};
++    bool debug = false;
++    double accumulator = 0.0;
++    float worldTime = 0.0f;
++
++    while (!WindowShouldClose()) {
++        if (IsKeyPressed(KEY_F3)) debug = !debug;
++        if (IsKeyPressed(KEY_F11)) ToggleBorderlessWindowed();
++
++        /* Fixed-timestep simulation. Input is polled once per rendered frame. */
++        float frame = GetFrameTime();
++        if (frame > MAX_FRAME_TIME) frame = MAX_FRAME_TIME;
++        accumulator += frame;
++        Input_Poll(&input);
++
++        int steps = 0;
++        while (accumulator >= SIM_DT && steps < MAX_SIM_STEPS) {
++            if (assetsOk) Player_Update(&player, &input, SIM_DT, Room_Bounds());
++            worldTime += SIM_DT;
++            accumulator -= SIM_DT;
++            steps++;
++        }
++        if (steps == MAX_SIM_STEPS) accumulator = 0.0; /* drop leftover after a stall */
++
++        /* ---- draw the world into the 320x180 canvas ---- */
++        BeginTextureMode(canvas);
++        ClearBackground((Color){11, 26, 34, 255});
++        if (assetsOk) {
++            Room_Draw(&room, worldTime);
++            Player_Draw(&player, sheet);
++        } else {
++            DrawText("Assets not found.", 8, 8, 10, WHITE);
++            DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);
++            DrawText("the assets/ folder next to build/.", 8, 36, 10, WHITE);
++        }
++        EndTextureMode();
+ 
+-    while (!WindowShouldClose())
+-    {
++        /* ---- present: integer scale, point filter, letterbox ---- */
+         BeginDrawing();
+-        ClearBackground((Color){20, 31, 39, 255});
+-        DrawText("PALM ISLAND", 48, 48, 32, (Color){213, 232, 222, 255});
+-        DrawText("Top-down movement room not implemented yet.",
+-                 48, 100, 20, (Color){180, 196, 188, 255});
++        ClearBackground(BLACK);
++        Rectangle src = {0.0f, 0.0f, (float)VIRTUAL_W, -(float)VIRTUAL_H}; /* render textures are flipped */
++        DrawTexturePro(canvas.texture, src, CanvasDestination(), (Vector2){0, 0}, 0.0f, WHITE);
++        if (debug) {
++            DrawText(TextFormat("FPS %d  frame %.2f ms", GetFPS(), GetFrameTime() * 1000.0f), 10, 10, 20, RAYWHITE);
++            DrawText(TextFormat("speed %.2f px/s  (walk %.0f)", Player_Speed(&player), WALK_SPEED), 10, 34, 20, RAYWHITE);
++            DrawText(TextFormat("feet %.1f, %.1f", player.pos.x, player.pos.y), 10, 58, 20, RAYWHITE);
++        }
+         EndDrawing();
+     }
+ 
++    if (sheet.id != 0) UnloadTexture(sheet);
++    Room_Unload(&room);
++    UnloadRenderTexture(canvas);
+     CloseWindow();
+     return 0;
+ }
+diff --git a/src/player.c b/src/player.c
+new file mode 100644
+index 0000000..2054c2a
+--- /dev/null
++++ b/src/player.c
+@@ -0,0 +1,104 @@
++#include "player.h"
++#include "tuning.h"
++#include <math.h>
++
++static const Vector2 FACING_VEC[4] = {
++    { 0.0f,  1.0f},  /* down  */
++    {-1.0f,  0.0f},  /* left  */
++    { 1.0f,  0.0f},  /* right */
++    { 0.0f, -1.0f}   /* up    */
++};
++
++static float Dot(Vector2 a, Vector2 b) { return a.x * b.x + a.y * b.y; }
++static float Length(Vector2 v)         { return sqrtf(v.x * v.x + v.y * v.y); }
++
++void Player_Init(Player *p, Vector2 feet)
++{
++    p->pos = feet;
++    p->vel = (Vector2){0.0f, 0.0f};
++    p->facing = FACING_DOWN;
++    p->animTime = 0.0f;
++}
++
++/* Keep the current facing while the input stays within FACING_KEEP_DEG of it.
++ * This stops the sprite flickering on diagonals. */
++static Facing PickFacing(Facing current, Vector2 dir)
++{
++    const float keepCos = cosf(FACING_KEEP_DEG * (PI / 180.0f));
++    if (Dot(dir, FACING_VEC[current]) >= keepCos) return current;
++
++    /* Otherwise choose the closest cardinal; on an exact tie prefer horizontal. */
++    if (fabsf(dir.x) >= fabsf(dir.y)) return dir.x < 0.0f ? FACING_LEFT : FACING_RIGHT;
++    return dir.y < 0.0f ? FACING_UP : FACING_DOWN;
++}
++
++void Player_Update(Player *p, const Input *in, float dt, Rectangle bounds)
++{
++    float inLen = Length(in->move);
++    bool moving = inLen > 0.0f;
++
++    Vector2 desired = {in->move.x * WALK_SPEED, in->move.y * WALK_SPEED};
++    float accel = WALK_DECEL;
++    if (moving) {
++        accel = WALK_ACCEL;
++        /* Snappier turns when pushing against current motion. */
++        if (Dot(p->vel, desired) < 0.0f) accel *= TURN_ACCEL_MULT;
++    }
++
++    /* Move velocity toward desired by at most accel*dt (vector approach). */
++    Vector2 delta = {desired.x - p->vel.x, desired.y - p->vel.y};
++    float dl = Length(delta);
++    float maxStep = accel * dt;
++    if (dl <= maxStep) {
++        p->vel = desired;
++    } else {
++        p->vel.x += delta.x / dl * maxStep;
++        p->vel.y += delta.y / dl * maxStep;
++    }
++
++    if (moving) {
++        Vector2 dir = {in->move.x / inLen, in->move.y / inLen};
++        p->facing = PickFacing(p->facing, dir);
++    }
++
++    p->pos.x += p->vel.x * dt;
++    p->pos.y += p->vel.y * dt;
++
++    /* Temporary: stay inside the room until the feet collider arrives (M3). */
++    float minX = bounds.x + PLAYER_WALL_MARGIN, maxX = bounds.x + bounds.width  - PLAYER_WALL_MARGIN;
++    float minY = bounds.y + PLAYER_SPRITE_H, maxY = bounds.y + bounds.height;
++    if (p->pos.x < minX) { p->pos.x = minX; if (p->vel.x < 0.0f) p->vel.x = 0.0f; }
++    if (p->pos.x > maxX) { p->pos.x = maxX; if (p->vel.x > 0.0f) p->vel.x = 0.0f; }
++    if (p->pos.y < minY) { p->pos.y = minY; if (p->vel.y < 0.0f) p->vel.y = 0.0f; }
++    if (p->pos.y > maxY) { p->pos.y = maxY; if (p->vel.y > 0.0f) p->vel.y = 0.0f; }
++
++    /* Walk animation advances with speed, resets when standing still. */
++    float speedFrac = Length(p->vel) / WALK_SPEED;
++    if (speedFrac > 0.05f) p->animTime += dt * speedFrac;
++    else                   p->animTime = 0.0f;
++}
++
++float Player_Speed(const Player *p) { return Length(p->vel); }
++
++void Player_Draw(const Player *p, Texture2D sheet)
++{
++    /* Whole-pixel snapping happens only at draw time. */
++    int fx = (int)floorf(p->pos.x);
++    int fy = (int)floorf(p->pos.y);
++
++    DrawEllipse(fx, fy - 1, 6.0f, 2.5f, (Color){8, 24, 28, 110});
++
++    int frame = 0; /* idle */
++    if (p->animTime > 0.0f) {
++        /* Sequence: walk A, idle, walk B, idle (sheet columns 1,2,3,0). */
++        frame = (1 + (int)(p->animTime / WALK_FRAME_TIME)) % 4;
++    }
++    Rectangle src = {
++        (float)(frame * PLAYER_SPRITE_W),
++        (float)((int)p->facing * PLAYER_SPRITE_H),
++        (float)PLAYER_SPRITE_W,
++        (float)PLAYER_SPRITE_H
++    };
++    Vector2 dst = {(float)(fx - PLAYER_SPRITE_W / 2), (float)(fy - PLAYER_SPRITE_H)};
++    DrawTextureRec(sheet, src, dst, WHITE);
++}
+diff --git a/src/player.h b/src/player.h
+new file mode 100644
+index 0000000..96096cc
+--- /dev/null
++++ b/src/player.h
+@@ -0,0 +1,29 @@
++#ifndef PALM_PLAYER_H
++#define PALM_PLAYER_H
++
++#include "raylib.h"
++#include "input.h"
++
++/* Row order in assets/sprites/player_sheet_14x20.png */
++typedef enum Facing {
++    FACING_DOWN = 0,
++    FACING_LEFT = 1,
++    FACING_RIGHT = 2,
++    FACING_UP = 3
++} Facing;
++
++typedef struct Player {
++    Vector2 pos;     /* feet point (bottom-centre), the world anchor */
++    Vector2 vel;     /* px/s */
++    Facing facing;
++    float animTime;  /* seconds spent walking since last stop */
++} Player;
++
++void  Player_Init(Player *p, Vector2 feet);
++/* Advance by one fixed simulation step. bounds limits the feet point. */
++void  Player_Update(Player *p, const Input *in, float dt, Rectangle bounds);
++float Player_Speed(const Player *p);
++/* Draw shadow and sprite. Snaps to whole pixels only here. */
++void  Player_Draw(const Player *p, Texture2D sheet);
++
++#endif
+diff --git a/src/room.c b/src/room.c
+new file mode 100644
+index 0000000..262495d
+--- /dev/null
++++ b/src/room.c
+@@ -0,0 +1,79 @@
++#include "room.h"
++#include "tuning.h"
++
++/* Tile letters -> tileset index (column = i % 8, row = i / 8).
++ * Order from tools/generate_assets.py:
++ * 0 G  1 G2  2 J  3 J2  4 D  5 D2  6 A  7 A2  8 S  9 N  10 R  11 W0  12 W1  13 T */
++enum { T_G = 0, T_J = 2, T_D = 4, T_A = 6, T_S = 8, T_N = 9, T_R = 10, T_W0 = 11, T_W1 = 12 };
++
++/* G grass, J jungle floor, D dirt path, A sand, W water,
++ * S shrine stone, N cliff face, R ramp/stairs. */
++static const char *LAYOUT[ROOM_ROWS] = {
++    "JJGGJJJSSSSSSJJGGGJJ",
++    "JGGGGJJSSSSSSJJGGGGJ",
++    "JGGGGJJNNRRNNJGGGGGJ",
++    "GGGGGGGGGDDGGGGGGGGG",
++    "GGGGGGGGGDDGGGGGGGGG",
++    "GGGGGGGDDDDDDGGGGGGG",
++    "GGGGGGGDDGGGDDGGGGAA",
++    "GGGGGGGDDGGGGDDGGAAW",
++    "GGGGGGGGDDGGGGDDAAWW",
++    "GGGGGGGGGDDGGGGAAWWW",
++    "GGGGGGGGGGDDGGAAWWWW"
++};
++
++bool Room_Load(Room *r, const char *tilesetPath)
++{
++    r->tileset = LoadTexture(tilesetPath);
++    return r->tileset.id != 0;
++}
++
++void Room_Unload(Room *r)
++{
++    if (r->tileset.id != 0) UnloadTexture(r->tileset);
++    r->tileset.id = 0;
++}
++
++static int TileIndex(char c, int x, int y, float time)
++{
++    /* Two look-alike variants per ground type, chosen by position (no randomness per frame). */
++    int variant = ((x * 7 + y * 13) % 2);
++    switch (c) {
++        case 'G': return T_G + variant;
++        case 'J': return T_J + variant;
++        case 'D': return T_D + variant;
++        case 'A': return T_A + variant;
++        case 'S': return T_S;
++        case 'N': return T_N;
++        case 'R': return T_R;
++        case 'W': return ((int)(time * 2.0f) % 2) ? T_W1 : T_W0; /* 2 frames, 0.5 s each */
++        default:  return T_G;
++    }
++}
++
++void Room_Draw(const Room *r, float time)
++{
++    for (int y = 0; y < ROOM_ROWS; y++) {
++        for (int x = 0; x < ROOM_COLS; x++) {
++            int idx = TileIndex(LAYOUT[y][x], x, y, time);
++            Rectangle src = {
++                (float)((idx % 8) * TILE_SIZE),
++                (float)((idx / 8) * TILE_SIZE),
++                (float)TILE_SIZE, (float)TILE_SIZE
++            };
++            Vector2 dst = {(float)(x * TILE_SIZE), (float)(y * TILE_SIZE)};
++            DrawTextureRec(r->tileset, src, dst, WHITE);
++        }
++    }
++}
++
++Rectangle Room_Bounds(void)
++{
++    return (Rectangle){0.0f, 0.0f, (float)(ROOM_COLS * TILE_SIZE), (float)(ROOM_ROWS * TILE_SIZE)};
++}
++
++Vector2 Room_SpawnPoint(void)
++{
++    /* Centre of the dirt path in front of the shrine stairs. */
++    return (Vector2){(float)(10 * TILE_SIZE), (float)(5 * TILE_SIZE + TILE_SIZE / 2)};
++}
+diff --git a/src/room.h b/src/room.h
+new file mode 100644
+index 0000000..f86e77c
+--- /dev/null
++++ b/src/room.h
+@@ -0,0 +1,20 @@
++#ifndef PALM_ROOM_H
++#define PALM_ROOM_H
++
++#include "raylib.h"
++
++#define ROOM_COLS 20
++#define ROOM_ROWS 11
++
++typedef struct Room {
++    Texture2D tileset;   /* assets/tilesets/tileset_16.png (8 columns x 2 rows) */
++} Room;
++
++/* Returns false if the tileset could not be loaded. */
++bool      Room_Load(Room *r, const char *tilesetPath);
++void      Room_Unload(Room *r);
++void      Room_Draw(const Room *r, float time);
++Rectangle Room_Bounds(void);
++Vector2   Room_SpawnPoint(void);
++
++#endif
+diff --git a/src/tuning.h b/src/tuning.h
+new file mode 100644
+index 0000000..a1d7d81
+--- /dev/null
++++ b/src/tuning.h
+@@ -0,0 +1,37 @@
++#ifndef PALM_TUNING_H
++#define PALM_TUNING_H
++
++/* Every feel/movement number lives here. See docs/GAME_FEEL_AND_SIGNATURE_PLAN.md.
++ * Starting values at the 320x180 virtual canvas; tune by playing.
++ * Change ONE number per tuning pass. */
++
++/* --- Canvas and loop (locked decisions) --- */
++#define VIRTUAL_W        320
++#define VIRTUAL_H        180
++#define TILE_SIZE        16
++#define SIM_HZ           120
++#define SIM_DT           (1.0f / (float)SIM_HZ)
++#define MAX_SIM_STEPS    5      /* drop extra time after a stall instead of spiralling */
++#define MAX_FRAME_TIME   0.1f   /* seconds; clamp a long stall */
++
++/* --- Walking (feel plan section 1.2) --- */
++#define WALK_SPEED        76.0f  /* px/s, about 4.75 tiles/s */
++#define ACCEL_TIME        0.07f  /* seconds to reach full speed */
++#define DECEL_TIME        0.05f  /* seconds to stop */
++#define TURN_ACCEL_MULT   1.5f   /* extra accel when input opposes velocity */
++#define STICK_DEADZONE    0.20f  /* radial dead zone for analog sticks */
++#define FACING_KEEP_DEG   60.0f  /* keep current facing within this angle (45 + 15 hysteresis) */
++
++/* --- Derived (do not edit) --- */
++#define WALK_ACCEL        (WALK_SPEED / ACCEL_TIME)
++#define WALK_DECEL        (WALK_SPEED / DECEL_TIME)
++
++/* --- Animation --- */
++#define WALK_FRAME_TIME   0.14f  /* seconds per walk frame at full speed */
++
++/* --- Player sprite (assets/sprites/player_sheet_14x20.png) --- */
++#define PLAYER_SPRITE_W   14
++#define PLAYER_SPRITE_H   20
++#define PLAYER_WALL_MARGIN 5.0f  /* temporary: side margin until the M3 feet collider replaces it */
++
++#endif
+-- 
+2.43.0
+

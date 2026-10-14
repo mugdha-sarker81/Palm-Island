@@ -6,15 +6,16 @@ to a quiet, mysterious island. The intended game is about noticing, exploring,
 and understanding the island—not grinding or constant combat.
 
 > **Honest status:** this is not the complete game or the planned Forgotten
-> Jungle vertical slice. The previous side-scrolling prototype was removed;
-> the current executable is a minimal Raylib window scaffold. Top-down
-> movement, authored levels, enemies, combat, dialogue, audio, and saving are
-> not implemented.
+> Jungle vertical slice. The previous side-scrolling prototype was removed.
+> The current executable is a small top-down movement room with an integer-
+> scaled tile map and eight-way player movement. Collision, camera, props,
+> authored levels, enemies, combat, dialogue, audio, and saving are not
+> implemented.
 >
 > **Direction:** the game is planned as top-down 2D pixel art with
 > eight-direction movement and 3D-like depth cues (layering, occlusion, and
-> stairs/ramps between elevation layers). A movement test room is the next
-> implementation milestone.
+> stairs/ramps between elevation layers). The movement room is underway;
+> obstacle collision and camera bounds are next.
 
 ## Start here
 
@@ -57,19 +58,27 @@ downloads Raylib 5.5 into `build/_deps`; subsequent builds reuse it.
 
 ## Current executable
 
-The previous side-scrolling prototype has been removed. The current executable
-is a minimal Raylib window scaffold; the top-down movement room is not
-implemented yet. Close the window or press Esc to exit.
+The current executable loads the starter tile and player art into a 320×180
+render target, displays it with integer scaling/letterboxing, and supports
+eight-way walking with a fixed-step simulation. There is not yet collision
+against cliffs, water, or walls, nor camera movement or prop sorting.
+
+| Action | Keyboard | Controller |
+|---|---|---|
+| Move (8 directions) | WASD or arrow keys | Left stick / D-pad |
+| Debug overlay (FPS, speed, position) | F3 | — |
+| Borderless windowed | F11 | — |
+| Quit | Esc | — |
 
 ## Project layout
 
 ```text
 AGENTS.md                 Assistant behavior and memory entry point
-src/main.c                Minimal runnable application scaffold
-src/tuning.h               Planned centralized movement/camera tuning values
-src/player.[ch]            Planned player movement and collision module
-src/room.[ch]              Planned test-room geometry and elevation connectors
-src/input.[ch]             Planned keyboard/controller input mapping
+src/main.c                Window, pixel canvas, fixed-step loop, asset lookup
+src/tuning.h              Centralized movement, loop, canvas, and animation tuning
+src/player.[ch]            Eight-way movement, facing, animation (collision planned: M3)
+src/room.[ch]              Tile-room drawing (solid tiles/ramp logic planned: M3/M6)
+src/input.[ch]             Keyboard and gamepad movement input
 src/camera.[ch]            Planned room-bounded camera
 src/render.[ch]            Planned pixel-art scene rendering and depth ordering
 assets/concept_art/       Visual references and art guide
@@ -85,6 +94,7 @@ docs/GAME_FEEL_AND_SIGNATURE_PLAN.md
                           Movement targets, Feel Gate, and unapproved mechanic proposals
 docs/ASSET_INDEX.md       Asset reference and usage notes
 docs/source/              Historical source documents
+docs/media/m1_m2/         Uploaded M1–M2 reference screenshots
 build/                    Generated files; do not edit by hand
 ```
 
