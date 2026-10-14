@@ -1,5 +1,6 @@
 #include "player.h"
 #include "tuning.h"
+#include "room.h"
 #include <math.h>
 
 static const Vector2 FACING_VEC[4] = {
@@ -11,6 +12,17 @@ static const Vector2 FACING_VEC[4] = {
 
 static float Dot(Vector2 a, Vector2 b) { return a.x * b.x + a.y * b.y; }
 static float Length(Vector2 v)         { return sqrtf(v.x * v.x + v.y * v.y); }
+
+static Vector2 Approach(Vector2 current, Vector2 target, float maxStep)
+{
+    Vector2 delta = {target.x - current.x, target.y - current.y};
+    float length = Length(delta);
+    if (length <= maxStep) return target;
+    return (Vector2){
+        current.x + delta.x / length * maxStep,
+        current.y + delta.y / length * maxStep
+    };
+}
 
 void Player_Init(Player *p, Vector2 feet)
 {
@@ -32,7 +44,56 @@ static Facing PickFacing(Facing current, Vector2 dir)
     return dir.y < 0.0f ? FACING_UP : FACING_DOWN;
 }
 
-void Player_Update(Player *p, const Input *in, float dt, Rectangle bounds)
+Rectangle Player_FeetCollider(const Player *p)
+{
+    return (Rectangle){
+        p->pos.x - PLAYER_COLLIDER_W * 0.5f,
+        p->pos.y - PLAYER_COLLIDER_H * 0.5f,
+        PLAYER_COLLIDER_W,
+        PLAYER_COLLIDER_H
+    };
+}
+
+static bool CanOccupy(Vector2 feet)
+{
+    Player candidate = {0};
+    candidate.pos = feet;
+    return !Room_Collides(Player_FeetCollider(&candidate));
+}
+
+static bool TryCornerAssist(Player *p, float blockedStep, float perpendicularStep,
+                            bool blockedAxisIsX, float *assistOffset)
+{
+    float preferredDirection = perpendicularStep > 0.0f ? 1.0f : -1.0f;
+    int directionCount = perpendicularStep == 0.0f ? 2 : 1;
+
+    for (int offset = 1; offset <= CORNER_ASSIST_MAX; offset++) {
+        for (int directionIndex = 0; directionIndex < directionCount; directionIndex++) {
+            float direction = directionIndex == 0 ? preferredDirection : -preferredDirection;
+            Vector2 candidate = p->pos;
+            if (blockedAxisIsX) candidate.y += direction * (float)offset;
+            else                candidate.x += direction * (float)offset;
+            if (blockedAxisIsX) candidate.x += blockedStep;
+            else                candidate.y += blockedStep;
+
+            if (CanOccupy(candidate)) {
+                *assistOffset = direction * (float)offset;
+                p->pos = candidate;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static float RemainingStep(float step, float assist)
+{
+    if (step == 0.0f || assist == 0.0f || step * assist <= 0.0f) return step;
+    if (fabsf(assist) >= fabsf(step)) return 0.0f;
+    return step - assist;
+}
+
+void Player_Update(Player *p, const Input *in, float dt)
 {
     float inLen = Length(in->move);
     bool moving = inLen > 0.0f;
@@ -46,31 +107,65 @@ void Player_Update(Player *p, const Input *in, float dt, Rectangle bounds)
     }
 
     /* Move velocity toward desired by at most accel*dt (vector approach). */
-    Vector2 delta = {desired.x - p->vel.x, desired.y - p->vel.y};
-    float dl = Length(delta);
+    Vector2 startingVelocity = p->vel;
     float maxStep = accel * dt;
-    if (dl <= maxStep) {
-        p->vel = desired;
-    } else {
-        p->vel.x += delta.x / dl * maxStep;
-        p->vel.y += delta.y / dl * maxStep;
-    }
+    p->vel = Approach(p->vel, desired, maxStep);
 
     if (moving) {
         Vector2 dir = {in->move.x / inLen, in->move.y / inLen};
         p->facing = PickFacing(p->facing, dir);
     }
 
-    p->pos.x += p->vel.x * dt;
-    p->pos.y += p->vel.y * dt;
+    float moveX = p->vel.x * dt;
+    float moveY = p->vel.y * dt;
+    float longestMove = fmaxf(fabsf(moveX), fabsf(moveY));
+    int substeps = (int)ceilf(longestMove / COLLISION_MAX_STEP);
+    if (substeps < 1) substeps = 1;
+    float stepX = moveX / (float)substeps;
+    float stepY = moveY / (float)substeps;
+    bool blockedX = false;
+    bool blockedY = false;
 
-    /* Temporary: stay inside the room until the feet collider arrives (M3). */
-    float minX = bounds.x + PLAYER_WALL_MARGIN, maxX = bounds.x + bounds.width  - PLAYER_WALL_MARGIN;
-    float minY = bounds.y + PLAYER_SPRITE_H, maxY = bounds.y + bounds.height;
-    if (p->pos.x < minX) { p->pos.x = minX; if (p->vel.x < 0.0f) p->vel.x = 0.0f; }
-    if (p->pos.x > maxX) { p->pos.x = maxX; if (p->vel.x > 0.0f) p->vel.x = 0.0f; }
-    if (p->pos.y < minY) { p->pos.y = minY; if (p->vel.y < 0.0f) p->vel.y = 0.0f; }
-    if (p->pos.y > maxY) { p->pos.y = maxY; if (p->vel.y > 0.0f) p->vel.y = 0.0f; }
+    for (int i = 0; i < substeps; i++) {
+        float xStep = stepX;
+        float yStep = stepY;
+        float assist = 0.0f;
+
+        Vector2 candidate = {p->pos.x + xStep, p->pos.y};
+        if (!CanOccupy(candidate)) {
+            if (TryCornerAssist(p, xStep, yStep, true, &assist)) {
+                yStep = RemainingStep(yStep, assist);
+            } else {
+                blockedX = true;
+                stepX = 0.0f;
+                xStep = 0.0f;
+            }
+        } else {
+            p->pos = candidate;
+        }
+
+        candidate = (Vector2){p->pos.x, p->pos.y + yStep};
+        if (!CanOccupy(candidate)) {
+            if (TryCornerAssist(p, yStep, xStep, false, &assist)) {
+                xStep = RemainingStep(xStep, assist);
+            } else {
+                blockedY = true;
+                stepY = 0.0f;
+                yStep = 0.0f;
+            }
+        } else {
+            p->pos = candidate;
+        }
+    }
+
+    if (blockedX || blockedY) {
+        Vector2 slideTarget = desired;
+        if (blockedX) slideTarget.x = 0.0f;
+        if (blockedY) slideTarget.y = 0.0f;
+        p->vel = Approach(startingVelocity, slideTarget, maxStep);
+        if (blockedX) p->vel.x = 0.0f;
+        if (blockedY) p->vel.y = 0.0f;
+    }
 
     /* Walk animation advances with speed, resets when standing still. */
     float speedFrac = Length(p->vel) / WALK_SPEED;
@@ -80,13 +175,17 @@ void Player_Update(Player *p, const Input *in, float dt, Rectangle bounds)
 
 float Player_Speed(const Player *p) { return Length(p->vel); }
 
-void Player_Draw(const Player *p, Texture2D sheet)
+void Player_Draw(const Player *p, Texture2D sheet, bool debug)
 {
     /* Whole-pixel snapping happens only at draw time. */
     int fx = (int)floorf(p->pos.x);
     int fy = (int)floorf(p->pos.y);
 
     DrawEllipse(fx, fy - 1, 6.0f, 2.5f, (Color){8, 24, 28, 110});
+    if (debug) {
+        Rectangle collider = Player_FeetCollider(p);
+        DrawRectangleLinesEx(collider, 1.0f, (Color){255, 64, 64, 255});
+    }
 
     int frame = 0; /* idle */
     if (p->animTime > 0.0f) {

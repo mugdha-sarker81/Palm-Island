@@ -32,6 +32,11 @@
 /* --- Player sprite (assets/sprites/player_sheet_14x20.png) --- */
 #define PLAYER_SPRITE_W   14
 #define PLAYER_SPRITE_H   20
-#define PLAYER_WALL_MARGIN 7.0f  /* temporary: half sprite width until the M3 feet collider replaces it */
+
+/* --- Feet collision (feel plan section 1.3) --- */
+#define PLAYER_COLLIDER_W 10.0f
+#define PLAYER_COLLIDER_H 6.0f
+#define COLLISION_MAX_STEP 4.0f
+#define CORNER_ASSIST_MAX 4
 
 #endif

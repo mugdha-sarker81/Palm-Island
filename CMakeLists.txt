@@ -59,3 +59,19 @@ if(NOT MSVC)
     target_compile_options(PalmIsland PRIVATE -Wall -Wextra)
 endif()
 target_link_libraries(PalmIsland PRIVATE raylib)
+
+option(PALM_BUILD_TESTS "Build Palm Island movement tests" OFF)
+if(PALM_BUILD_TESTS)
+    enable_testing()
+    add_executable(PalmIslandMovementTests
+        tests/movement_collision_test.c
+        src/player.c
+        src/room.c
+    )
+    target_include_directories(PalmIslandMovementTests PRIVATE src)
+    target_link_libraries(PalmIslandMovementTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandMovementTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME movement_collision COMMAND PalmIslandMovementTests)
+endif()

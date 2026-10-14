@@ -16,5 +16,7 @@ void      Room_Unload(Room *r);
 void      Room_Draw(const Room *r, float time);
 Rectangle Room_Bounds(void);
 Vector2   Room_SpawnPoint(void);
+/* Tests whether an axis-aligned collider touches a solid tile or leaves the room. */
+bool      Room_Collides(Rectangle collider);
 
 #endif

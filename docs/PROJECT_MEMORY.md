@@ -8,9 +8,9 @@ The map-by-map implementation blueprint is maintained in
 exploration/subtask sequence for all 24 proposed zones.
 
 **Last reconciled:** 2026-10-14
-**Current milestone:** top-down movement room, M1–M2 integrated; collision and
-camera are not implemented
-**Next milestone:** add feet collision (M3), then complete and playtest the
+**Current milestone:** top-down movement room, M1–M3 integrated; collision
+tests pass, but interactive movement playtesting remains
+**Next milestone:** add bounded camera follow (M4), then complete the
 movement Feel Gate before blocking out the Forgotten Jungle slice.
 
 > Update this document when implementation status, a locked decision, or the
@@ -66,11 +66,10 @@ the original GDD remains historical reference material.
 - Language/build: C11 + CMake; Raylib 5.5 is downloaded into the ignored
   `build/_deps` folder during first configure.
 - A clean configure/build succeeded on 2026-10-14 using the MSYS2 MinGW64
-  toolchain (`C:\msys64\mingw64\bin`) and CMake's `MinGW Makefiles` generator
-  for the M1–M2 top-down movement-room build. The Windows executable launched
-  and remained open with the expected `Palm Island` window title. Raylib's
-  configure emitted an upstream CMake minimum-version deprecation warning;
-  the game sources compiled without warnings.
+  toolchain (`C:\msys64\mingw64\bin`) and CMake's `MinGW Makefiles` generator.
+  The M1–M2 executable launched and remained open with the expected `Palm
+  Island` window title. The M3 Windows build and focused collision CTest also
+  passed; Raylib emitted an upstream CMake minimum-version deprecation warning.
 - Use MSYS2 MinGW64, not the unrelated legacy `C:\MinGW` compiler. If the
   generator differs from the existing CMake cache, rename the generated
   `build` directory (for example, `build-backup`) and configure again.
@@ -78,7 +77,8 @@ the original GDD remains historical reference material.
   launch; the scripts set the standard MSYS2 MinGW64 PATH automatically.
 - This workspace is a Git clone of `mugdha-sarker81/Palm-Island` on `main`,
   tracking `origin/main`.
-- No automated gameplay test suite is configured.
+- No interactive gameplay automation is configured; opt-in CTest covers the
+  M3 collision logic.
 
 ### Current code state
 
@@ -89,11 +89,16 @@ the original GDD remains historical reference material.
   hysteresis, walk animation, fixed-step simulation, and an F3 debug overlay.
   F11 toggles borderless windowed mode; Esc exits.
 - `src/room.c` draws ground, path, shrine, stairs, cliffs, and animated water.
+- M3 adds a 10×6 feet collider, solid collision against shrine stone, cliff
+  faces, water, and room bounds, axis-separated movement with substeps no
+  larger than 4 px, a 4 px corner assist, and an F3 collider outline. The stair
+  opening is one 16 px tile wide; tests verify its fit and straight-on entry
+  from slightly off-center positions on either side. Other focused checks cover
+  tile/bounds collision, obstacle blocking, wall slide, and corner assist.
 - Uploaded M1–M2 screenshots are retained in `docs/media/m1_m2/` as reference
   captures; they were not captured during the Windows verification.
-- Collision against obstacles, camera follow, prop rendering/Y-sorting, and
-  ramp elevation behavior are not implemented yet. Until M3, only room bounds
-  constrain player movement.
+- Interactive movement feel has not yet been playtested. Camera follow, prop
+  rendering/Y-sorting, and ramp elevation behavior are not implemented yet.
 
 ### Not implemented yet
 
@@ -358,7 +363,7 @@ verify before continuing.
 2026-10-14. Configure reported an upstream Raylib CMake deprecation warning;
 the game sources compiled without warnings.
 
-### Phase 1 — Prototype the selected movement direction (next)
+### Phase 1 — Prototype the selected movement direction (in progress)
 
 1. Keep the top-down movement room buildable as it grows one task at a time.
 2. In a bounded test room, implement eight-way normalized input, facing,
@@ -386,7 +391,7 @@ Do one bounded task per session; build and verify before continuing:
 |---|---|---|
 | M1 ✅ | Add 320×180 render target, point filtering, integer scale/letterbox, and a tile-room blockout | Pixel-scaled room; Windows build/launch verified |
 | M2 ✅ | Load the player sheet and implement normalized eight-way movement using `tuning.h` | Movement integrated; interactive speed test pending |
-| M3 | Add a 10×6 feet collider, axis-separated collision, and 4 px corner assist | Wall sliding and reliable doorway entry |
+| M3 ✅ | Add a 10×6 feet collider, axis-separated collision, and 4 px corner assist | Automated obstacle, bounds, wall-slide, corner-assist, and stair-approach checks pass |
 | M4 | Add bounded camera follow, look-ahead, and render-time pixel snapping | No camera shimmer |
 | M5 | Add foot-Y sorting for palm/pillar props and one foreground occluder | Player passes behind and in front correctly |
 | M6 | Add the explicit ramp/elevation connector | Visible, safe elevation change |
@@ -561,22 +566,21 @@ Memory updated: yes/no
 
 ## 12. Current next work item
 
-**Continue the top-down movement room with micro-task M3**: implement the
-10×6 feet collider, axis-separated solid collision, and 4 px corner assist.
-Keep cliffs, water, and shrine walls solid; keep the ramp walkable. Replace the
-temporary room-edge clamp and then run the collision acceptance cases. M1–M2
-are integrated and the Windows build launches, but movement has not yet been
-interactively tested here. Use the Feel Gate before starting combat, the Jungle
-blockout, or any signature mechanic.
+**Continue the top-down movement room with micro-task M4**: add bounded camera
+follow, look-ahead, and render-time pixel snapping. Preserve M3 collision and
+the walkable stairs; verify the camera at room edges, while walking, and after
+stopping. M3 builds and its focused CTest passes, but movement has not yet been
+interactively playtested. Continue to use the Feel Gate before starting
+combat, the Jungle blockout, or any signature mechanic.
 
-Checklist for that session:
+Checklist for the M4 session:
 
 1. Keep the movement-room buildable throughout this work.
 2. Implement the planned modules incrementally; avoid empty files and unrelated
    systems.
-3. Test cardinal/diagonal speed, wall sliding, corners, narrow passages,
-   elevation transition, occlusion, world bounds, and frame-time stability.
-4. Test keyboard and a connected controller if available.
+3. Keep camera motion bounded by the room and snap only at render time.
+4. Build and check for edge clamping, jitter while moving, and drift after
+    stopping; perform interactive testing when available.
 5. Record reproducible issues; fix only the top verified issue in a follow-up.
 
 **Completion record:** On 2026-10-14, M1–M2 were clean-configured and built

@@ -48,8 +48,23 @@ different generator, rename that generated folder (for example, to
 
 The current executable loads the starter tile and player art into a 320×180
 render target, displays it with integer scaling/letterboxing, and supports
-eight-way walking with a fixed-step simulation. There is not yet collision
-against cliffs, water, or walls, nor camera movement or prop sorting.
+eight-way walking with a fixed-step simulation. A 10×6 feet collider blocks
+cliffs, water, shrine stone, and room edges; the 16 px stair opening remains
+walkable without pixel-perfect horizontal alignment. F3 shows the collider
+while debug mode is active. Camera movement and prop sorting are not
+implemented yet.
+
+## Optional movement tests
+
+The focused collision tests are opt-in. From PowerShell in the repository,
+configure and run them with MSYS2 MinGW64 available:
+
+```powershell
+$env:Path = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;$env:Path"
+cmake -S . -B build -G "MinGW Makefiles" -DPALM_BUILD_TESTS=ON
+cmake --build build --parallel 4
+ctest --test-dir build --output-on-failure
+```
 
 | Action | Keyboard | Controller |
 |---|---|---|
@@ -65,9 +80,9 @@ AGENTS.md                 Assistant behavior and memory entry point
 src/main.c                Window, pixel canvas, fixed-step loop, asset lookup
 build.bat                 Configure and build for Windows
 run.bat                   Build, then launch the game
-src/tuning.h              Centralized movement, loop, canvas, and animation tuning
-src/player.[ch]            Eight-way movement, facing, animation (collision planned: M3)
-src/room.[ch]              Tile-room drawing (solid tiles/ramp logic planned: M3/M6)
+src/tuning.h              Centralized movement, collision, loop, and canvas tuning
+src/player.[ch]            Eight-way movement, feet collider, collision, animation
+src/room.[ch]              Tile-room drawing and solid terrain queries (ramp: M6)
 src/input.[ch]             Keyboard and gamepad movement input
 src/camera.[ch]            Planned room-bounded camera
 src/render.[ch]            Planned pixel-art scene rendering and depth ordering

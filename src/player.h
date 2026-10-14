@@ -20,10 +20,11 @@ typedef struct Player {
 } Player;
 
 void  Player_Init(Player *p, Vector2 feet);
-/* Advance by one fixed simulation step. bounds limits the feet point. */
-void  Player_Update(Player *p, const Input *in, float dt, Rectangle bounds);
+/* Advance by one fixed simulation step with room collision. */
+void  Player_Update(Player *p, const Input *in, float dt);
+Rectangle Player_FeetCollider(const Player *p);
 float Player_Speed(const Player *p);
 /* Draw shadow and sprite. Snaps to whole pixels only here. */
-void  Player_Draw(const Player *p, Texture2D sheet);
+void  Player_Draw(const Player *p, Texture2D sheet, bool debug);
 
 #endif

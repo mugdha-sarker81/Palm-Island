@@ -11,7 +11,7 @@ enum { T_G = 0, T_J = 2, T_D = 4, T_A = 6, T_S = 8, T_N = 9, T_R = 10, T_W0 = 11
 static const char *LAYOUT[ROOM_ROWS] = {
     "JJGGJJJSSSSSSJJGGGJJ",
     "JGGGGJJSSSSSSJJGGGGJ",
-    "JGGGGJJNNRRNNJGGGGGJ",
+    "JGGGGJJNNRNNNJGGGGGJ",
     "GGGGGGGGGDDGGGGGGGGG",
     "GGGGGGGGGDDGGGGGGGGG",
     "GGGGGGGDDDDDDGGGGGGG",
@@ -72,8 +72,43 @@ Rectangle Room_Bounds(void)
     return (Rectangle){0.0f, 0.0f, (float)(ROOM_COLS * TILE_SIZE), (float)(ROOM_ROWS * TILE_SIZE)};
 }
 
+static bool IsSolid(char tile)
+{
+    return tile == 'S' || tile == 'N' || tile == 'W';
+}
+
+bool Room_Collides(Rectangle collider)
+{
+    const float roomWidth = (float)(ROOM_COLS * TILE_SIZE);
+    const float roomHeight = (float)(ROOM_ROWS * TILE_SIZE);
+    float right = collider.x + collider.width;
+    float bottom = collider.y + collider.height;
+
+    if (collider.width <= 0.0f || collider.height <= 0.0f ||
+        collider.x < 0.0f || collider.y < 0.0f ||
+        right > roomWidth || bottom > roomHeight) return true;
+
+    int minX = (int)(collider.x / TILE_SIZE);
+    int minY = (int)(collider.y / TILE_SIZE);
+    int maxX = (int)((right - 0.001f) / TILE_SIZE);
+    int maxY = (int)((bottom - 0.001f) / TILE_SIZE);
+
+    for (int y = minY; y <= maxY; y++) {
+        for (int x = minX; x <= maxX; x++) {
+            char tile = LAYOUT[y][x];
+            if (!IsSolid(tile)) continue;
+
+            float tileLeft = (float)(x * TILE_SIZE);
+            float tileTop = (float)(y * TILE_SIZE);
+            if (collider.x < tileLeft + TILE_SIZE && right > tileLeft &&
+                collider.y < tileTop + TILE_SIZE && bottom > tileTop) return true;
+        }
+    }
+    return false;
+}
+
 Vector2 Room_SpawnPoint(void)
 {
     /* Centre of the dirt path in front of the shrine stairs. */
-    return (Vector2){(float)(10 * TILE_SIZE), (float)(5 * TILE_SIZE + TILE_SIZE / 2)};
+    return (Vector2){(float)(9 * TILE_SIZE + TILE_SIZE / 2), (float)(5 * TILE_SIZE + TILE_SIZE / 2)};
 }

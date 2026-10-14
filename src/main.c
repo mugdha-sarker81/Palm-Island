@@ -90,7 +90,7 @@ int main(void)
 
         int steps = 0;
         while (accumulator >= SIM_DT && steps < MAX_SIM_STEPS) {
-            if (assetsOk) Player_Update(&player, &input, SIM_DT, Room_Bounds());
+            if (assetsOk) Player_Update(&player, &input, SIM_DT);
             worldTime += SIM_DT;
             accumulator -= SIM_DT;
             steps++;
@@ -102,7 +102,7 @@ int main(void)
         ClearBackground((Color){11, 26, 34, 255});
         if (assetsOk) {
             Room_Draw(&room, worldTime);
-            Player_Draw(&player, sheet);
+            Player_Draw(&player, sheet, debug);
         } else {
             DrawText("Assets not found.", 8, 8, 10, WHITE);
             DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);
