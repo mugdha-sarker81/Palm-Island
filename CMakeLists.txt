@@ -54,6 +54,8 @@ add_executable(PalmIsland
     src/input.c
     src/player.c
     src/room.c
+    src/camera.c
+    src/render.c
 )
 if(NOT MSVC)
     target_compile_options(PalmIsland PRIVATE -Wall -Wextra)
@@ -74,4 +76,28 @@ if(PALM_BUILD_TESTS)
         target_compile_options(PalmIslandMovementTests PRIVATE -Wall -Wextra)
     endif()
     add_test(NAME movement_collision COMMAND PalmIslandMovementTests)
+
+    add_executable(PalmIslandCameraTests
+        tests/camera_follow_test.c
+        src/camera.c
+    )
+    target_include_directories(PalmIslandCameraTests PRIVATE src)
+    target_link_libraries(PalmIslandCameraTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandCameraTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME camera_follow COMMAND PalmIslandCameraTests)
+
+    add_executable(PalmIslandRenderTests
+        tests/render_depth_test.c
+        src/render.c
+        src/player.c
+        src/room.c
+    )
+    target_include_directories(PalmIslandRenderTests PRIVATE src)
+    target_link_libraries(PalmIslandRenderTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandRenderTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME render_depth COMMAND PalmIslandRenderTests)
 endif()

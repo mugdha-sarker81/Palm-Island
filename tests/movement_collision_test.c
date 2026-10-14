@@ -45,6 +45,39 @@ static void TestRoomCollisionMap(void)
     CHECK(!Room_Collides(FeetAt(5.0f, 80.0f)));
 }
 
+static void TestPalmTrunkAndPillarBaseAreSolid(void)
+{
+    CHECK(Room_Collides(FeetAt(90.0f, 108.0f))); /* palm trunk */
+    CHECK(Room_Collides(FeetAt(232.0f, 76.0f))); /* pillar base */
+    CHECK(!Room_Collides(FeetAt(80.0f, 108.0f))); /* beside palm */
+    CHECK(!Room_Collides(FeetAt(232.0f, 68.0f))); /* above pillar base */
+
+    Player palm;
+    Player_Init(&palm, (Vector2){90.0f, 128.0f});
+    Advance(&palm, (Vector2){0.0f, -1.0f}, SIM_HZ);
+    CHECK(palm.pos.y >= 114.0f);
+    CHECK(fabsf(palm.vel.y) < 0.001f);
+    CHECK(!Room_Collides(Player_FeetCollider(&palm)));
+
+    Player pillar;
+    Player_Init(&pillar, (Vector2){232.0f, 96.0f});
+    Advance(&pillar, (Vector2){0.0f, -1.0f}, SIM_HZ);
+    CHECK(pillar.pos.y >= 83.0f);
+    CHECK(fabsf(pillar.vel.y) < 0.001f);
+    CHECK(!Room_Collides(Player_FeetCollider(&pillar)));
+}
+
+static void TestPlayerCanWalkBehindPalmCanopy(void)
+{
+    Player player;
+    Player_Init(&player, (Vector2){60.0f, 85.0f});
+    Advance(&player, (Vector2){1.0f, 0.0f}, SIM_HZ);
+
+    CHECK(player.pos.x > 100.0f);
+    CHECK(fabsf(player.pos.y - 85.0f) < 0.01f);
+    CHECK(!Room_Collides(Player_FeetCollider(&player)));
+}
+
 static void TestShrineWallBlocksPlayer(void)
 {
     Player player;
@@ -128,6 +161,8 @@ static void TestRoomEdgeBlocksPlayer(void)
 int main(void)
 {
     TestRoomCollisionMap();
+    TestPalmTrunkAndPillarBaseAreSolid();
+    TestPlayerCanWalkBehindPalmCanopy();
     TestShrineWallBlocksPlayer();
     TestCliffAndWaterBlockPlayer();
     TestWallSlide();

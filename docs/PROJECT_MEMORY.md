@@ -8,10 +8,11 @@ The map-by-map implementation blueprint is maintained in
 exploration/subtask sequence for all 24 proposed zones.
 
 **Last reconciled:** 2026-10-14
-**Current milestone:** top-down movement room, M1–M3 integrated; collision
-tests pass, but interactive movement playtesting remains
-**Next milestone:** add bounded camera follow (M4), then complete the
-movement Feel Gate before blocking out the Forgotten Jungle slice.
+**Current milestone:** top-down movement room, M1–M5 integrated; collision,
+camera, and draw-order tests pass, but interactive visual playtesting remains
+**Next milestone:** add the explicit ramp/elevation connector (M6), then
+complete and playtest the movement Feel Gate before blocking out the Forgotten
+Jungle slice.
 
 > Update this document when implementation status, a locked decision, or the
 > next task changes. Keep the current status factual. Do not mark design ideas
@@ -96,10 +97,23 @@ the original GDD remains historical reference material.
   straight-on entry from slightly off-center positions on either side. Other
   focused checks cover tile/bounds collision, obstacle blocking, wall slide,
   and corner assist.
+- M4 adds a bounded camera module with 6/s exponential follow, smoothed
+  velocity-based look-ahead up to 14 px, room-size-aware centering, and
+  render-time integer target rounding. The existing 320×176 room remains
+  unchanged and centered in the 320×180 view. Focused camera tests cover
+  centering, follow smoothing, look-ahead easing, room bounds, hard
+  initialization snap, and render rounding.
+- M5 loads the prototype palm (40×56), pillar (16×40), and bush (20×16).
+  The player, palm, and pillar are sorted back-to-front by feet/base Y with a
+  stable tie-break; the bush is drawn in a final foreground pass. Palm-trunk
+  and pillar-base colliders are shared with room collision; their canopies
+  remain walk-through for depth overlap. Focused tests cover prop blocking,
+  canopy overlap, depth order, equal-Y ordering, and foreground precedence.
+  Interactive visual appearance still needs playtesting.
 - Uploaded M1–M2 screenshots are retained in `docs/media/m1_m2/` as reference
   captures; they were not captured during the Windows verification.
-- Interactive movement feel has not yet been playtested. Camera follow, prop
-  rendering/Y-sorting, and ramp elevation behavior are not implemented yet.
+- Interactive movement, camera feel, and prop occlusion have not yet been
+  playtested. Ramp elevation behavior is not implemented yet.
 
 ### Not implemented yet
 
@@ -393,8 +407,8 @@ Do one bounded task per session; build and verify before continuing:
 | M1 ✅ | Add 320×180 render target, point filtering, integer scale/letterbox, and a tile-room blockout | Pixel-scaled room; Windows build/launch verified |
 | M2 ✅ | Load the player sheet and implement normalized eight-way movement using `tuning.h` | Movement integrated; interactive speed test pending |
 | M3 ✅ | Add a 10×6 feet collider, axis-separated collision, and 4 px corner assist | Automated obstacle, bounds, wall-slide, corner-assist, and stair-approach checks pass |
-| M4 | Add bounded camera follow, look-ahead, and render-time pixel snapping | No camera shimmer |
-| M5 | Add foot-Y sorting for palm/pillar props and one foreground occluder | Player passes behind and in front correctly |
+| M4 ✅ | Add bounded camera follow, look-ahead, and render-time pixel snapping | Camera behavior tests pass; interactive feel pending |
+| M5 ✅ | Add foot-Y sorting for palm/pillar props and one foreground occluder | Sort and foreground-order tests pass; visual playtest pending |
 | M6 | Add the explicit ramp/elevation connector | Visible, safe elevation change |
 | M7 | Add controller dead-zone and analog-magnitude behavior | Controller matches keyboard movement |
 | M8 | Add F3 debug data and run the Feel Gate | Measured pass/fail is recorded |
@@ -567,21 +581,22 @@ Memory updated: yes/no
 
 ## 12. Current next work item
 
-**Continue the top-down movement room with micro-task M4**: add bounded camera
-follow, look-ahead, and render-time pixel snapping. Preserve M3 collision and
-the walkable stairs; verify the camera at room edges, while walking, and after
-stopping. M3 builds and its focused CTest passes, but movement has not yet been
+**Continue the top-down movement room with micro-task M6**: add the explicit
+ramp/elevation connector. Preserve M3 collision, the original two-tile stair
+opening, and M4 camera bounds/render snapping. M3–M5 builds and focused CTests
+pass, but movement/camera feel and rendered prop occlusion have not yet been
 interactively playtested. Continue to use the Feel Gate before starting
 combat, the Jungle blockout, or any signature mechanic.
 
-Checklist for the M4 session:
+Checklist for the M6 session:
 
 1. Keep the movement-room buildable throughout this work.
 2. Implement the planned modules incrementally; avoid empty files and unrelated
    systems.
-3. Keep camera motion bounded by the room and snap only at render time.
-4. Build and check for edge clamping, jitter while moving, and drift after
-    stopping; perform interactive testing when available.
+3. Keep the ramp connector explicit in room data; do not introduce a free jump
+   or a general elevation framework.
+4. Build and verify the ramp is readable, traversable in the intended
+   direction(s), and cannot bypass solid terrain or leave the room.
 5. Record reproducible issues; fix only the top verified issue in a follow-up.
 
 **Completion record:** On 2026-10-14, M1–M2 were clean-configured and built

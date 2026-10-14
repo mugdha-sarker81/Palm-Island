@@ -24,9 +24,11 @@ The two copies previously named `Fantasy Action-Platformer Design Sheet.png` and
 | `assets/sprites/props/` | Palm, bush, marker, and pillar sprites | Test-room props |
 | `assets/previews/preview_scene.png` | 1280×768 lit scene preview (320×192 source) | Visual reference; taller than the selected 320×180 runtime canvas |
 
-The player sheet and tileset are loaded in the movement-room prototype; the
-larger prop sprites are not used yet. See the art guide for palette and layout
-conventions.
+The player sheet, tileset, palm, pillar, and bush are loaded in the
+movement-room prototype. The palm and pillar use foot/base Y sorting; the bush
+is a foreground occluder. Palm-trunk and pillar-base collision is enabled;
+upper canopy areas remain walk-through. The marker remains unused. See the art
+guide for palette and layout conventions.
 
 ## Generator
 

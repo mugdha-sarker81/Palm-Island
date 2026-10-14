@@ -39,4 +39,8 @@
 #define COLLISION_MAX_STEP 4.0f
 #define CORNER_ASSIST_MAX 4
 
+/* --- Camera follow (feel plan section 1.4) --- */
+#define CAMERA_FOLLOW_RATE 6.0f
+#define CAMERA_LOOK_AHEAD 14.0f
+
 #endif

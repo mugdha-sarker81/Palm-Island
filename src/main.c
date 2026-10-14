@@ -3,6 +3,8 @@
 #include "input.h"
 #include "player.h"
 #include "room.h"
+#include "camera.h"
+#include "render.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -60,19 +62,45 @@ int main(void)
     Room room = {0};
     Player player;
     Texture2D sheet = {0};
+    Texture2D propTextures[RENDER_PROP_COUNT] = {0};
+    const RoomProp *roomProps = Room_Props();
     bool assetsOk = FindAssetRoot();
     if (assetsOk) {
         assetsOk = Room_Load(&room, AssetPath("tilesets/tileset_16.png"));
         sheet = LoadTexture(AssetPath("sprites/player_sheet_14x20.png"));
         if (sheet.id == 0) assetsOk = false;
+        propTextures[0] = LoadTexture(AssetPath("sprites/props/prop_palm.png"));
+        propTextures[1] = LoadTexture(AssetPath("sprites/props/prop_pillar.png"));
+        propTextures[2] = LoadTexture(AssetPath("sprites/props/prop_bush.png"));
+        for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+            if (propTextures[i].id == 0) assetsOk = false;
+        }
+    }
+
+    RenderItem props[RENDER_PROP_COUNT];
+    for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+        props[i] = (RenderItem){
+            .type = RENDER_ITEM_PROP,
+            .position = roomProps[i].drawPosition,
+            .feetY = roomProps[i].feetY,
+            .stableOrder = (unsigned int)(i + 1),
+            .foreground = roomProps[i].foreground,
+            .texture = propTextures[i]
+        };
     }
 
     RenderTexture2D canvas = LoadRenderTexture(VIRTUAL_W, VIRTUAL_H);
     SetTextureFilter(canvas.texture, TEXTURE_FILTER_POINT);
     if (room.tileset.id != 0) SetTextureFilter(room.tileset, TEXTURE_FILTER_POINT);
     if (sheet.id != 0)        SetTextureFilter(sheet, TEXTURE_FILTER_POINT);
+    for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+        if (propTextures[i].id != 0) SetTextureFilter(propTextures[i], TEXTURE_FILTER_POINT);
+    }
 
     Player_Init(&player, Room_SpawnPoint());
+    CameraFollow camera;
+    Camera_Init(&camera, player.pos, Room_Bounds(),
+                (Vector2){(float)VIRTUAL_W, (float)VIRTUAL_H});
     Input input = {0};
     bool debug = false;
     double accumulator = 0.0;
@@ -90,7 +118,10 @@ int main(void)
 
         int steps = 0;
         while (accumulator >= SIM_DT && steps < MAX_SIM_STEPS) {
-            if (assetsOk) Player_Update(&player, &input, SIM_DT);
+            if (assetsOk) {
+                Player_Update(&player, &input, SIM_DT);
+                Camera_Update(&camera, player.pos, player.vel, SIM_DT);
+            }
             worldTime += SIM_DT;
             accumulator -= SIM_DT;
             steps++;
@@ -101,8 +132,10 @@ int main(void)
         BeginTextureMode(canvas);
         ClearBackground((Color){11, 26, 34, 255});
         if (assetsOk) {
+            BeginMode2D(Camera_Render(&camera));
             Room_Draw(&room, worldTime);
-            Player_Draw(&player, sheet, debug);
+            Render_DrawDepthScene(&player, sheet, props, debug);
+            EndMode2D();
         } else {
             DrawText("Assets not found.", 8, 8, 10, WHITE);
             DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);
@@ -124,6 +157,9 @@ int main(void)
     }
 
     if (sheet.id != 0) UnloadTexture(sheet);
+    for (int i = 0; i < RENDER_PROP_COUNT; i++) {
+        if (propTextures[i].id != 0) UnloadTexture(propTextures[i]);
+    }
     Room_Unload(&room);
     UnloadRenderTexture(canvas);
     CloseWindow();

@@ -22,6 +22,24 @@ static const char *LAYOUT[ROOM_ROWS] = {
     "GGGGGGGGGGDDGGAAWWWW"
 };
 
+static const RoomProp PROPS[ROOM_PROP_COUNT] = {
+    {
+        .drawPosition = {69.0f, 55.0f},
+        .feetY = 111.0f,
+        .collider = {86.0f, 104.0f, 8.0f, 7.0f}
+    },
+    {
+        .drawPosition = {224.0f, 40.0f},
+        .feetY = 80.0f,
+        .collider = {228.0f, 73.0f, 8.0f, 7.0f}
+    },
+    {
+        .drawPosition = {171.0f, 84.0f},
+        .feetY = 100.0f,
+        .foreground = true
+    }
+};
+
 bool Room_Load(Room *r, const char *tilesetPath)
 {
     r->tileset = LoadTexture(tilesetPath);
@@ -72,6 +90,11 @@ Rectangle Room_Bounds(void)
     return (Rectangle){0.0f, 0.0f, (float)(ROOM_COLS * TILE_SIZE), (float)(ROOM_ROWS * TILE_SIZE)};
 }
 
+const RoomProp *Room_Props(void)
+{
+    return PROPS;
+}
+
 static bool IsSolid(char tile)
 {
     return tile == 'S' || tile == 'N' || tile == 'W';
@@ -103,6 +126,15 @@ bool Room_Collides(Rectangle collider)
             if (collider.x < tileLeft + TILE_SIZE && right > tileLeft &&
                 collider.y < tileTop + TILE_SIZE && bottom > tileTop) return true;
         }
+    }
+
+    for (int i = 0; i < ROOM_PROP_COUNT; i++) {
+        Rectangle obstacle = PROPS[i].collider;
+        if (obstacle.width <= 0.0f || obstacle.height <= 0.0f) continue;
+        if (collider.x < obstacle.x + obstacle.width &&
+            right > obstacle.x &&
+            collider.y < obstacle.y + obstacle.height &&
+            bottom > obstacle.y) return true;
     }
     return false;
 }
