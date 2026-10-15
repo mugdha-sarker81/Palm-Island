@@ -7,8 +7,10 @@
 #include "camera.h"
 #include "render.h"
 #include "thornback.h"
+#include "save.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* ---- asset lookup: works from the repo root, build/, or next to the exe ---- */
 static char gAssetRoot[512] = "";
@@ -54,7 +56,8 @@ static Rectangle CanvasDestination(void)
 }
 
 static void BuildRenderProps(RenderItem renderProps[RENDER_PROP_COUNT],
-                             RoomArea area)
+                             RoomArea area, bool thornGateOpen,
+                             const Texture2D propTextures[ROOM_SPRITE_COUNT])
 {
     const RoomProp *roomProps = Room_Props(area);
     for (int i = 0; i < RENDER_PROP_COUNT; i++) {
@@ -65,9 +68,87 @@ static void BuildRenderProps(RenderItem renderProps[RENDER_PROP_COUNT],
             .elevation = roomProps[i].elevation,
             .stableOrder = (unsigned int)(i + 1),
             .foreground = roomProps[i].foreground,
-            .texture = (Texture2D){0}
+            .texture = thornGateOpen && area == ROOM_AREA_ROOT_PATH &&
+                               roomProps[i].sprite == ROOM_SPRITE_THORN_GATE
+                           ? (Texture2D){0}
+                           : propTextures[roomProps[i].sprite]
         };
     }
+}
+
+static SaveData CurrentSaveData(RoomArea checkpointArea, int health,
+                                const Inventory *inventory,
+                                bool thornGateOpen)
+{
+    return (SaveData){
+        .checkpointArea = checkpointArea,
+        .health = health,
+        .inventory = *inventory,
+        .thornGateOpen = thornGateOpen
+    };
+}
+
+static bool PersistProgress(const char *savePath, RoomArea checkpointArea,
+                            int health, const Inventory *inventory,
+                            bool thornGateOpen,
+                            char *notice, size_t noticeCapacity,
+                            float *noticeTime)
+{
+    SaveData data = CurrentSaveData(checkpointArea, health, inventory,
+                                    thornGateOpen);
+    SaveWriteResult result = Save_Write(savePath, &data);
+    if (result == SAVE_WRITE_OK) {
+        snprintf(notice, noticeCapacity, "GAME SAVED");
+        *noticeTime = 1.5f;
+        return true;
+    }
+
+    const char *reason = result == SAVE_WRITE_INVALID_DATA
+                             ? "SAVE REJECTED - INVALID STATE"
+                             : "SAVE FAILED - CHECK STORAGE";
+    snprintf(notice, noticeCapacity, "%s", reason);
+    *noticeTime = 0.0f;
+    fprintf(stderr, "%s: %s\n", reason, savePath);
+    return false;
+}
+
+static bool HasThornfang(const Inventory *inventory)
+{
+    return Inventory_HasWeapon(inventory, INVENTORY_WEAPON_THORNFANG);
+}
+
+static void RecordKeyItem(Inventory *inventory,
+                          RoomInteractableKind interactionKind)
+{
+    switch (interactionKind) {
+        case ROOM_INTERACTABLE_ROOT_WEAVE:
+            Inventory_AddKeyItem(inventory, INVENTORY_KEY_ITEM_ROOT_WEAVE);
+            break;
+        case ROOM_INTERACTABLE_ROOT_MARKER:
+            Inventory_AddKeyItem(
+                inventory, INVENTORY_KEY_ITEM_ROOT_MARKER_TRACE);
+            break;
+        case ROOM_INTERACTABLE_CLEARING_NOTE:
+            Inventory_AddKeyItem(
+                inventory, INVENTORY_KEY_ITEM_CLEARING_NOTE);
+            break;
+        case ROOM_INTERACTABLE_ROOTS_MURAL:
+            Inventory_AddKeyItem(inventory, INVENTORY_KEY_ITEM_ROOTS_MURAL);
+            break;
+        case ROOM_INTERACTABLE_THORNBACK_TRIAL:
+        default:
+            break;
+    }
+}
+
+static bool FindSavePath(char *path, size_t capacity)
+{
+    const char *directory = getenv("APPDATA");
+    if (directory == NULL || directory[0] == '\0') {
+        directory = GetApplicationDirectory();
+    }
+    int length = snprintf(path, capacity, "%s/PalmIsland.sav", directory);
+    return length >= 0 && (size_t)length < capacity;
 }
 
 static Vector2 FacingDirection(Facing facing)
@@ -130,6 +211,45 @@ static void DrawInteractionUI(const RoomInteractable *target, float promptFade,
     }
 }
 
+static void DrawInventoryUI(const Inventory *inventory)
+{
+    const Color panelColor = {11, 26, 34, 250};
+    const Color edgeColor = {127, 196, 192, 255};
+    const Color headingColor = {245, 214, 124, 255};
+    const Color mutedColor = {164, 184, 181, 255};
+    const char *keyItemNames[INVENTORY_KEY_ITEM_COUNT] = {
+        "Living Thorn Weave",
+        "Root Marker Trace",
+        "Explorer's Note",
+        "Map of Roots"
+    };
+
+    DrawRectangle(12, 12, 296, 156, panelColor);
+    DrawRectangleLines(12, 12, 296, 156, edgeColor);
+    DrawText("INVENTORY", 20, 18, 12, headingColor);
+    DrawText("WEAPONS", 20, 38, 8, headingColor);
+    if (Inventory_HasWeapon(inventory, INVENTORY_WEAPON_THORNFANG)) {
+        DrawText(inventory->selectedWeapon == INVENTORY_WEAPON_THORNFANG
+                     ? "> Thornfang  ACTIVE"
+                     : "  Thornfang  OWNED",
+                 24, 50, 8, RAYWHITE);
+        DrawText("Cuts marked thorn barriers", 32, 61, 8, mutedColor);
+    } else {
+        DrawText("No weapons discovered", 24, 50, 8, mutedColor);
+    }
+
+    DrawText("KEY ITEMS / DISCOVERIES", 164, 38, 8, headingColor);
+    for (int i = 0; i < INVENTORY_KEY_ITEM_COUNT; i++) {
+        bool found = Inventory_HasKeyItem(inventory, (InventoryKeyItem)i);
+        DrawText(TextFormat("%s %s", found ? "[x]" : "[ ]",
+                            keyItemNames[i]),
+                 168, 52 + i * 16, 8, found ? RAYWHITE : mutedColor);
+    }
+    DrawLine(20, 136, 300, 136, edgeColor);
+    DrawText("I / TAB / Y  CLOSE", 20, 145, 8, RAYWHITE);
+    DrawText("World paused", 226, 145, 8, mutedColor);
+}
+
 static void DrawRootMarkerRoute(void)
 {
     const Color routeColor = {100, 219, 143, 220};
@@ -174,12 +294,91 @@ int main(void)
         }
     }
 
-    RenderItem props[RENDER_PROP_COUNT];
-    BuildRenderProps(props, room.area);
-    const RoomProp *roomProps = Room_Props(room.area);
-    for (int i = 0; i < RENDER_PROP_COUNT; i++) {
-        props[i].texture = propTextures[roomProps[i].sprite];
+    InteractionState interaction = {0};
+    Inventory inventory = {0};
+    bool thornGateOpen = false;
+    RoomArea checkpointArea = room.area;
+    bool saveAvailable = false;
+    bool saveError = false;
+    char savePath[1024] = "";
+    char saveNotice[64] = "";
+    float saveNoticeTime = 0.0f;
+    SaveData loaded = {0};
+    SaveLoadResult loadResult = SAVE_LOAD_MISSING;
+    if (FindSavePath(savePath, sizeof(savePath))) {
+        saveAvailable = true;
+        loadResult = Save_Load(savePath, &loaded);
+        if (loadResult == SAVE_LOAD_LOADED ||
+            loadResult == SAVE_LOAD_RECOVERED_BACKUP) {
+            checkpointArea = loaded.checkpointArea;
+            Room_SetArea(&room, checkpointArea);
+            inventory = loaded.inventory;
+            thornGateOpen = loaded.thornGateOpen;
+            interaction.rootWeaveSeen = Inventory_HasKeyItem(
+                &inventory, INVENTORY_KEY_ITEM_ROOT_WEAVE);
+            interaction.rootMarkerActivated = Inventory_HasKeyItem(
+                &inventory, INVENTORY_KEY_ITEM_ROOT_MARKER_TRACE);
+            interaction.clearingNoteSeen = Inventory_HasKeyItem(
+                &inventory, INVENTORY_KEY_ITEM_CLEARING_NOTE);
+            interaction.rootsMuralSeen = Inventory_HasKeyItem(
+                &inventory, INVENTORY_KEY_ITEM_ROOTS_MURAL);
+            if (loadResult == SAVE_LOAD_RECOVERED_BACKUP) {
+                snprintf(saveNotice, sizeof(saveNotice),
+                         "SAVE RESTORED FROM BACKUP");
+                saveNoticeTime = 3.0f;
+                fprintf(stderr, "Recovered Palm Island progress from backup.\n");
+            }
+        } else if (loadResult == SAVE_LOAD_INVALID ||
+                   loadResult == SAVE_LOAD_IO_ERROR) {
+            saveAvailable = false;
+            saveError = true;
+            snprintf(saveNotice, sizeof(saveNotice),
+                     loadResult == SAVE_LOAD_INVALID
+                         ? "SAVE INVALID - NOT OVERWRITTEN"
+                         : "SAVE LOAD FAILED - CHECK STORAGE");
+            fprintf(stderr, "%s: %s\n", saveNotice, savePath);
+        }
+    } else {
+        saveError = true;
+        snprintf(saveNotice, sizeof(saveNotice), "SAVE PATH UNAVAILABLE");
+        fputs("Could not create a path for Palm Island save data.\n", stderr);
     }
+
+    Player_Init(&player, Room_SpawnPoint(checkpointArea));
+    if (saveAvailable) {
+        if (loadResult == SAVE_LOAD_LOADED ||
+            loadResult == SAVE_LOAD_RECOVERED_BACKUP) {
+            player.health = loaded.health;
+            player.thornfangOwned = HasThornfang(&inventory);
+            player.thornGateOpen = thornGateOpen;
+            if (Room_CollidesAtElevationWithGate(
+                    checkpointArea, Player_FeetCollider(&player),
+                    player.elevation, thornGateOpen)) {
+                saveAvailable = false;
+                saveError = true;
+                snprintf(saveNotice, sizeof(saveNotice),
+                         "SAVE CHECKPOINT BLOCKED");
+                fprintf(stderr, "%s: %s\n", saveNotice, savePath);
+                checkpointArea = ROOM_AREA_JUNGLE_ENTRANCE;
+                Room_SetArea(&room, checkpointArea);
+                inventory = (Inventory){0};
+                thornGateOpen = false;
+                interaction = (InteractionState){0};
+                Player_Init(&player, Room_SpawnPoint(checkpointArea));
+            }
+        } else if (loadResult == SAVE_LOAD_MISSING) {
+            if (!PersistProgress(savePath, checkpointArea, player.health,
+                                 &inventory,
+                                 thornGateOpen, saveNotice,
+                                 sizeof(saveNotice), &saveNoticeTime)) {
+                saveAvailable = false;
+                saveError = true;
+            }
+        }
+    }
+
+    RenderItem props[RENDER_PROP_COUNT];
+    BuildRenderProps(props, room.area, thornGateOpen, propTextures);
 
     RenderTexture2D canvas = LoadRenderTexture(VIRTUAL_W, VIRTUAL_H);
     SetTextureFilter(canvas.texture, TEXTURE_FILTER_POINT);
@@ -189,7 +388,6 @@ int main(void)
         if (propTextures[i].id != 0) SetTextureFilter(propTextures[i], TEXTURE_FILTER_POINT);
     }
 
-    Player_Init(&player, Room_SpawnPoint(room.area));
     CameraFollow camera;
     Camera_Init(&camera, player.pos, Room_Bounds(),
                 (Vector2){(float)VIRTUAL_W, (float)VIRTUAL_H});
@@ -197,6 +395,7 @@ int main(void)
     bool debug = false;
     double accumulator = 0.0;
     float worldTime = 0.0f;
+    bool inventoryOpen = false;
     enum { TRANSITION_NONE, TRANSITION_FADE_OUT, TRANSITION_FADE_IN };
     int transitionPhase = TRANSITION_NONE;
     float transitionTime = 0.0f;
@@ -205,12 +404,11 @@ int main(void)
     float interactBuffer = 0.0f;
     float attackBuffer = 0.0f;
     float attackFeedbackTime = 0.0f;
+    float thornGateFeedbackTime = 0.0f;
     float retryFeedbackTime = 0.0f;
     float promptFade = 0.0f;
-    InteractionState interaction = {0};
     Thornback thornback;
     Thornback_Init(&thornback);
-    bool thornfangAcquired = false;
     const RoomInteractable *activeInteractable = NULL;
     const RoomInteractable *promptInteractable = NULL;
 
@@ -221,30 +419,44 @@ int main(void)
         /* Fixed-timestep simulation. Input is polled once per rendered frame. */
         float frame = GetFrameTime();
         if (frame > MAX_FRAME_TIME) frame = MAX_FRAME_TIME;
-        accumulator += frame;
         Input_Poll(&input);
-        if (transitionPhase == TRANSITION_NONE && input.interactPressed) {
+        if (input.inventoryPressed) {
+            inventoryOpen = !inventoryOpen;
+            interactBuffer = 0.0f;
+            attackBuffer = 0.0f;
+        }
+        if (inventoryOpen) {
+            accumulator = 0.0;
+        } else {
+            accumulator += frame;
+        }
+        if (!inventoryOpen && transitionPhase == TRANSITION_NONE &&
+            input.interactPressed) {
             interactBuffer = INTERACT_INPUT_BUFFER;
         } else if (transitionPhase != TRANSITION_NONE) {
             interactBuffer = 0.0f;
         }
-        if (transitionPhase == TRANSITION_NONE && input.attackPressed) {
-            attackBuffer = 0.10f;
+        if (!inventoryOpen && transitionPhase == TRANSITION_NONE &&
+            input.attackPressed) {
+            attackBuffer = THORNFANG_CUT_BUFFER;
         } else if (transitionPhase != TRANSITION_NONE) {
             attackBuffer = 0.0f;
         }
 
         int steps = 0;
-        while (accumulator >= SIM_DT && steps < MAX_SIM_STEPS) {
+        while (!inventoryOpen && accumulator >= SIM_DT &&
+               steps < MAX_SIM_STEPS) {
             if (assetsOk) {
                 if (transitionPhase == TRANSITION_NONE) {
+                    player.thornfangOwned = HasThornfang(&inventory);
+                    player.thornGateOpen = thornGateOpen;
                     Player_Update(&player, &input, SIM_DT, room.area);
                     Camera_Update(&camera, player.pos, player.vel, SIM_DT);
                     Vector2 facingDirection = FacingDirection(player.facing);
                     activeInteractable =
                         room.area == ROOM_AREA_THORNBACK_ARENA &&
                                 (thornback.state != THORNBACK_STATE_DORMANT ||
-                                 thornfangAcquired)
+                                 HasThornfang(&inventory))
                             ? NULL
                             : Room_FindInteractable(
                                   room.area, player.pos, facingDirection,
@@ -269,12 +481,23 @@ int main(void)
                         if (inRange != NULL) {
                             if (inRange->kind ==
                                 ROOM_INTERACTABLE_THORNBACK_TRIAL) {
-                                if (!thornfangAcquired) {
+                                if (!HasThornfang(&inventory)) {
                                     Thornback_Start(&thornback, player.pos);
                                 }
                             } else {
                                 InteractionState_Activate(&interaction,
                                                           inRange);
+                                RecordKeyItem(&inventory, inRange->kind);
+                                if (saveAvailable &&
+                                    !PersistProgress(
+                                        savePath, checkpointArea,
+                                        player.health, &inventory,
+                                        thornGateOpen,
+                                        saveNotice, sizeof(saveNotice),
+                                        &saveNoticeTime)) {
+                                    saveAvailable = false;
+                                    saveError = true;
+                                }
                             }
                             interactBuffer = 0.0f;
                         } else {
@@ -305,18 +528,27 @@ int main(void)
                             float damageInvulnerability =
                                 player.damageInvulnerability;
                             Room_SetArea(&room, destinationArea);
+                            checkpointArea = destinationArea;
                             Thornback_Init(&thornback);
                             Player_Init(&player, destinationSpawn);
                             player.health = health;
                             player.damageInvulnerability =
                                 damageInvulnerability;
+                            player.thornfangOwned = HasThornfang(&inventory);
+                            player.thornGateOpen = thornGateOpen;
+                            if (saveAvailable &&
+                                !PersistProgress(
+                                    savePath, checkpointArea, player.health,
+                                    &inventory,
+                                    thornGateOpen, saveNotice,
+                                    sizeof(saveNotice), &saveNoticeTime)) {
+                                saveAvailable = false;
+                                saveError = true;
+                            }
                             Camera_Init(&camera, player.pos, Room_Bounds(),
                                         (Vector2){(float)VIRTUAL_W, (float)VIRTUAL_H});
-                            BuildRenderProps(props, room.area);
-                            roomProps = Room_Props(room.area);
-                            for (int i = 0; i < RENDER_PROP_COUNT; i++) {
-                                props[i].texture = propTextures[roomProps[i].sprite];
-                            }
+                            BuildRenderProps(props, room.area, thornGateOpen,
+                                             propTextures);
                             transitionPhase = TRANSITION_FADE_IN;
                         } else {
                             transitionPhase = TRANSITION_NONE;
@@ -327,8 +559,20 @@ int main(void)
             if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                 transitionPhase == TRANSITION_NONE) {
                 Thornback_Update(&thornback, SIM_DT);
-                if (thornback.state == THORNBACK_STATE_DEFEATED) {
-                    thornfangAcquired = true;
+                if (thornback.state == THORNBACK_STATE_DEFEATED &&
+                    !HasThornfang(&inventory)) {
+                    Inventory_AddWeapon(&inventory,
+                                        INVENTORY_WEAPON_THORNFANG);
+                    player.thornfangOwned = true;
+                    if (saveAvailable &&
+                        !PersistProgress(
+                            savePath, checkpointArea, player.health,
+                            &inventory, thornGateOpen,
+                            saveNotice, sizeof(saveNotice),
+                            &saveNoticeTime)) {
+                        saveAvailable = false;
+                        saveError = true;
+                    }
                 } else if (Thornback_TryPlayerContact(&thornback,
                                                      player.pos)) {
                     Player_TakeDamage(&player, thornback.position,
@@ -336,6 +580,8 @@ int main(void)
                     if (player.health <= 0) {
                         Player_Init(&player, Room_SpawnPoint(
                                                  ROOM_AREA_THORNBACK_ARENA));
+                        player.thornfangOwned = HasThornfang(&inventory);
+                        player.thornGateOpen = thornGateOpen;
                         Thornback_Init(&thornback);
                         Camera_Init(&camera, player.pos, Room_Bounds(),
                                     (Vector2){(float)VIRTUAL_W,
@@ -343,14 +589,48 @@ int main(void)
                         attackBuffer = 0.0f;
                         attackFeedbackTime = 0.0f;
                         retryFeedbackTime = 1.5f;
+                        if (saveAvailable &&
+                            !PersistProgress(
+                                savePath, checkpointArea, player.health,
+                                &inventory,
+                                thornGateOpen, saveNotice,
+                                sizeof(saveNotice), &saveNoticeTime)) {
+                            saveAvailable = false;
+                            saveError = true;
+                        }
                     }
                 }
                 if (attackBuffer > 0.0f) {
                     if (Thornback_TryHit(&thornback, player.pos,
                                          FacingDirection(player.facing))) {
                         attackFeedbackTime = 0.25f;
-                        if (thornback.state == THORNBACK_STATE_DEFEATED) {
-                            thornfangAcquired = true;
+                        attackBuffer = 0.0f;
+                    } else {
+                        attackBuffer -= SIM_DT;
+                        if (attackBuffer < 0.0f) attackBuffer = 0.0f;
+                    }
+                }
+            } else if (room.area == ROOM_AREA_ROOT_PATH &&
+                       transitionPhase == TRANSITION_NONE) {
+                if (attackBuffer > 0.0f) {
+                    if (Room_TryCutThornGate(
+                            room.area, player.pos,
+                            FacingDirection(player.facing),
+                            HasThornfang(&inventory),
+                            &thornGateOpen)) {
+                        player.thornGateOpen = true;
+                        BuildRenderProps(props, room.area, thornGateOpen,
+                                         propTextures);
+                        thornGateFeedbackTime =
+                            THORNFANG_CUT_FEEDBACK_TIME;
+                        if (saveAvailable &&
+                            !PersistProgress(
+                                savePath, checkpointArea, player.health,
+                                &inventory,
+                                thornGateOpen, saveNotice,
+                                sizeof(saveNotice), &saveNoticeTime)) {
+                            saveAvailable = false;
+                            saveError = true;
                         }
                         attackBuffer = 0.0f;
                     } else {
@@ -365,9 +645,19 @@ int main(void)
                 attackFeedbackTime -= SIM_DT;
                 if (attackFeedbackTime < 0.0f) attackFeedbackTime = 0.0f;
             }
+            if (thornGateFeedbackTime > 0.0f) {
+                thornGateFeedbackTime -= SIM_DT;
+                if (thornGateFeedbackTime < 0.0f) {
+                    thornGateFeedbackTime = 0.0f;
+                }
+            }
             if (retryFeedbackTime > 0.0f) {
                 retryFeedbackTime -= SIM_DT;
                 if (retryFeedbackTime < 0.0f) retryFeedbackTime = 0.0f;
+            }
+            if (saveNoticeTime > 0.0f) {
+                saveNoticeTime -= SIM_DT;
+                if (saveNoticeTime < 0.0f) saveNoticeTime = 0.0f;
             }
             worldTime += SIM_DT;
             accumulator -= SIM_DT;
@@ -380,7 +670,7 @@ int main(void)
         ClearBackground((Color){11, 26, 34, 255});
         if (assetsOk) {
             BeginMode2D(Camera_Render(&camera));
-            Room_Draw(&room, worldTime);
+            Room_Draw(&room, worldTime, thornGateOpen);
             if (room.area == ROOM_AREA_ROOT_PATH &&
                 interaction.rootMarkerActivated) {
                 DrawRootMarkerRoute();
@@ -403,16 +693,38 @@ int main(void)
             }
             DrawInteractionUI(promptInteractable, promptFade,
                               &interaction);
+            bool thornGatePrompt = Room_IsFacingThornGate(
+                room.area, player.pos, FacingDirection(player.facing),
+                thornGateOpen);
+            if (thornGatePrompt) {
+                DrawRectangle(8, 154, 304, 18, (Color){11, 26, 34, 240});
+                DrawRectangleLines(8, 154, 304, 18,
+                                   (Color){127, 196, 192, 255});
+                DrawText(HasThornfang(&inventory) ? "SPACE / X CUT THORNS"
+                                           : "MARKED VINES - THORNFANG NEEDED",
+                         14, 158, 8, RAYWHITE);
+            }
             DrawText(TextFormat("HP %d/%d", player.health,
                                 PLAYER_START_HEALTH),
                      8, 8, 8, (Color){245, 214, 124, 255});
+            if (saveError || saveNoticeTime > 0.0f) {
+                DrawText(saveNotice, 8, 170, 8,
+                         saveError ? (Color){255, 139, 115, 255}
+                                   : (Color){127, 196, 192, 255});
+            }
+            if (room.area == ROOM_AREA_ROOT_PATH && thornGateOpen &&
+                thornGateFeedbackTime > 0.0f) {
+                DrawRectangle(6, 22, 136, 15, (Color){11, 26, 34, 220});
+                DrawText("THORNS CUT - PATH OPEN", 10, 26, 8,
+                         (Color){127, 196, 192, 255});
+            }
             if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                 retryFeedbackTime > 0.0f) {
                 DrawRectangle(6, 22, 210, 15, (Color){11, 26, 34, 220});
                 DrawText("TRIAL RESET - RETURN TO MARKER", 10, 26, 8,
                          (Color){245, 214, 124, 255});
             } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
-                thornfangAcquired) {
+                HasThornfang(&inventory)) {
                 DrawRectangle(6, 22, 146, 15, (Color){11, 26, 34, 220});
                 DrawText("THORNFANG CLAIMED", 10, 26, 8,
                          (Color){127, 196, 192, 255});
@@ -437,6 +749,7 @@ int main(void)
                                     THORNBACK_HEALTH),
                          224, 26, 8, (Color){245, 214, 124, 255});
             }
+            if (inventoryOpen) DrawInventoryUI(&inventory);
         } else {
             DrawText("Assets not found.", 8, 8, 10, WHITE);
             DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);

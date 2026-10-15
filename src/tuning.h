@@ -45,6 +45,9 @@
 #define INTERACT_PROMPT_FADE  0.15f
 #define INTERACT_INPUT_BUFFER 0.12f
 #define INTERACT_FACING_DOT   0.819152f /* cos(35 degrees), 70-degree cone */
+#define THORNFANG_CUT_RANGE   24.0f
+#define THORNFANG_CUT_BUFFER  0.10f
+#define THORNFANG_CUT_FEEDBACK_TIME 1.2f
 
 /* --- Camera follow (feel plan section 1.4) --- */
 #define CAMERA_FOLLOW_RATE 6.0f

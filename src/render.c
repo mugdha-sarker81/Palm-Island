@@ -32,7 +32,7 @@ static void DrawItem(const RenderItem *item, const Player *player,
         Player_Draw(player, playerSheet, debug);
     } else if (item->type == RENDER_ITEM_THORNBACK) {
         Thornback_Draw(thornback);
-    } else {
+    } else if (item->texture.id != 0) {
         DrawTexture(item->texture, (int)floorf(item->position.x),
                     (int)floorf(item->position.y), WHITE);
     }

@@ -31,13 +31,12 @@ status, locked decisions, and the next bounded task.
   Entrance/Root Path and Root Path/Overgrown Clearing.
 - Root Path root markings have a minimal inspect interaction: E/controller A,
   in-front distance targeting, a fading prompt, buffered input, and a
-  repeatable clue panel. The clue is session-only; there is no save/progression
-  integration.
+  repeatable clue panel. Its clue state is included in autosaves.
 - The Living Thorn Weave clue and first Root Path marker are separate targets.
-  Activating the marker produces a session-only route trace around the gate;
-  this has no save/progression integration.
+  Activating the marker produces a route trace around the gate; its state is
+  included in autosaves.
 - An optional Explorer's Note in the Overgrown Clearing nook uses the same
-  inspect panel with a separate session-only seen flag.
+  inspect panel with a separate saved seen flag.
 - A non-combat Shrine Approach connects to Overgrown Clearing and the
   Thornback Arena shell. It has a walkable courtyard loop, an open north
   doorway, and a reachable Map of Roots mural clue.
@@ -55,28 +54,56 @@ status, locked decisions, and the next bounded task.
   follows Thornback's body while the sweep uses the telegraphed band.
 - Thornback can be struck once per recovery by pressing Space/controller X
   while facing it and within range. Three recovery hits defeat the guardian.
-  Defeat sets a session-only Thornfang-acquired flag; zero health retries at
+  Defeat grants Thornfang; zero health retries at
   the Arena entrance with full health and a visible retry cue, then resets the
   encounter. These are provisional encounter values, not final balance.
-- Thornback remains a procedural placeholder. The acquired flag does not yet
-  enable a weapon inventory/action or open the thorn gate/return shortcut.
-- The user manually playtested Phase 1 and reports that starting the trial,
-  reading/avoiding the charge lane, recovery, and the Arena return all work
-  well.
+- Thornfang is a world ability: Space/controller X cuts the
+  marked Root Path gate when Ichigo faces it within range. Cutting it removes
+  the gate prop and collision, opens a walkable corridor through the root wall,
+  and persists the opened state across relaunches. A nearby prompt explains
+  the required weapon or cut input.
+- A version-2 autosave in `%APPDATA%/PalmIsland.sav` records the current safe
+  room-entry checkpoint, health, owned/selected weapons, four discovered
+  Jungle evidence entries, and the opened thorn gate. Version-1 saves migrate
+  their Thornfang and clue flags into the new inventory state. Autosave runs at
+  room transitions and when progression changes; the previous valid file is
+  kept as a `.bak` and can restore a damaged/missing primary save. Invalid
+  saves without a valid backup are reported and left untouched.
+- Inventory state supports permanent weapon ownership/selection and key-item
+  discovery. Thornfang is the only implemented weapon; the four key-item
+  entries mirror existing inspectable Jungle evidence. A compact inventory
+  overlay opens with I/Tab or controller Y, shows weapon/evidence status, and
+  pauses simulation while open. Quick weapon switching is deferred until a
+  second weapon is implemented.
+- Manual save was deferred by user choice; autosaving at checkpoints and major
+  progress is the selected prototype behavior.
+- The user manually playtested the full Thornback encounter and reports that
+  it works well.
+- The user manually tested the Thornfang marked-gate route and reports that
+  cutting and using the opened corridor worked well. This is user-reported
+  visual/gameplay feedback; the gate state is now included in autosaves.
+- The user reports the end-to-end current Jungle blockout playtest completed
+  without softlocks. The 10–15 minute duration and detailed route observations
+  were not reported.
 - Placeholder sprites and tiles are prototypes, not production art.
 
 ### Verification
 
-- Windows build: `.\build.bat` succeeded with the two-pattern encounter,
-  damage, and recovery-strike prototype.
-- Focused tests: `ctest --test-dir build --output-on-failure` passed all 4
-  tests: `movement_collision`, `camera_follow`, `render_depth`, and
-  `thornback_trial`. Tests cover pattern alternation, timing, attack zones,
-  one hit per enemy attack/recovery, facing/range gates, defeat, and player
-  damage invulnerability/knockback.
+- The user confirmed that the original versioned autosave survives a normal
+  close and relaunch, restoring the saved checkpoint/progress.
+- The user confirmed the version-2 save loads Thornfang and discovered
+  evidence, and that migrated inventory progress persists across relaunch.
+- The Windows build succeeded with the inventory and version-2 save changes.
+- All six focused Windows tests passed: movement/collision, camera,
+  render-depth, Thornback trial, versioned save (including version-1 migration),
+  and inventory state.
+- The inventory overlay build succeeded; visual readability, input parity, and
+  pause/resume behavior still need a hands-on playtest.
 - The user confirms the Phase 2 sweep pattern works well.
-- The combat, damage, recovery-strike, defeat, reward, and retry loop has
-  passed automated tests but still needs a user hands-on playtest.
+- The user reports the combat, damage, recovery-strike, defeat, reward, and
+  retry loop passed hands-on playtesting.
+- The Thornfang prompt, cut action, and opened corridor passed a user-reported
+  hands-on playtest.
 - The executable launched and remained responsive with the expected
   `Palm Island` window title.
 - The user manually playtested both linked rooms and reported that the
@@ -111,11 +138,10 @@ status, locked decisions, and the next bounded task.
 
 ### Not implemented
 
-- The 10–15 minute Forgotten Jungle slice; the current Thornback encounter is
-  still a prototype and its combat/retry loop needs hands-on testing.
-- Persistent checkpoints/progression/save-load, general combat and health
-  systems, Thornfang's vine-cutting action, open gate/shortcut, audio, and
-  additional interactions/clues.
+- The planned 10–15 minute Forgotten Jungle slice; the end-to-end user pass
+  confirmed no softlocks but did not report completion time.
+- Inventory UI/quick-switch controls, food, discovered-map/settings
+  persistence, general combat, audio, and additional interactions/clues.
 - Production art, finished UI, and release packaging.
 
 ## Locked Decisions
@@ -133,6 +159,8 @@ status, locked decisions, and the next bounded task.
 - **Progression:** Thornfang is the first planned traversal ability;
   Excalibur is a temporary final transformation, not a sixth open-world
   weapon.
+- **Saving:** autosave at room-entry checkpoints and major progression;
+  manual save is deferred during the prototype.
 - **Scope:** no generic crafting/grinding, XP levels, large enemy roster, or
   broad content expansion during the first slice. Signature mechanics remain
   proposals and require approval before implementation.
@@ -148,23 +176,20 @@ Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
 
 ## Next Work Item
 
-Manually playtest the encounter prototype: confirm charge and sweep tells are
-readable, hit zones match their warnings, Space/controller X strikes only
-Thornback's recovery when facing it in range, and hits/defeat/retry feedback
-are clear. Values are tunable starting points; change one per tuning pass.
+Playtest the inventory overlay: confirm I/Tab and controller Y open/close it,
+that the displayed weapon and discovered evidence match progress, and that
+movement and the Thornback encounter remain paused until the overlay closes.
+Then proceed to the first bounded health/food pickup task.
 
 ## Upcoming Roadmap
 
-1. Complete the Thornback encounter prototype's user playtest gate.
-2. Implement Thornfang's actual vine-cutting action and the marked thorn-gate
-   route/shortcut back toward the Jungle Entrance.
-3. Playtest the full 10–15 minute Forgotten Jungle slice for route clarity,
-   task completion, return paths, controller use, and softlocks.
-4. After the slice gate passes, add the fixed inventory/health/checkpoint and
-   versioned save foundation described in Stage D.
-5. Polish the slice's licensed art, audio, menus, prompts, accessibility, and
+1. Complete the inventory overlay hands-on playtest; defer quick-switch UX
+   until another weapon exists.
+2. Add food/pickup behavior only with clear world pickups and checkpoint-safe
+   progression.
+3. Polish the slice's licensed art, audio, menus, prompts, accessibility, and
    measured onboarding; then build and verify a data-driven region template.
-6. Expand one weapon region at a time through its own playtest gate, then
+4. Expand one weapon region at a time through its own playtest gate, then
    implement the Sanctuary/finale and clean Windows packaging.
 
 Keep Thornback signature mechanics such as "The Read" out of scope unless

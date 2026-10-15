@@ -33,6 +33,8 @@ void Player_Init(Player *p, Vector2 feet)
     p->animTime = 0.0f;
     p->health = PLAYER_START_HEALTH;
     p->damageInvulnerability = 0.0f;
+    p->thornfangOwned = false;
+    p->thornGateOpen = false;
 }
 
 /* Keep the current facing while the input stays within FACING_KEEP_DEG of it.
@@ -65,8 +67,10 @@ static bool TryMoveTo(Player *p, Vector2 feet, RoomArea area)
     Player candidate = *p;
     candidate.pos = feet;
     candidate.elevation = candidateElevation;
-    if (Room_CollidesAtElevation(area, Player_FeetCollider(&candidate),
-                                 candidateElevation)) return false;
+    if (Room_CollidesAtElevationWithGate(area,
+                                         Player_FeetCollider(&candidate),
+                                         candidateElevation,
+                                         p->thornGateOpen)) return false;
 
     p->pos = feet;
     p->elevation = candidateElevation;

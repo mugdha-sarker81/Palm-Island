@@ -53,6 +53,8 @@ add_executable(PalmIsland
     src/main.c
     src/input.c
     src/interaction.c
+    src/inventory.c
+    src/save.c
     src/player.c
     src/room.c
     src/camera.c
@@ -116,4 +118,26 @@ if(PALM_BUILD_TESTS)
         target_compile_options(PalmIslandThornbackTests PRIVATE -Wall -Wextra)
     endif()
     add_test(NAME thornback_trial COMMAND PalmIslandThornbackTests)
+
+    add_executable(PalmIslandSaveTests
+        tests/save_test.c
+        src/inventory.c
+        src/save.c
+    )
+    target_include_directories(PalmIslandSaveTests PRIVATE src)
+    target_link_libraries(PalmIslandSaveTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandSaveTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME versioned_save COMMAND PalmIslandSaveTests)
+
+    add_executable(PalmIslandInventoryTests
+        tests/inventory_test.c
+        src/inventory.c
+    )
+    target_include_directories(PalmIslandInventoryTests PRIVATE src)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandInventoryTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME inventory_state COMMAND PalmIslandInventoryTests)
 endif()

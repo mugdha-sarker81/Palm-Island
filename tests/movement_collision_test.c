@@ -228,6 +228,51 @@ static void TestRootPathGateHasAReconnectingSideRoute(void)
                                     Player_FeetCollider(&player), player.elevation));
 }
 
+static void TestThornfangOpensRootPathShortcut(void)
+{
+    Vector2 gateApproach = {320.0f, 76.0f};
+    Vector2 facingGate = {0.0f, 1.0f};
+    bool gateOpen = false;
+
+    CHECK(Room_IsFacingThornGate(ROOM_AREA_ROOT_PATH, gateApproach,
+                                 facingGate, gateOpen));
+    CHECK(!Room_CanCutThornGate(ROOM_AREA_ROOT_PATH, gateApproach,
+                                facingGate, false, gateOpen));
+    CHECK(!Room_CanCutThornGate(ROOM_AREA_ROOT_PATH, gateApproach,
+                                (Vector2){0.0f, -1.0f}, true, gateOpen));
+    CHECK(!Room_CanCutThornGate(ROOM_AREA_ROOT_PATH,
+                                (Vector2){320.0f, 64.0f}, facingGate,
+                                true, gateOpen));
+    CHECK(Room_CollidesAtElevationWithGate(
+        ROOM_AREA_ROOT_PATH, FeetAt(320.0f, 112.0f),
+        ROOM_ELEVATION_GROUND, false));
+    CHECK(!Room_CollidesAtElevationWithGate(
+        ROOM_AREA_ROOT_PATH, FeetAt(320.0f, 112.0f),
+        ROOM_ELEVATION_GROUND, true));
+
+    CHECK(!Room_TryCutThornGate(ROOM_AREA_ROOT_PATH, gateApproach,
+                                facingGate, false, &gateOpen));
+    CHECK(!gateOpen);
+    CHECK(Room_TryCutThornGate(ROOM_AREA_ROOT_PATH, gateApproach,
+                               facingGate, true, &gateOpen));
+    CHECK(gateOpen);
+    CHECK(!Room_IsFacingThornGate(ROOM_AREA_ROOT_PATH, gateApproach,
+                                  facingGate, gateOpen));
+    CHECK(!Room_TryCutThornGate(ROOM_AREA_ROOT_PATH, gateApproach,
+                                facingGate, true, &gateOpen));
+
+    Player player;
+    Player_Init(&player, gateApproach);
+    player.thornfangOwned = true;
+    player.thornGateOpen = gateOpen;
+    AdvanceInArea(&player, facingGate, SIM_HZ * 2,
+                  ROOM_AREA_ROOT_PATH);
+    CHECK(player.pos.y > 144.0f);
+    CHECK(!Room_CollidesAtElevationWithGate(
+        ROOM_AREA_ROOT_PATH, Player_FeetCollider(&player),
+        player.elevation, gateOpen));
+}
+
 static void TestRootPathTransitionPairsAndRamp(void)
 {
     Room room = {0};
@@ -675,6 +720,7 @@ int main(void)
     TestPlayerDamageHasInvulnerabilityAndKnockback();
     TestRampTransitionsAndSideBlocking();
     TestRootPathGateHasAReconnectingSideRoute();
+    TestThornfangOpensRootPathShortcut();
     TestRootPathTransitionPairsAndRamp();
     TestOvergrownClearingRoutesAndTransition();
     TestShrineApproachLayoutAndConnections();

@@ -21,6 +21,8 @@ typedef struct Player {
     float animTime;  /* seconds spent walking since last stop */
     int health;
     float damageInvulnerability;
+    bool thornfangOwned;
+    bool thornGateOpen;
 } Player;
 
 void  Player_Init(Player *p, Vector2 feet);

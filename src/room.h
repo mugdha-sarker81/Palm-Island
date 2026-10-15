@@ -73,7 +73,7 @@ typedef struct Room {
 bool      Room_Load(Room *r, const char *tilesetPath);
 void      Room_SetArea(Room *r, RoomArea area);
 void      Room_Unload(Room *r);
-void      Room_Draw(const Room *r, float time);
+void      Room_Draw(const Room *r, float time, bool thornGateOpen);
 Rectangle Room_Bounds(void);
 Vector2   Room_SpawnPoint(RoomArea area);
 const RoomProp *Room_Props(RoomArea area);
@@ -84,12 +84,23 @@ const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
 /* Returns the paired spawn for a simple in-room connection, if reached. */
 bool      Room_GetTransition(const Room *r, Vector2 feet, RoomArea *destination,
                              Vector2 *spawnPoint);
+bool      Room_CanCutThornGate(RoomArea area, Vector2 feet,
+                               Vector2 facingDirection, bool hasThornfang,
+                               bool gateOpen);
+bool      Room_TryCutThornGate(RoomArea area, Vector2 feet,
+                               Vector2 facingDirection, bool hasThornfang,
+                               bool *gateOpen);
+bool      Room_IsFacingThornGate(RoomArea area, Vector2 feet,
+                                 Vector2 facingDirection, bool gateOpen);
 /* Tests terrain, solid prop bases, and room bounds against a feet collider. */
 bool      Room_Collides(Rectangle collider);
 /* Tests collision against the requested side of the authored stair connector. */
 bool      Room_CollidesInArea(RoomArea area, Rectangle collider);
 bool      Room_CollidesAtElevation(RoomArea area, Rectangle collider,
                                    RoomElevation elevation);
+bool      Room_CollidesAtElevationWithGate(RoomArea area, Rectangle collider,
+                                           RoomElevation elevation,
+                                           bool thornGateOpen);
 /* Changes elevation only when a move crosses the midpoint of the stair connector. */
 void      Room_TryRampTransition(RoomArea area, Vector2 from, Vector2 to,
                                  RoomElevation *elevation);

@@ -274,9 +274,14 @@ static bool RootPathFloor(int x, int y)
            upperJunction || northTrail || rampWest;
 }
 
-static char RootPathTileAt(int x, int y)
+static char RootPathTileAt(int x, int y, bool thornGateOpen)
 {
-    if (x >= 17 && x <= 22 && y >= 6 && y <= 7) return 'T';
+    if (x >= 17 && x <= 22 && y >= 6 && y <= 7) {
+        return thornGateOpen ? 'D' : 'T';
+    }
+    if (thornGateOpen && x >= 17 && x <= 22 && y >= 5 && y <= 10) {
+        return 'D';
+    }
     if (x >= 15 && x <= 24 && y >= 14 && y <= 17) return 'N';
     if (x >= 8 && x <= 9 && y == 10) return 'S';
     if (x >= 8 && x <= 9 && y == 11) return 'R';
@@ -357,20 +362,23 @@ static char ThornbackArenaTileAt(int x, int y)
     return ((x * 11 + y * 7) % 4 == 0) ? 'J' : 'G';
 }
 
-static char RoomTileAt(RoomArea area, int x, int y)
+static char RoomTileAt(RoomArea area, int x, int y, bool thornGateOpen)
 {
-    if (area == ROOM_AREA_ROOT_PATH) return RootPathTileAt(x, y);
+    if (area == ROOM_AREA_ROOT_PATH) {
+        return RootPathTileAt(x, y, thornGateOpen);
+    }
     if (area == ROOM_AREA_OVERGROWN_CLEARING) return ClearingTileAt(x, y);
     if (area == ROOM_AREA_SHRINE_APPROACH) return ShrineApproachTileAt(x, y);
     if (area == ROOM_AREA_THORNBACK_ARENA) return ThornbackArenaTileAt(x, y);
     return EntranceTileAt(x, y);
 }
 
-void Room_Draw(const Room *r, float time)
+void Room_Draw(const Room *r, float time, bool thornGateOpen)
 {
     for (int y = 0; y < ROOM_ROWS; y++) {
         for (int x = 0; x < ROOM_COLS; x++) {
-            int idx = TileIndex(RoomTileAt(r->area, x, y), x, y, time);
+            int idx = TileIndex(RoomTileAt(r->area, x, y, thornGateOpen),
+                                x, y, time);
             Rectangle src = {
                 (float)((idx % 8) * TILE_SIZE),
                 (float)((idx / 8) * TILE_SIZE),
@@ -379,6 +387,12 @@ void Room_Draw(const Room *r, float time)
             Vector2 dst = {(float)(x * TILE_SIZE), (float)(y * TILE_SIZE)};
             DrawTextureRec(r->tileset, src, dst, WHITE);
         }
+    }
+    if (r->area == ROOM_AREA_ROOT_PATH && thornGateOpen) {
+        DrawLineEx((Vector2){272.0f, 112.0f}, (Vector2){296.0f, 112.0f},
+                   2.0f, (Color){100, 219, 143, 220});
+        DrawLineEx((Vector2){344.0f, 112.0f}, (Vector2){368.0f, 112.0f},
+                   2.0f, (Color){100, 219, 143, 220});
     }
 }
 
@@ -515,6 +529,52 @@ bool Room_GetTransition(const Room *r, Vector2 feet, RoomArea *destination,
     return false;
 }
 
+bool Room_IsFacingThornGate(RoomArea area, Vector2 feet,
+                            Vector2 facingDirection, bool gateOpen)
+{
+    if (area != ROOM_AREA_ROOT_PATH || gateOpen) return false;
+
+    const Rectangle gate = {304.0f, 96.0f, 32.0f, 32.0f};
+    float closestX = fmaxf(gate.x, fminf(feet.x, gate.x + gate.width));
+    float closestY = fmaxf(gate.y, fminf(feet.y, gate.y + gate.height));
+    Vector2 delta = {closestX - feet.x, closestY - feet.y};
+    float distance = sqrtf(delta.x * delta.x + delta.y * delta.y);
+    if (distance > THORNFANG_CUT_RANGE) return false;
+
+    Vector2 centerDelta = {gate.x + gate.width * 0.5f - feet.x,
+                           gate.y + gate.height * 0.5f - feet.y};
+    float centerDistance = sqrtf(centerDelta.x * centerDelta.x +
+                                 centerDelta.y * centerDelta.y);
+    float facingLength = sqrtf(facingDirection.x * facingDirection.x +
+                               facingDirection.y * facingDirection.y);
+    if (centerDistance == 0.0f || facingLength == 0.0f) return false;
+    float facingDot = (facingDirection.x * centerDelta.x +
+                       facingDirection.y * centerDelta.y) /
+                      (facingLength * centerDistance);
+    return facingDot >= INTERACT_FACING_DOT;
+}
+
+bool Room_CanCutThornGate(RoomArea area, Vector2 feet,
+                          Vector2 facingDirection, bool hasThornfang,
+                          bool gateOpen)
+{
+    return hasThornfang &&
+           Room_IsFacingThornGate(area, feet, facingDirection, gateOpen);
+}
+
+bool Room_TryCutThornGate(RoomArea area, Vector2 feet,
+                          Vector2 facingDirection, bool hasThornfang,
+                          bool *gateOpen)
+{
+    if (gateOpen == NULL ||
+        !Room_CanCutThornGate(area, feet, facingDirection, hasThornfang,
+                              *gateOpen)) {
+        return false;
+    }
+    *gateOpen = true;
+    return true;
+}
+
 static bool IsSolid(char tile)
 {
     return tile == 'S' || tile == 'N' || tile == 'W' || tile == 'T';
@@ -531,8 +591,9 @@ static bool IsUpperLandingTile(RoomArea area, int x, int y)
     return x >= left && x < right && y >= top && y < bottom;
 }
 
-bool Room_CollidesAtElevation(RoomArea area, Rectangle collider,
-                             RoomElevation elevation)
+bool Room_CollidesAtElevationWithGate(RoomArea area, Rectangle collider,
+                                      RoomElevation elevation,
+                                      bool thornGateOpen)
 {
     float roomWidth = (float)(ROOM_COLS * TILE_SIZE);
     float roomHeight = (float)(ROOM_ROWS * TILE_SIZE);
@@ -548,7 +609,7 @@ bool Room_CollidesAtElevation(RoomArea area, Rectangle collider,
     int maxY = (int)((bottom - 0.001f) / TILE_SIZE);
     for (int y = minY; y <= maxY; y++) {
         for (int x = minX; x <= maxX; x++) {
-            char tile = RoomTileAt(area, x, y);
+            char tile = RoomTileAt(area, x, y, thornGateOpen);
             if (!IsSolid(tile)) continue;
             if (elevation == ROOM_ELEVATION_UPPER &&
                 IsUpperLandingTile(area, x, y)) continue;
@@ -561,6 +622,8 @@ bool Room_CollidesAtElevation(RoomArea area, Rectangle collider,
 
     const RoomProp *props = PropsForArea(area);
     for (int i = 0; i < ROOM_PROP_COUNT; i++) {
+        if (thornGateOpen && area == ROOM_AREA_ROOT_PATH &&
+            props[i].sprite == ROOM_SPRITE_THORN_GATE) continue;
         if (props[i].elevation != elevation) continue;
         Rectangle obstacle = props[i].collider;
         if (obstacle.width <= 0.0f || obstacle.height <= 0.0f) continue;
@@ -569,6 +632,12 @@ bool Room_CollidesAtElevation(RoomArea area, Rectangle collider,
             bottom > obstacle.y) return true;
     }
     return false;
+}
+
+bool Room_CollidesAtElevation(RoomArea area, Rectangle collider,
+                              RoomElevation elevation)
+{
+    return Room_CollidesAtElevationWithGate(area, collider, elevation, false);
 }
 
 bool Room_CollidesInArea(RoomArea area, Rectangle collider)

@@ -1411,7 +1411,10 @@ session, and every mandatory step can be understood without a waypoint arrow.
 
 ### Stage D — Save/inventory foundation
 
-1. Add weapon ownership/selection and key-item inventory.
+1. Implemented: version-2 save data tracks weapon ownership/selection and
+   discovered Jungle evidence, migrating existing version-1 saves. A compact
+   pause overlay shows the currently implemented weapon and discovered
+   evidence. Defer quick-switch controls until another weapon exists.
 2. Add health/food behavior and explicit, readable world pickups; verify
    checkpoint recovery does not remove major progression.
 3. Add the first fixed tool only when its region/task is implemented; include
@@ -1489,11 +1492,11 @@ decision log once chosen.
 | 8-region / 24-zone campaign outline | Planned in this document |
 | Top-down eight-direction controller | Implemented; Feel Gate reported passed |
 | Jungle slice in top-down world | In progress; current areas are blockouts |
-| Inventory/map/quest/save systems | Planned; not implemented |
+| Inventory/map/quest/save systems | Version-2 autosave includes Thornfang and discovered Jungle evidence; inventory UI/map/settings remain planned |
 | Health/food/shop/tool-building system | Proposed; not implemented |
 | Ichigo costume/animation set | Appearance direction proposed; no production sprites |
-| Enemy and guardian systems | Thornback two-pattern combat/reward prototype; needs hands-on testing |
+| Enemy and guardian systems | Thornback two-pattern combat/reward prototype; user-reported hands-on pass |
 
-**Next bounded task:** manually playtest Thornback's two-pattern combat
-prototype. Confirm telegraph/hit-zone clarity, recovery strikes, defeat/retry,
-and reward feedback before building the Thornfang vine-gate route.
+**Current bounded task:** add and playtest a compact inventory view for the
+currently implemented weapon and discovered Jungle evidence. Autosave and
+version-1 migration are covered by the save foundation; manual save is deferred.

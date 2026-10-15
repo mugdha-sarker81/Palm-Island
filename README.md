@@ -11,10 +11,11 @@ and understanding the island—not grinding or constant combat.
 > Jungle blockout areas: the Entrance, Root Path, Overgrown Clearing, Shrine
 > Approach, and a Thornback Arena shell with a two-pattern encounter
 > prototype. It has placeholder terrain and props, player collision, a
-> scrolling camera, ramps, a closed
-> thorn gate, and fade transitions between the areas. A few landmarks have
-> small inspect interactions. Persistent progression, general combat, dialogue,
-> audio, and saving are not implemented.
+> scrolling camera, ramps, a Thornfang-cuttable gate, and fade transitions
+> between the areas. A few landmarks have small inspect interactions. A
+> versioned autosave preserves Jungle checkpoints, health, the Thornfang
+> weapon, discovered evidence, and the opened gate; the inventory screen,
+> food, general combat, dialogue, and settings persistence are not implemented.
 >
 > **Direction:** the game is planned as top-down 2D pixel art with
 > eight-direction movement and 3D-like depth cues (layering, occlusion, and
@@ -69,9 +70,17 @@ a distinct ground tell and recovery window; the sweep's marked danger band
 leaves a safe repositioning strip above and below it. The player can strike
 once during each recovery, and must face Thornback and be in range. The
 prototype includes five hearts, visible invulnerability/knockback, a full-
-health retry cue at the Arena entrance, and a session-only Thornfang reward flag;
-general combat, persistent progression, and the Thornfang vine-cutting route
-are not implemented.
+health retry cue at the Arena entrance, and a Thornfang reward.
+After earning it, face the marked Root Path vines and press Space/controller X
+to cut them and open a direct corridor through the wall. General combat,
+quick weapon switching, and save/load for map, tools, and settings are not
+implemented. The versioned
+autosave at `%APPDATA%/PalmIsland.sav` records each room-entry checkpoint and
+major clue/reward/gate progress, retaining the previous file as a `.bak`.
+The opened gate is the return shortcut toward the Jungle Entrance and the user
+reports it works.
+Press I/Tab or controller Y to open the compact inventory overlay; it lists
+Thornfang and discovered Jungle evidence and pauses gameplay while open.
 In Root Path, the thorn weave can be inspected and a visible root marker
 activated with E or controller A when approached from the front. Activating
 the marker traces the bypass around the gate; clue panels can be reviewed or
@@ -79,19 +88,19 @@ closed with the same action. The bounded, smoothed camera follows Ichigo and
 resets at room transitions. Solid prop bases and walls block the 10×6 feet
 collider; prop drawing is sorted by foot/base Y. F3 shows the live input
 source/magnitude, frame time, player speed, position, and elevation. Persistent
-checkpoints/saves, general combat systems, and Jungle progression are not
+health/food, general combat systems, and additional Jungle progression are not
 implemented. The user reports the Feel Gate, existing Jungle areas, clue
 prompt/panel, marker trace, and Clearing note work well. The Shrine Approach
 was hands-on tested before its doorway was opened; the user reports that the
-completed Arena shell route and return worked well. The user also confirmed
-the Phase 2 Thornback sweep looks and works well; the new combat/retry loop
-still needs a hands-on playtest.
+completed Arena shell route and return worked well. The user confirmed the
+Phase 2 Thornback sweep, full combat/retry loop, and Thornfang gate route work
+well. The user also reports the end-to-end Jungle playtest had no softlocks.
 
 ## Optional focused tests
 
-The focused movement, camera, render, and Thornback trial tests are opt-in. From
-PowerShell in the repository, configure and run them with MSYS2 MinGW64
-available:
+The focused movement, camera, render, Thornback trial, and versioned save tests
+are opt-in. From PowerShell in the repository, configure and run them with
+MSYS2 MinGW64 available:
 
 ```powershell
 $env:Path = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;$env:Path"
@@ -104,7 +113,7 @@ ctest --test-dir build --output-on-failure
 |---|---|---|
 | Move (8 directions) | WASD or arrow keys | Left stick / D-pad |
 | Interact / close panel | E | A (right face button) |
-| Strike during Thornback recovery | Space | X (left face button) |
+| Thornback recovery strike / cut marked vines | Space | X (left face button) |
 | Debug overlay (FPS, speed, position) | F3 | — |
 | Borderless windowed | F11 | — |
 | Quit | Esc | — |
