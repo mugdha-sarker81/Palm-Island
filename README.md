@@ -79,8 +79,11 @@ steam costs a heart, with the existing invulnerability and knockback, and
 depleting health resets to Ashfall's entry checkpoint. The southern exit
 returns to the Arena. One Ash Skitter patrols between marked safe patches,
 telegraphs its route, dashes across it, and can be hit with Thornfang during
-recovery; the encounter resets when the room is re-entered. No Ashfall boss or
-completed cavern progression has been implemented. The west marker starts a
+recovery; the encounter resets when the room is re-entered. Inspect the
+pulsing cracked mineral seal on the central path to add it to key-item
+discoveries, or look for the optional cooled seam on the west lower path.
+No Ashfall boss or completed cavern progression has been implemented. The
+west marker starts a
 Thornback encounter prototype
 that alternates a straight charge with a slower, broad sweep. Each attack has
 a distinct ground tell and recovery window; the sweep's marked danger band
@@ -91,8 +94,9 @@ health retry cue at the Arena entrance, and a Thornfang reward.
 Before Thornfang is earned, a pulsing beacon marks the trial on the Arena's
 west-center side; approach from the south and move north, then west. Stand
 just south of the marker, face north, and press E/controller A to begin.
-The upper-right current-room minimap names the area, shows the player dot, and
-marks the trial when it is available. It updates as you move and change rooms.
+The upper-right island map shows all six currently playable areas and their
+connections, with your dot moving inside the room you are in. It marks the
+Thornback trial while available; campaign regions not yet built are not shown.
 After earning it, face the marked Root Path vines and press Space/controller X
 to cut them and open a direct corridor through the wall. General combat,
 quick weapon switching, and save/load for map, tools, and settings are not

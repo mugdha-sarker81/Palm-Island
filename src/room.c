@@ -332,6 +332,24 @@ static const RoomInteractable THORNBACK_TRIAL = {
     .kind = ROOM_INTERACTABLE_THORNBACK_TRIAL
 };
 
+static const RoomInteractable CRACKED_MINERAL_SEAL = {
+    .id = "cavern.cracked_mineral_seal_seen",
+    .title = "Cracked Mineral Seal",
+    .text = "A dark fracture cuts across the mineral face.\n"
+            "Warm air rises through it from somewhere below.",
+    .interactBox = {312.0f, 144.0f, 16.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_CRACKED_MINERAL_SEAL
+};
+
+static const RoomInteractable COOLED_MINERAL_SEAM = {
+    .id = "cavern.cooled_mineral_seam_seen",
+    .title = "Cooled Mineral Seam",
+    .text = "This seam cooled into a shallow fork.\n"
+            "The split may show how heat once flowed.",
+    .interactBox = {144.0f, 224.0f, 16.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_COOLED_MINERAL_SEAM
+};
+
 static const RoomInteractableEntry ROOT_PATH_INTERACTABLES[] = {
     {&ROOT_MARKINGS},
     {&ROOT_MARKER}
@@ -349,6 +367,11 @@ static const RoomInteractableEntry SHRINE_APPROACH_INTERACTABLES[] = {
 
 static const RoomInteractableEntry THORNBACK_ARENA_INTERACTABLES[] = {
     {&THORNBACK_TRIAL}
+};
+
+static const RoomInteractableEntry ASHFALL_DESCENT_INTERACTABLES[] = {
+    {&CRACKED_MINERAL_SEAL},
+    {&COOLED_MINERAL_SEAM}
 };
 
 static const RoomDefinition ROOM_DEFINITIONS[ROOM_AREA_COUNT] = {
@@ -434,6 +457,9 @@ static const RoomDefinition ROOM_DEFINITIONS[ROOM_AREA_COUNT] = {
         .vents = ASHFALL_DESCENT_VENTS,
         .ventCount = sizeof(ASHFALL_DESCENT_VENTS) /
                      sizeof(ASHFALL_DESCENT_VENTS[0]),
+        .interactables = ASHFALL_DESCENT_INTERACTABLES,
+        .interactableCount = sizeof(ASHFALL_DESCENT_INTERACTABLES) /
+                             sizeof(ASHFALL_DESCENT_INTERACTABLES[0]),
         .gatePropSprite = ROOM_SPRITE_COUNT
     }
 };
@@ -658,14 +684,29 @@ const char *Room_AreaLabel(RoomArea area)
     return "UNKNOWN";
 }
 
-Vector2 Room_MiniMapPlayerPosition(Vector2 playerPosition)
+static Vector2 WorldMapNodeCenter(RoomArea area)
 {
-    const Vector2 mapOrigin = {234.0f, 20.0f};
-    const float mapPixelsPerWorldPixel = 2.0f / TILE_SIZE;
-    return (Vector2){
-        mapOrigin.x + playerPosition.x * mapPixelsPerWorldPixel,
-        mapOrigin.y + playerPosition.y * mapPixelsPerWorldPixel
-    };
+    switch (area) {
+        case ROOM_AREA_JUNGLE_ENTRANCE: return (Vector2){218.0f, 28.0f};
+        case ROOM_AREA_ROOT_PATH: return (Vector2){254.0f, 28.0f};
+        case ROOM_AREA_OVERGROWN_CLEARING: return (Vector2){290.0f, 28.0f};
+        case ROOM_AREA_SHRINE_APPROACH: return (Vector2){290.0f, 55.0f};
+        case ROOM_AREA_THORNBACK_ARENA: return (Vector2){254.0f, 55.0f};
+        case ROOM_AREA_ASHFALL_DESCENT: return (Vector2){218.0f, 55.0f};
+        case ROOM_AREA_COUNT: break;
+    }
+    return (Vector2){218.0f, 28.0f};
+}
+
+Vector2 Room_WorldMapPlayerPosition(RoomArea area, Vector2 playerPosition)
+{
+    const Vector2 center = WorldMapNodeCenter(area);
+    const float roomWidth = (float)(ROOM_COLS * TILE_SIZE);
+    const float roomHeight = (float)(ROOM_ROWS * TILE_SIZE);
+    float x = fmaxf(0.0f, fminf(playerPosition.x, roomWidth)) / roomWidth;
+    float y = fmaxf(0.0f, fminf(playerPosition.y, roomHeight)) / roomHeight;
+    return (Vector2){center.x - 8.0f + x * 16.0f,
+                     center.y - 3.0f + y * 6.0f};
 }
 
 void Room_Draw(const Room *r, float time, bool thornGateOpen)
@@ -901,49 +942,58 @@ bool Room_TryCutThornGate(RoomArea area, Vector2 feet,
     return true;
 }
 
-void Room_DrawMiniMap(const Room *r, Vector2 playerPosition,
-                      bool thornGateOpen, bool showTrialMarker)
+void Room_DrawWorldMap(RoomArea currentArea, Vector2 playerPosition,
+                       bool showTrialMarker)
 {
-    const float mapX = 234.0f;
-    const float mapY = 20.0f;
-    const float tilePixels = 2.0f;
     const Color panelColor = {11, 26, 34, 235};
     const Color borderColor = {127, 196, 192, 255};
     const Color playerColor = {105, 225, 238, 255};
+    const Color pathColor = {127, 153, 125, 255};
 
-    DrawRectangle(230, 6, 88, 62, panelColor);
-    DrawRectangleLines(230, 6, 88, 62, borderColor);
-    DrawText(Room_AreaLabel(r->area), 234, 9, 6, RAYWHITE);
-    DrawCircleV((Vector2){288.0f, 12.0f}, 2.0f, playerColor);
-    DrawText("YOU", 293, 9, 6, playerColor);
+    DrawRectangle(203, 6, 115, 72, panelColor);
+    DrawRectangleLines(203, 6, 115, 72, borderColor);
+    DrawText("ISLAND MAP", 207, 9, 7, RAYWHITE);
 
-    for (int y = 0; y < ROOM_ROWS; y++) {
-        for (int x = 0; x < ROOM_COLS; x++) {
-            char tile = RoomTileAt(r->area, x, y, thornGateOpen);
-            Color tileColor;
-            switch (tile) {
-                case 'D': tileColor = (Color){117, 133, 91, 255}; break;
-                case 'R': tileColor = (Color){96, 173, 190, 255}; break;
-                case 'T': tileColor = (Color){171, 119, 70, 255}; break;
-                case 'S':
-                case 'N':
-                case 'W': tileColor = (Color){62, 79, 76, 255}; break;
-                case 'G': tileColor = (Color){77, 111, 69, 255}; break;
-                default: tileColor = (Color){43, 77, 57, 255}; break;
-            }
-            DrawRectangle((int)(mapX + x * tilePixels),
-                          (int)(mapY + y * tilePixels),
-                          (int)tilePixels, (int)tilePixels, tileColor);
-        }
+    static const RoomArea connectedAreas[] = {
+        ROOM_AREA_JUNGLE_ENTRANCE,
+        ROOM_AREA_ROOT_PATH,
+        ROOM_AREA_OVERGROWN_CLEARING,
+        ROOM_AREA_SHRINE_APPROACH,
+        ROOM_AREA_THORNBACK_ARENA,
+        ROOM_AREA_ASHFALL_DESCENT
+    };
+    for (size_t i = 0; i + 1 < sizeof(connectedAreas) /
+                                   sizeof(connectedAreas[0]); i++) {
+        Vector2 from = WorldMapNodeCenter(connectedAreas[i]);
+        Vector2 to = WorldMapNodeCenter(connectedAreas[i + 1]);
+        DrawLineEx(from, to, 1.0f, pathColor);
+    }
+
+    for (size_t i = 0; i < sizeof(connectedAreas) /
+                                sizeof(connectedAreas[0]); i++) {
+        RoomArea area = connectedAreas[i];
+        Vector2 center = WorldMapNodeCenter(area);
+        Rectangle node = {center.x - 12.0f, center.y - 5.0f, 24.0f, 10.0f};
+        bool isCurrent = area == currentArea;
+        DrawRectangleRec(node, isCurrent ? (Color){49, 97, 87, 255}
+                                         : (Color){30, 54, 52, 255});
+        DrawRectangleLinesEx(node, isCurrent ? 1.5f : 1.0f,
+                             isCurrent ? playerColor : borderColor);
+        const char *label = Room_AreaLabel(area);
+        int labelWidth = MeasureText(label, 5);
+        DrawText(label, (int)(center.x - labelWidth * 0.5f),
+                 (int)(center.y + 7.0f), 5,
+                 isCurrent ? RAYWHITE : (Color){176, 194, 182, 255});
     }
 
     if (showTrialMarker) {
-        DrawRectangle((int)(mapX + 11.0f * tilePixels - 1.0f),
-                      (int)(mapY + 11.0f * tilePixels - 1.0f),
-                      4, 4, (Color){255, 214, 112, 255});
+        Vector2 trialPosition = Room_WorldMapPlayerPosition(
+            ROOM_AREA_THORNBACK_ARENA, (Vector2){176.0f, 176.0f});
+        DrawCircleV(trialPosition, 1.5f, (Color){255, 214, 112, 255});
     }
 
-    Vector2 playerMapPosition = Room_MiniMapPlayerPosition(playerPosition);
+    Vector2 playerMapPosition =
+        Room_WorldMapPlayerPosition(currentArea, playerPosition);
     DrawCircleV(playerMapPosition, 2.0f, BLACK);
     DrawCircleV(playerMapPosition, 1.0f, playerColor);
 }

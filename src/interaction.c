@@ -20,6 +20,12 @@ void InteractionState_Activate(InteractionState *state,
     if (target->kind == ROOM_INTERACTABLE_ROOTS_MURAL) {
         state->rootsMuralSeen = true;
     }
+    if (target->kind == ROOM_INTERACTABLE_CRACKED_MINERAL_SEAL) {
+        state->crackedMineralSealSeen = true;
+    }
+    if (target->kind == ROOM_INTERACTABLE_COOLED_MINERAL_SEAM) {
+        state->cooledMineralSeamSeen = true;
+    }
 }
 
 void InteractionState_Close(InteractionState *state)

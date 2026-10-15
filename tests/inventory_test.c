@@ -25,6 +25,14 @@ int main(void)
 
     CHECK(Inventory_AddKeyItem(&inventory, INVENTORY_KEY_ITEM_ROOT_WEAVE));
     CHECK(Inventory_HasKeyItem(&inventory, INVENTORY_KEY_ITEM_ROOT_WEAVE));
+    CHECK(Inventory_AddKeyItem(
+        &inventory, INVENTORY_KEY_ITEM_CRACKED_MINERAL_SEAL));
+    CHECK(Inventory_HasKeyItem(
+        &inventory, INVENTORY_KEY_ITEM_CRACKED_MINERAL_SEAL));
+    CHECK(Inventory_AddKeyItem(
+        &inventory, INVENTORY_KEY_ITEM_COOLED_MINERAL_SEAM));
+    CHECK(Inventory_HasKeyItem(
+        &inventory, INVENTORY_KEY_ITEM_COOLED_MINERAL_SEAM));
     CHECK(Inventory_IsValid(&inventory));
 
     CHECK(Inventory_AddFood(&inventory));

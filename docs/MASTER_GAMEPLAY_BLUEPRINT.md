@@ -412,9 +412,10 @@ which random weapon opens a gate.
 
 - A diegetic world map is acquired early and fills in as Ichigo observes
   landmarks and visits exits.
-- Prototype note: a current-room minimap is implemented in the upper-right HUD.
-  It names the current generated room and shows Ichigo's position; it is not
-  the planned acquired, discovery-based regional/island map.
+- Prototype note: an upper-right island map is implemented for the six
+  currently playable rooms. It shows their connections and Ichigo's position
+  within the current room. Planned, unbuilt regions remain hidden; this is not
+  yet the planned acquired, discovery-based campaign map.
 - Show region names, visited routes, known exits, checkpoints, and discovered
   landmarks. Show locked ability gates with a clear icon/name only after
   Ichigo has seen them.
@@ -607,7 +608,10 @@ spaces are needed for pacing.
 - **Entry/exit:** central island after Thornfang; descends to Forge Veins.
 - **Player task:** map a safe route through the hot entrance.
 - **Subtasks:** identify periodic vent glow; cross between vents; inspect
-  cracked mineral seal.
+  cracked mineral seal. The current greybox exposes the seal as a pulsing,
+  inspectable landmark on the central path; reading it records a persistent
+  key-item discovery. An optional cooled seam on the west-lower path records
+  its forked crack pattern for comparison in Forge Veins.
 - **Obstacles:** telegraphed steam vents; falling rocks have shadow indicators;
   stairs descend between explicit elevation layers.
 - **Enemies/boss:** one Ash Skitter introduced alone.
@@ -1537,7 +1541,7 @@ decision log once chosen.
 |---|---|
 | Existing Windows build and launch | Verified |
 | Existing side-scroll coast prototype | Removed on 2026-10-14 at user direction |
-| Current executable | Five linked Jungle slice areas plus the Ashfall Descent greybox with its first Ash Skitter; Thornback Arena trial prototype |
+| Current executable | Five linked Jungle slice areas plus the Ashfall Descent greybox with its Cracked Mineral Seal discovery and first Ash Skitter; Thornback Arena trial prototype |
 | Top-down camera/game direction | Implemented for current blockout |
 | 8-region / 24-zone campaign outline | Planned in this document |
 | Top-down eight-direction controller | Implemented; Feel Gate reported passed |
@@ -1549,7 +1553,8 @@ decision log once chosen.
 
 **Current bounded task:** hands-on playtest Ashfall's Ash Skitter: bright
 route-tell readability, dash evasion/contact, upper-elevation safety,
-Thornfang range/facing and recovery, and defeat/reset. Ashfall's prior
-navigation gate passed in a user-reported test on 2026-10-15. Keep the Forge
-Warden and guardian out of scope until this encounter is validated. Manual save
-is deferred.
+Thornfang range/facing and recovery, and defeat/reset. Also verify the
+current-room map in play. Ashfall's prior navigation gate passed in a
+user-reported test on 2026-10-15. Expand into Forge Veins one zone at a time
+after this gate; keep the Forge Warden and guardian out of scope until the
+encounter is validated. Manual save is deferred.

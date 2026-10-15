@@ -10,6 +10,8 @@ typedef struct InteractionState {
     bool rootMarkerActivated;
     bool clearingNoteSeen;
     bool rootsMuralSeen;
+    bool crackedMineralSealSeen;
+    bool cooledMineralSeamSeen;
 } InteractionState;
 
 void InteractionState_Activate(InteractionState *state,

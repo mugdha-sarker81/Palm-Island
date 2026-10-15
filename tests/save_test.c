@@ -75,6 +75,8 @@ static void TestMissingAndVersionedRoundTrip(const char *path)
     CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);
     CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
     CHECK(SaveDataMatches(&loaded, &expected));
+    CHECK(Inventory_HasKeyItem(
+        &loaded.inventory, INVENTORY_KEY_ITEM_CRACKED_MINERAL_SEAL));
 
     expected.checkpointArea = ROOM_AREA_ASHFALL_DESCENT;
     CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);

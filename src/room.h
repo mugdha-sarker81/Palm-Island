@@ -56,7 +56,9 @@ typedef enum RoomInteractableKind {
     ROOM_INTERACTABLE_CLEARING_NOTE,
     ROOM_INTERACTABLE_ROOTS_MURAL,
     ROOM_INTERACTABLE_THORNBACK_TRIAL,
-    ROOM_INTERACTABLE_PALM_FRUIT
+    ROOM_INTERACTABLE_PALM_FRUIT,
+    ROOM_INTERACTABLE_CRACKED_MINERAL_SEAL,
+    ROOM_INTERACTABLE_COOLED_MINERAL_SEAM
 } RoomInteractableKind;
 
 typedef struct RoomProp {
@@ -87,10 +89,10 @@ bool      Room_Load(Room *r, const char *tilesetPath);
 void      Room_SetArea(Room *r, RoomArea area);
 void      Room_Unload(Room *r);
 void      Room_Draw(const Room *r, float time, bool thornGateOpen);
-void      Room_DrawMiniMap(const Room *r, Vector2 playerPosition,
-                           bool thornGateOpen, bool showTrialMarker);
+void      Room_DrawWorldMap(RoomArea currentArea, Vector2 playerPosition,
+                            bool showTrialMarker);
 const char *Room_AreaLabel(RoomArea area);
-Vector2   Room_MiniMapPlayerPosition(Vector2 playerPosition);
+Vector2   Room_WorldMapPlayerPosition(RoomArea area, Vector2 playerPosition);
 Rectangle Room_Bounds(void);
 Vector2   Room_SpawnPoint(RoomArea area);
 const RoomProp *Room_Props(RoomArea area);

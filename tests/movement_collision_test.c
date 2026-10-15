@@ -864,6 +864,54 @@ static void TestMapOfRootsMuralIsReachableAndIndependent(void)
     CHECK(state.rootsMuralSeen);
 }
 
+static void TestCrackedMineralSealIsReachableAndReviewable(void)
+{
+    InteractionState state = {0};
+    const RoomInteractable *seal = Room_FindInteractable(
+        ROOM_AREA_ASHFALL_DESCENT, (Vector2){320.0f, 176.0f},
+        (Vector2){0.0f, -1.0f}, INTERACT_RANGE);
+    CHECK(!Room_CollidesInArea(ROOM_AREA_ASHFALL_DESCENT,
+                               FeetAt(320.0f, 176.0f)));
+    CHECK(seal != NULL);
+    if (seal == NULL) return;
+
+    CHECK(strcmp(seal->id, "cavern.cracked_mineral_seal_seen") == 0);
+    CHECK(strcmp(seal->title, "Cracked Mineral Seal") == 0);
+    CHECK(seal->kind == ROOM_INTERACTABLE_CRACKED_MINERAL_SEAL);
+    InteractionState_Activate(&state, seal);
+    CHECK(state.panelOpen);
+    CHECK(state.crackedMineralSealSeen);
+    InteractionState_Activate(&state, seal);
+    CHECK(!state.panelOpen);
+    InteractionState_Activate(&state, seal);
+    CHECK(state.panelOpen);
+    CHECK(state.crackedMineralSealSeen);
+}
+
+static void TestCooledMineralSeamIsReachableAndReviewable(void)
+{
+    InteractionState state = {0};
+    const RoomInteractable *seam = Room_FindInteractable(
+        ROOM_AREA_ASHFALL_DESCENT, (Vector2){152.0f, 252.0f},
+        (Vector2){0.0f, -1.0f}, INTERACT_RANGE);
+    CHECK(!Room_CollidesInArea(ROOM_AREA_ASHFALL_DESCENT,
+                               FeetAt(152.0f, 252.0f)));
+    CHECK(seam != NULL);
+    if (seam == NULL) return;
+
+    CHECK(strcmp(seam->id, "cavern.cooled_mineral_seam_seen") == 0);
+    CHECK(strcmp(seam->title, "Cooled Mineral Seam") == 0);
+    CHECK(seam->kind == ROOM_INTERACTABLE_COOLED_MINERAL_SEAM);
+    InteractionState_Activate(&state, seam);
+    CHECK(state.panelOpen);
+    CHECK(state.cooledMineralSeamSeen);
+    InteractionState_Activate(&state, seam);
+    CHECK(!state.panelOpen);
+    InteractionState_Activate(&state, seam);
+    CHECK(state.panelOpen);
+    CHECK(state.cooledMineralSeamSeen);
+}
+
 int main(void)
 {
     TestEntranceBoundsAndRouteLayout();
@@ -888,6 +936,8 @@ int main(void)
     TestRootMarkerActivationIsRepeatable();
     TestClearingNoteCanBeReadAndReopened();
     TestMapOfRootsMuralIsReachableAndIndependent();
+    TestCrackedMineralSealIsReachableAndReviewable();
+    TestCooledMineralSeamIsReachableAndReviewable();
 
     if (failures != 0) {
         fprintf(stderr, "%d movement collision check(s) failed.\n", failures);

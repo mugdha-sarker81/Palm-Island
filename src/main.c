@@ -140,6 +140,14 @@ static void RecordKeyItem(Inventory *inventory,
         case ROOM_INTERACTABLE_ROOTS_MURAL:
             Inventory_AddKeyItem(inventory, INVENTORY_KEY_ITEM_ROOTS_MURAL);
             break;
+        case ROOM_INTERACTABLE_CRACKED_MINERAL_SEAL:
+            Inventory_AddKeyItem(
+                inventory, INVENTORY_KEY_ITEM_CRACKED_MINERAL_SEAL);
+            break;
+        case ROOM_INTERACTABLE_COOLED_MINERAL_SEAM:
+            Inventory_AddKeyItem(
+                inventory, INVENTORY_KEY_ITEM_COOLED_MINERAL_SEAM);
+            break;
         case ROOM_INTERACTABLE_THORNBACK_TRIAL:
         case ROOM_INTERACTABLE_PALM_FRUIT:
         default:
@@ -176,6 +184,10 @@ static bool InteractionWasSeen(const InteractionState *state,
         case ROOM_INTERACTABLE_ROOT_MARKER: return state->rootMarkerActivated;
         case ROOM_INTERACTABLE_CLEARING_NOTE: return state->clearingNoteSeen;
         case ROOM_INTERACTABLE_ROOTS_MURAL: return state->rootsMuralSeen;
+        case ROOM_INTERACTABLE_CRACKED_MINERAL_SEAL:
+            return state->crackedMineralSealSeen;
+        case ROOM_INTERACTABLE_COOLED_MINERAL_SEAM:
+            return state->cooledMineralSeamSeen;
         case ROOM_INTERACTABLE_THORNBACK_TRIAL: return false;
         default: return false;
     }
@@ -229,7 +241,9 @@ static void DrawInventoryUI(const Inventory *inventory)
         "Living Thorn Weave",
         "Root Marker Trace",
         "Explorer's Note",
-        "Map of Roots"
+        "Map of Roots",
+        "Cracked Mineral Seal",
+        "Cooled Mineral Seam"
     };
 
     DrawRectangle(12, 12, 296, 156, panelColor);
@@ -254,7 +268,7 @@ static void DrawInventoryUI(const Inventory *inventory)
         bool found = Inventory_HasKeyItem(inventory, (InventoryKeyItem)i);
         DrawText(TextFormat("%s %s", found ? "[x]" : "[ ]",
                             keyItemNames[i]),
-                 168, 52 + i * 16, 8, found ? RAYWHITE : mutedColor);
+                 168, 51 + i * 13, 8, found ? RAYWHITE : mutedColor);
     }
     DrawLine(20, 136, 300, 136, edgeColor);
     DrawText("I / TAB / Y  CLOSE", 20, 145, 8, RAYWHITE);
@@ -393,6 +407,32 @@ static void DrawArenaTrialLocator(float worldTime)
     DrawText("TRIAL", 158, 143, 8, locatorColor);
 }
 
+static void DrawAshfallSeal(float worldTime, bool discovered)
+{
+    float pulse = discovered ? 0.45f : 0.65f + 0.35f * sinf(worldTime * 3.0f);
+    Color sealColor = Fade((Color){255, 181, 83, 255}, pulse);
+    DrawCircleLines(320, 152, 10.0f, Fade(sealColor, 0.55f));
+    DrawLineEx((Vector2){316.0f, 145.0f}, (Vector2){319.0f, 151.0f},
+               2.0f, sealColor);
+    DrawLineEx((Vector2){319.0f, 151.0f}, (Vector2){316.0f, 157.0f},
+               2.0f, sealColor);
+    DrawLineEx((Vector2){320.0f, 151.0f}, (Vector2){324.0f, 155.0f},
+               1.0f, sealColor);
+}
+
+static void DrawCooledMineralSeam(float worldTime, bool discovered)
+{
+    float pulse = discovered ? 0.42f : 0.55f + 0.25f * sinf(worldTime * 2.5f);
+    Color seamColor = Fade((Color){126, 205, 211, 255}, pulse);
+    DrawCircleLines(152, 232, 8.0f, Fade(seamColor, 0.6f));
+    DrawLineEx((Vector2){148.0f, 231.0f}, (Vector2){152.0f, 235.0f},
+               2.0f, seamColor);
+    DrawLineEx((Vector2){152.0f, 235.0f}, (Vector2){156.0f, 231.0f},
+               2.0f, seamColor);
+    DrawLineEx((Vector2){152.0f, 235.0f}, (Vector2){152.0f, 238.0f},
+               1.0f, seamColor);
+}
+
 int main(void)
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
@@ -456,6 +496,10 @@ int main(void)
                 &inventory, INVENTORY_KEY_ITEM_CLEARING_NOTE);
             interaction.rootsMuralSeen = Inventory_HasKeyItem(
                 &inventory, INVENTORY_KEY_ITEM_ROOTS_MURAL);
+            interaction.crackedMineralSealSeen = Inventory_HasKeyItem(
+                &inventory, INVENTORY_KEY_ITEM_CRACKED_MINERAL_SEAL);
+            interaction.cooledMineralSeamSeen = Inventory_HasKeyItem(
+                &inventory, INVENTORY_KEY_ITEM_COOLED_MINERAL_SEAM);
             if (loadResult == SAVE_LOAD_RECOVERED_BACKUP) {
                 snprintf(saveNotice, sizeof(saveNotice),
                          "SAVE RESTORED FROM BACKUP");
@@ -968,6 +1012,18 @@ int main(void)
                 Thornback_DrawWarning(&thornback);
             }
             if (room.area == ROOM_AREA_ASHFALL_DESCENT) {
+                DrawAshfallSeal(
+                    worldTime,
+                    Inventory_HasKeyItem(
+                        &inventory,
+                        INVENTORY_KEY_ITEM_CRACKED_MINERAL_SEAL));
+                DrawCooledMineralSeam(
+                    worldTime,
+                    Inventory_HasKeyItem(
+                        &inventory,
+                        INVENTORY_KEY_ITEM_COOLED_MINERAL_SEAM));
+            }
+            if (room.area == ROOM_AREA_ASHFALL_DESCENT) {
                 AshSkitter_DrawWarning(&ashSkitter);
             }
             RenderItem foodPickup;
@@ -1034,21 +1090,21 @@ int main(void)
                            ASH_SKITTER_STATE_DEFEATED) {
                     ashfallCue = "ASH SKITTER DOWN - ROUTE CLEAR";
                 }
-                DrawRectangle(6, 22, 250, 15, (Color){11, 26, 34, 220});
-                DrawText(ashfallCue, 10, 26, 8,
+                DrawRectangle(6, 81, 194, 15, (Color){11, 26, 34, 220});
+                DrawText(ashfallCue, 10, 85, 8,
                          (Color){245, 214, 124, 255});
                 if (ashSkitter.state != ASH_SKITTER_STATE_DORMANT) {
                     DrawText(TextFormat("SKITTER %d/%d", ashSkitter.health,
                                         ASH_SKITTER_HEALTH),
-                             234, 71, 8, RAYWHITE);
+                             234, 98, 8, RAYWHITE);
                 }
             } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                        !HasThornfang(&inventory) &&
                        thornback.state == THORNBACK_STATE_DORMANT &&
                        retryFeedbackTime <= 0.0f) {
-                DrawRectangle(6, 22, 250, 15, (Color){11, 26, 34, 220});
+                DrawRectangle(6, 81, 194, 15, (Color){11, 26, 34, 220});
                 DrawText("ARENA TRIAL: WEST-CENTER GLOWING MARKER",
-                         10, 26, 8, (Color){245, 214, 124, 255});
+                         10, 85, 8, (Color){245, 214, 124, 255});
             } else if (!objectiveCueVisible) {
                 JungleTaskProgress taskProgress = {
                     .rootWeaveSeen = interaction.rootWeaveSeen,
@@ -1060,19 +1116,17 @@ int main(void)
                     .returnedToJungleEntrance =
                         room.area == ROOM_AREA_JUNGLE_ENTRANCE
                 };
-                DrawRectangle(6, 22, 308, 15,
+                DrawRectangle(6, 81, 308, 15,
                               (Color){11, 26, 34, 220});
                 DrawText(TextFormat("OBJECTIVE: %s",
                                     JungleTask_CurrentObjective(taskProgress)),
-                         10, 26, 8, (Color){245, 214, 124, 255});
+                         10, 85, 8, (Color){245, 214, 124, 255});
             }
-            if (room.area == ROOM_AREA_THORNBACK_ARENA &&
-                !HasThornfang(&inventory) &&
-                thornback.state == THORNBACK_STATE_DORMANT) {
-                Room_DrawMiniMap(&room, player.pos, thornGateOpen, true);
-            } else {
-                Room_DrawMiniMap(&room, player.pos, thornGateOpen, false);
-            }
+            Room_DrawWorldMap(
+                room.area, player.pos,
+                room.area == ROOM_AREA_THORNBACK_ARENA &&
+                    !HasThornfang(&inventory) &&
+                    thornback.state == THORNBACK_STATE_DORMANT);
             bool thornGatePrompt = Room_IsFacingThornGate(
                 room.area, player.pos, FacingDirection(player.facing),
                 thornGateOpen);
@@ -1100,24 +1154,24 @@ int main(void)
             }
             if (room.area == ROOM_AREA_ROOT_PATH && thornGateOpen &&
                 thornGateFeedbackTime > 0.0f) {
-                DrawRectangle(6, 22, 136, 15, (Color){11, 26, 34, 220});
-                DrawText("THORNS CUT - PATH OPEN", 10, 26, 8,
+                DrawRectangle(6, 81, 136, 15, (Color){11, 26, 34, 220});
+                DrawText("THORNS CUT - PATH OPEN", 10, 85, 8,
                          (Color){127, 196, 192, 255});
             }
             if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                 retryFeedbackTime > 0.0f) {
-                DrawRectangle(6, 22, 210, 15, (Color){11, 26, 34, 220});
-                DrawText("TRIAL RESET - RETURN TO MARKER", 10, 26, 8,
+                DrawRectangle(6, 81, 210, 15, (Color){11, 26, 34, 220});
+                DrawText("TRIAL RESET - RETURN TO MARKER", 10, 85, 8,
                          (Color){245, 214, 124, 255});
             } else if (room.area == ROOM_AREA_ASHFALL_DESCENT &&
                        ashfallRetryFeedbackTime > 0.0f) {
-                DrawRectangle(6, 22, 218, 15, (Color){11, 26, 34, 220});
-                DrawText("STEAM RESET - ROOM ENTRY", 10, 26, 8,
+                DrawRectangle(6, 81, 218, 15, (Color){11, 26, 34, 220});
+                DrawText("STEAM RESET - ROOM ENTRY", 10, 85, 8,
                          (Color){255, 139, 115, 255});
             } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                 HasThornfang(&inventory)) {
-                DrawRectangle(6, 22, 146, 15, (Color){11, 26, 34, 220});
-                DrawText("THORNFANG CLAIMED", 10, 26, 8,
+                DrawRectangle(6, 81, 146, 15, (Color){11, 26, 34, 220});
+                DrawText("THORNFANG CLAIMED", 10, 85, 8,
                          (Color){127, 196, 192, 255});
             } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                        thornback.state != THORNBACK_STATE_DORMANT) {
@@ -1134,8 +1188,8 @@ int main(void)
                               ? "THORNBACK HIT!"
                               : "RECOVERY - FACE + SPACE / X";
                 }
-                DrawRectangle(6, 22, 210, 15, (Color){11, 26, 34, 220});
-                DrawText(cue, 10, 26, 8, (Color){245, 214, 124, 255});
+                DrawRectangle(6, 81, 210, 15, (Color){11, 26, 34, 220});
+                DrawText(cue, 10, 85, 8, (Color){245, 214, 124, 255});
                 DrawText(TextFormat("THORNBACK %d/%d", thornback.health,
                                     THORNBACK_HEALTH),
                          234, 71, 8, (Color){245, 214, 124, 255});

@@ -43,16 +43,25 @@ status, locked decisions, and the next bounded task.
   dashes with once-per-pass contact damage, and accepts one Thornfang hit per
   recovery window until defeated. Its state resets on room re-entry or death;
   it adds no save flags or drops.
+- Ashfall's central path now has a pulsing, inspectable Cracked Mineral Seal.
+  Reading it adds a persistent key-item discovery and reveals a small clue
+  about airflow below; reach it from the south and face north. Interaction,
+  review, and save-round-trip checks are automated.
+- The west-lower Ashfall path now has an optional pulsing Cooled Mineral Seam.
+  Inspecting it records a persistent discovery of the seam's forked heat-flow
+  pattern; reach it from the south and face north. Reachability, review, and
+  inventory round-trip coverage are automated.
 - Ashfall is still accessible before Thornfang; its HUD now tells unequipped
   players to return to the Arena trial rather than leaving the weapon
   requirement implicit.
 - The Arena trial now has a pulsing world beacon and a west-center HUD locator
   while Thornfang is missing and the trial is dormant, addressing the reported
   difficulty finding the marker. This locator still needs a hands-on check.
-- A current-room minimap now appears in the upper-right HUD, showing the
-  current area name, generated paths/terrain, and a player-position dot.
-  While the Thornback trial is dormant and Thornfang is missing, the map also
-  marks the trial. It does not reveal other rooms; visual playtest is pending.
+- An upper-right island map now shows all six currently playable rooms and
+  their connections, with the player's position inside the current room node.
+  While the Thornback trial is dormant and Thornfang is missing, it also marks
+  the trial. Planned, unbuilt campaign regions are not represented; visual
+  playtest is pending.
 - The user reports that the Ashfall route, vent warning/fairness, damage/reset,
   and checkpoint after leaving/relaunching all passed hands-on testing on
   2026-10-15. This is a user-reported playtest result.
@@ -279,14 +288,18 @@ Stage F's room-template gate is complete. The Ashfall Descent navigation gate
 passed in a user-reported hands-on playtest on 2026-10-15: route, vent
 warnings/fairness, damage/reset feedback, and checkpoint persistence after
 relaunch were confirmed. The Arena trial has a pulsing marker, HUD locator, and
-a current-room minimap with the player's position and a trial icon while the
-trial is active; hands-on verification is pending. The first Ash Skitter is
-implemented as a two-hit Thornfang encounter with a bright route tell,
-dash/contact, and recovery; automated checks cover alert-range boundary,
-once-per-dash contact, and reinitialization. Next, verify the Arena map and
-locator in play, then hands-on test Ash Skitter's warning readability,
+an island map of all six playable rooms with the player's position and a trial
+icon while the trial is available; hands-on verification is pending. The first
+Ash Skitter is implemented as a two-hit Thornfang encounter with a bright
+route tell, dash/contact, and recovery; automated checks cover alert-range
+boundary, once-per-dash contact, and reinitialization. Next, verify the island
+map and locator in play, then hands-on test Ash Skitter's warning readability,
 evasion, elevation safety, attack range/facing, recovery timing, and
-defeat/reset behavior. Do not add the Forge Warden or a guardian.
+defeat/reset behavior. The cracked mineral seal is now an inspectable, saved
+Ashfall discovery, and the optional west-lower cooled seam records its forked
+crack pattern. The next expansion is Forge Veins, one zone at a time, but only
+after the Ashfall map and Ash Skitter playtest gate passes. Do not add the Forge
+Warden or a guardian.
 
 ## Upcoming Roadmap
 
