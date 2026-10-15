@@ -22,6 +22,7 @@ typedef struct Inventory {
     uint32_t ownedWeapons;
     InventoryWeapon selectedWeapon;
     uint32_t keyItems;
+    int foodServings;
 } Inventory;
 
 bool Inventory_HasWeapon(const Inventory *inventory, InventoryWeapon weapon);
@@ -29,6 +30,9 @@ bool Inventory_AddWeapon(Inventory *inventory, InventoryWeapon weapon);
 bool Inventory_SelectWeapon(Inventory *inventory, InventoryWeapon weapon);
 bool Inventory_HasKeyItem(const Inventory *inventory, InventoryKeyItem item);
 bool Inventory_AddKeyItem(Inventory *inventory, InventoryKeyItem item);
+bool Inventory_AddFood(Inventory *inventory);
+bool Inventory_ConsumeFood(Inventory *inventory, int *health,
+                           int maximumHealth);
 bool Inventory_IsValid(const Inventory *inventory);
 
 #endif

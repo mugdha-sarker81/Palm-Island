@@ -1415,8 +1415,12 @@ session, and every mandatory step can be understood without a waypoint arrow.
    discovered Jungle evidence, migrating existing version-1 saves. A compact
    pause overlay shows the currently implemented weapon and discovered
    evidence. Defer quick-switch controls until another weapon exists.
-2. Add health/food behavior and explicit, readable world pickups; verify
-   checkpoint recovery does not remove major progression.
+2. Prototype implemented: one finite Palm Fruit in the Clearing nook; E/A
+   collects it, H/controller B eats it, servings cap at three, and each serving
+   restores up to two hearts. Both numbers are provisional tuning values.
+   Version-3 save data persists the food count and collected node while
+   migrating version-1/version-2 saves. The user reports collection, healing,
+   full-health use, and relaunch/defeat persistence pass.
 3. Add the first fixed tool only when its region/task is implemented; include
    its material flags and a clear workbench interaction, not a generic recipe
    engine.
@@ -1492,11 +1496,10 @@ decision log once chosen.
 | 8-region / 24-zone campaign outline | Planned in this document |
 | Top-down eight-direction controller | Implemented; Feel Gate reported passed |
 | Jungle slice in top-down world | In progress; current areas are blockouts |
-| Inventory/map/quest/save systems | Version-2 autosave includes Thornfang and discovered Jungle evidence; inventory UI/map/settings remain planned |
-| Health/food/shop/tool-building system | Proposed; not implemented |
+| Inventory/map/quest/save systems | Version-3 autosave includes Thornfang, discovered evidence, Palm Fruit food count, and collected-node state; overlay implemented, map/settings remain planned |
+| Health/food/shop/tool-building system | One finite Palm Fruit pickup and healing prototype implemented; shop/tools and hands-on food verification remain |
 | Ichigo costume/animation set | Appearance direction proposed; no production sprites |
 | Enemy and guardian systems | Thornback two-pattern combat/reward prototype; user-reported hands-on pass |
 
-**Current bounded task:** add and playtest a compact inventory view for the
-currently implemented weapon and discovered Jungle evidence. Autosave and
-version-1 migration are covered by the save foundation; manual save is deferred.
+**Current bounded task:** playtest the Palm Fruit pickup, healing, and
+version-3 close/relaunch and defeat/respawn persistence. Manual save is deferred.

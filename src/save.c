@@ -40,7 +40,7 @@ static SaveLoadResult ReadSaveFile(const char *path, SaveData *data)
     SaveData parsed = {0};
     bool valid = fscanf(file, "%31s %d", magic, &version) == 2 &&
                  strcmp(magic, "PALM_ISLAND_SAVE") == 0 &&
-                 (version == 1 || version == 2);
+                 (version == 1 || version == 2 || version == 3);
     char checkpointKey[32];
     int checkpoint = 0;
     if (valid) {
@@ -107,6 +107,17 @@ static SaveLoadResult ReadSaveFile(const char *path, SaveData *data)
             parsed.inventory.selectedWeapon =
                 (InventoryWeapon)selectedWeapon;
             parsed.inventory.keyItems = (uint32_t)keyItems;
+            if (version == 3) {
+                valid = fscanf(file, " %31s %d", checkpointKey,
+                               &parsed.inventory.foodServings) == 2 &&
+                        strcmp(checkpointKey, "food_servings") == 0;
+                if (valid) {
+                    valid = ReadBoolean(file, "palm_fruit_collected",
+                                        &parsed.palmFruitCollected);
+                }
+            }
+        }
+        if (valid) {
             valid = ReadBoolean(file, "thorn_gate_open",
                                 &parsed.thornGateOpen);
         }
@@ -231,17 +242,21 @@ SaveWriteResult Save_Write(const char *path, const SaveData *data)
     if (file == NULL) return SAVE_WRITE_IO_ERROR;
     int written = fprintf(
         file,
-        "PALM_ISLAND_SAVE 2\n"
+        "PALM_ISLAND_SAVE 3\n"
         "checkpoint %d\n"
         "health %d\n"
         "weapons_owned %u\n"
         "weapon_selected %d\n"
         "key_items %u\n"
+        "food_servings %d\n"
+        "palm_fruit_collected %d\n"
         "thorn_gate_open %d\n",
         (int)data->checkpointArea, data->health,
         (unsigned int)data->inventory.ownedWeapons,
         (int)data->inventory.selectedWeapon,
-        (unsigned int)data->inventory.keyItems, data->thornGateOpen);
+        (unsigned int)data->inventory.keyItems,
+        data->inventory.foodServings, data->palmFruitCollected,
+        data->thornGateOpen);
     bool writeSucceeded = written >= 0 && fflush(file) == 0;
     if (fclose(file) != 0) writeSucceeded = false;
     if (!writeSucceeded) {

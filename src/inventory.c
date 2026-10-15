@@ -1,4 +1,5 @@
 #include "inventory.h"
+#include "tuning.h"
 
 static uint32_t WeaponBit(InventoryWeapon weapon)
 {
@@ -57,6 +58,30 @@ bool Inventory_AddKeyItem(Inventory *inventory, InventoryKeyItem item)
     return true;
 }
 
+bool Inventory_AddFood(Inventory *inventory)
+{
+    if (inventory == NULL ||
+        inventory->foodServings >= FOOD_SERVING_CAPACITY) {
+        return false;
+    }
+    inventory->foodServings++;
+    return true;
+}
+
+bool Inventory_ConsumeFood(Inventory *inventory, int *health,
+                           int maximumHealth)
+{
+    if (inventory == NULL || health == NULL ||
+        inventory->foodServings <= 0 || *health >= maximumHealth ||
+        *health < 0 || maximumHealth <= 0) {
+        return false;
+    }
+    inventory->foodServings--;
+    *health += FOOD_HEAL_AMOUNT;
+    if (*health > maximumHealth) *health = maximumHealth;
+    return true;
+}
+
 bool Inventory_IsValid(const Inventory *inventory)
 {
     if (inventory == NULL) return false;
@@ -65,7 +90,9 @@ bool Inventory_IsValid(const Inventory *inventory)
     const uint32_t keyItemMask =
         (UINT32_C(1) << INVENTORY_KEY_ITEM_COUNT) - 1;
     if ((inventory->ownedWeapons & ~weaponMask) != 0 ||
-        (inventory->keyItems & ~keyItemMask) != 0) {
+        (inventory->keyItems & ~keyItemMask) != 0 ||
+        inventory->foodServings < 0 ||
+        inventory->foodServings > FOOD_SERVING_CAPACITY) {
         return false;
     }
     if (inventory->selectedWeapon == INVENTORY_WEAPON_NONE) {

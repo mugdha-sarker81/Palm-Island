@@ -1,4 +1,5 @@
 #include "inventory.h"
+#include "tuning.h"
 #include <stdio.h>
 
 static int failures;
@@ -25,6 +26,21 @@ int main(void)
     CHECK(Inventory_AddKeyItem(&inventory, INVENTORY_KEY_ITEM_ROOT_WEAVE));
     CHECK(Inventory_HasKeyItem(&inventory, INVENTORY_KEY_ITEM_ROOT_WEAVE));
     CHECK(Inventory_IsValid(&inventory));
+
+    CHECK(Inventory_AddFood(&inventory));
+    CHECK(Inventory_AddFood(&inventory));
+    CHECK(Inventory_AddFood(&inventory));
+    CHECK(!Inventory_AddFood(&inventory));
+    CHECK(inventory.foodServings == FOOD_SERVING_CAPACITY);
+    int health = PLAYER_START_HEALTH - 1;
+    CHECK(Inventory_ConsumeFood(&inventory, &health, PLAYER_START_HEALTH));
+    CHECK(health == PLAYER_START_HEALTH);
+    CHECK(inventory.foodServings == FOOD_SERVING_CAPACITY - 1);
+    CHECK(!Inventory_ConsumeFood(&inventory, &health, PLAYER_START_HEALTH));
+    CHECK(inventory.foodServings == FOOD_SERVING_CAPACITY - 1);
+    health = PLAYER_START_HEALTH - 3;
+    CHECK(Inventory_ConsumeFood(&inventory, &health, PLAYER_START_HEALTH));
+    CHECK(health == PLAYER_START_HEALTH - 1);
 
     CHECK(!Inventory_AddWeapon(&inventory, INVENTORY_WEAPON_COUNT));
     CHECK(!Inventory_AddKeyItem(&inventory, INVENTORY_KEY_ITEM_COUNT));

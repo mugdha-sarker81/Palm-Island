@@ -11,6 +11,7 @@ typedef struct Input {
     bool interactPressed;
     bool attackPressed;
     bool inventoryPressed;
+    bool useFoodPressed;
 } Input;
 
 /* Poll keyboard and gamepad once per rendered frame. */

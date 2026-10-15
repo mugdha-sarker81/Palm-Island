@@ -14,8 +14,9 @@ and understanding the island—not grinding or constant combat.
 > scrolling camera, ramps, a Thornfang-cuttable gate, and fade transitions
 > between the areas. A few landmarks have small inspect interactions. A
 > versioned autosave preserves Jungle checkpoints, health, the Thornfang
-> weapon, discovered evidence, and the opened gate; the inventory screen,
-> food, general combat, dialogue, and settings persistence are not implemented.
+> weapon, discovered evidence, one Palm Fruit node, and the opened gate. A
+> compact inventory overlay and one prototype food pickup are implemented;
+> broader food, general combat, dialogue, and settings persistence are not.
 >
 > **Direction:** the game is planned as top-down 2D pixel art with
 > eight-direction movement and 3D-like depth cues (layering, occlusion, and
@@ -81,15 +82,21 @@ The opened gate is the return shortcut toward the Jungle Entrance and the user
 reports it works.
 Press I/Tab or controller Y to open the compact inventory overlay; it lists
 Thornfang and discovered Jungle evidence and pauses gameplay while open.
+In the Overgrown Clearing nook, approach the visible Palm Fruit and press E
+or controller A to collect it. H/controller B eats a serving to restore up to
+two hearts; food is capped at three servings and cannot be eaten at full health.
+The fruit node and food count are included in the version-3 autosave.
+Health is shown with five pixel-heart icons and a numeric count.
 In Root Path, the thorn weave can be inspected and a visible root marker
 activated with E or controller A when approached from the front. Activating
 the marker traces the bypass around the gate; clue panels can be reviewed or
 closed with the same action. The bounded, smoothed camera follows Ichigo and
 resets at room transitions. Solid prop bases and walls block the 10×6 feet
 collider; prop drawing is sorted by foot/base Y. F3 shows the live input
-source/magnitude, frame time, player speed, position, and elevation. Persistent
-health/food, general combat systems, and additional Jungle progression are not
-implemented. The user reports the Feel Gate, existing Jungle areas, clue
+source/magnitude, frame time, player speed, position, and elevation. The
+prototype uses the existing health system and a single finite food pickup;
+general combat systems and additional Jungle progression are not implemented.
+The user reports the Feel Gate, existing Jungle areas, clue
 prompt/panel, marker trace, and Clearing note work well. The Shrine Approach
 was hands-on tested before its doorway was opened; the user reports that the
 completed Arena shell route and return worked well. The user confirmed the

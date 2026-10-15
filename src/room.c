@@ -173,6 +173,14 @@ static const RoomInteractable CLEARING_NOTE = {
     .kind = ROOM_INTERACTABLE_CLEARING_NOTE
 };
 
+static const RoomInteractable PALM_FRUIT = {
+    .id = "jungle.palm_fruit_collected",
+    .title = "Palm Fruit",
+    .text = "A ripe palm fruit. It should restore a little strength.",
+    .interactBox = {96.0f, 176.0f, 16.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_PALM_FRUIT
+};
+
 static const RoomInteractable ROOTS_MURAL = {
     .id = "jungle.map_of_roots_seen",
     .title = "Map of Roots",
@@ -407,9 +415,23 @@ const RoomProp *Room_Props(RoomArea area)
     return PropsForArea(area);
 }
 
+Vector2 Room_PalmFruitPosition(void)
+{
+    return (Vector2){104.0f, 184.0f};
+}
+
 const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
                                                Vector2 facingDirection,
                                                float maxDistance)
+{
+    return Room_FindInteractableWithFruitState(
+        area, feet, facingDirection, maxDistance, false);
+}
+
+const RoomInteractable *Room_FindInteractableWithFruitState(
+    RoomArea area, Vector2 feet, Vector2 facingDirection,
+                                               float maxDistance,
+                                               bool palmFruitCollected)
 {
     if (maxDistance < 0.0f) return NULL;
     const RoomInteractable *targets[2];
@@ -419,6 +441,7 @@ const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
         targets[targetCount++] = &ROOT_MARKER;
     } else if (area == ROOM_AREA_OVERGROWN_CLEARING) {
         targets[targetCount++] = &CLEARING_NOTE;
+        if (!palmFruitCollected) targets[targetCount++] = &PALM_FRUIT;
     } else if (area == ROOM_AREA_SHRINE_APPROACH) {
         targets[targetCount++] = &ROOTS_MURAL;
     } else if (area == ROOM_AREA_THORNBACK_ARENA) {

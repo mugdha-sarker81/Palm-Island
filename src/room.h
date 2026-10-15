@@ -43,7 +43,8 @@ typedef enum RoomInteractableKind {
     ROOM_INTERACTABLE_ROOT_MARKER,
     ROOM_INTERACTABLE_CLEARING_NOTE,
     ROOM_INTERACTABLE_ROOTS_MURAL,
-    ROOM_INTERACTABLE_THORNBACK_TRIAL
+    ROOM_INTERACTABLE_THORNBACK_TRIAL,
+    ROOM_INTERACTABLE_PALM_FRUIT
 } RoomInteractableKind;
 
 typedef struct RoomProp {
@@ -81,6 +82,10 @@ const RoomProp *Room_Props(RoomArea area);
 const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
                                                Vector2 facingDirection,
                                                float maxDistance);
+const RoomInteractable *Room_FindInteractableWithFruitState(
+    RoomArea area, Vector2 feet, Vector2 facingDirection, float maxDistance,
+    bool palmFruitCollected);
+Vector2   Room_PalmFruitPosition(void);
 /* Returns the paired spawn for a simple in-room connection, if reached. */
 bool      Room_GetTransition(const Room *r, Vector2 feet, RoomArea *destination,
                              Vector2 *spawnPoint);

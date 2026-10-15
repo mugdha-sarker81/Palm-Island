@@ -10,6 +10,7 @@ typedef struct SaveData {
     int health;
     Inventory inventory;
     bool thornGateOpen;
+    bool palmFruitCollected;
 } SaveData;
 
 typedef enum SaveLoadResult {

@@ -32,6 +32,13 @@ static void DrawItem(const RenderItem *item, const Player *player,
         Player_Draw(player, playerSheet, debug);
     } else if (item->type == RENDER_ITEM_THORNBACK) {
         Thornback_Draw(thornback);
+    } else if (item->type == RENDER_ITEM_FOOD) {
+        int x = (int)floorf(item->position.x);
+        int y = (int)floorf(item->position.y);
+        DrawRectangle(x - 5, y + 1, 10, 3, (Color){38, 49, 31, 220});
+        DrawRectangle(x - 3, y - 5, 6, 6, (Color){220, 114, 68, 255});
+        DrawRectangle(x - 1, y - 6, 3, 2, (Color){127, 196, 104, 255});
+        DrawPixel(x - 1, y - 3, (Color){255, 211, 137, 255});
     } else if (item->texture.id != 0) {
         DrawTexture(item->texture, (int)floorf(item->position.x),
                     (int)floorf(item->position.y), WHITE);
@@ -40,9 +47,10 @@ static void DrawItem(const RenderItem *item, const Player *player,
 
 void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
                            const RenderItem props[RENDER_PROP_COUNT],
-                           const Thornback *thornback, bool debug)
+                           const Thornback *thornback,
+                           const RenderItem *foodPickup, bool debug)
 {
-    RenderItem items[RENDER_PROP_COUNT + 2];
+    RenderItem items[RENDER_PROP_COUNT + 3];
                            size_t itemCount = 1;
     items[0] = (RenderItem){
         .type = RENDER_ITEM_PLAYER,
@@ -63,6 +71,7 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
             .foreground = false
         };
     }
+    if (foodPickup != NULL) items[itemCount++] = *foodPickup;
     for (size_t i = 0; i < RENDER_PROP_COUNT; i++) {
         items[itemCount++] = props[i];
     }

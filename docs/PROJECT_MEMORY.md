@@ -62,7 +62,7 @@ status, locked decisions, and the next bounded task.
   the gate prop and collision, opens a walkable corridor through the root wall,
   and persists the opened state across relaunches. A nearby prompt explains
   the required weapon or cut input.
-- A version-2 autosave in `%APPDATA%/PalmIsland.sav` records the current safe
+- A version-3 autosave in `%APPDATA%/PalmIsland.sav` records the current safe
   room-entry checkpoint, health, owned/selected weapons, four discovered
   Jungle evidence entries, and the opened thorn gate. Version-1 saves migrate
   their Thornfang and clue flags into the new inventory state. Autosave runs at
@@ -75,6 +75,14 @@ status, locked decisions, and the next bounded task.
   overlay opens with I/Tab or controller Y, shows weapon/evidence status, and
   pauses simulation while open. Quick weapon switching is deferred until a
   second weapon is implemented.
+- One finite Palm Fruit pickup is placed in the Overgrown Clearing nook. E/A
+  collects it into a three-serving food capacity; H/controller B consumes one
+  serving to restore up to two hearts, capped at current max health. Full
+  health does not consume food. Pickup, food count, and node-collected state
+  autosave in version 3; version-1 and version-2 saves migrate with no food
+  and the fruit node available. Capacity/healing are prototype tunables.
+- Health is displayed as five pixel hearts with an adjacent numeric count for
+  readability; empty hearts use an outlined, muted treatment.
 - Manual save was deferred by user choice; autosaving at checkpoints and major
   progress is the selected prototype behavior.
 - The user manually playtested the full Thornback encounter and reports that
@@ -93,12 +101,18 @@ status, locked decisions, and the next bounded task.
   close and relaunch, restoring the saved checkpoint/progress.
 - The user confirmed the version-2 save loads Thornfang and discovered
   evidence, and that migrated inventory progress persists across relaunch.
-- The Windows build succeeded with the inventory and version-2 save changes.
+- The user confirmed the inventory overlay displays saved state, opens/closes
+  with its keyboard/controller inputs, and pauses/resumes gameplay.
+- The Windows build succeeded with version-3 food persistence.
 - All six focused Windows tests passed: movement/collision, camera,
-  render-depth, Thornback trial, versioned save (including version-1 migration),
-  and inventory state.
-- The inventory overlay build succeeded; visual readability, input parity, and
-  pause/resume behavior still need a hands-on playtest.
+  render-depth, Thornback trial, versioned save (including version-1 and
+  version-2 migration), and inventory/food state. Tests cover food capacity,
+  healing/clamping, no consumption at full health, and collectible reachability.
+- Inventory overlay hands-on check is user-confirmed.
+- The user reports that Palm Fruit collection/eating, full-health no-consume,
+  and food/node persistence across relaunch and defeat/respawn all work.
+- Pixel-heart HUD builds and is automated-build verified; visual readability
+  still needs hands-on confirmation.
 - The user confirms the Phase 2 sweep pattern works well.
 - The user reports the combat, damage, recovery-strike, defeat, reward, and
   retry loop passed hands-on playtesting.
@@ -140,8 +154,8 @@ status, locked decisions, and the next bounded task.
 
 - The planned 10–15 minute Forgotten Jungle slice; the end-to-end user pass
   confirmed no softlocks but did not report completion time.
-- Inventory UI/quick-switch controls, food, discovered-map/settings
-  persistence, general combat, audio, and additional interactions/clues.
+- Quick weapon-switch controls, additional food varieties, discovered-map/
+  settings persistence, general combat, audio, and additional interactions/clues.
 - Production art, finished UI, and release packaging.
 
 ## Locked Decisions
@@ -176,17 +190,16 @@ Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
 
 ## Next Work Item
 
-Playtest the inventory overlay: confirm I/Tab and controller Y open/close it,
-that the displayed weapon and discovered evidence match progress, and that
-movement and the Thornback encounter remain paused until the overlay closes.
-Then proceed to the first bounded health/food pickup task.
+Playtest the pixel-heart HUD at full and reduced health, confirming each heart
+tracks damage and healing and the adjacent numeric count remains readable.
+Then choose the next single-slice polish item from measured playtest feedback.
 
 ## Upcoming Roadmap
 
-1. Complete the inventory overlay hands-on playtest; defer quick-switch UX
-   until another weapon exists.
-2. Add food/pickup behavior only with clear world pickups and checkpoint-safe
-   progression.
+1. Complete the pixel-heart HUD hands-on check; defer quick-switch UX until
+   another weapon exists.
+2. Only add another food or pickup after the first collectible's visibility,
+   controls, persistence, and recovery behavior pass.
 3. Polish the slice's licensed art, audio, menus, prompts, accessibility, and
    measured onboarding; then build and verify a data-driven region template.
 4. Expand one weapon region at a time through its own playtest gate, then

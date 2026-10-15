@@ -607,6 +607,20 @@ static void TestRootMarkingsTargetRangeAndFacing(void)
                                 (Vector2){100.0f, 184.0f},
                                 (Vector2){-1.0f, 0.0f},
                                 INTERACT_PROMPT_RANGE) != NULL);
+
+    const RoomInteractable *fruit = Room_FindInteractableWithFruitState(
+        ROOM_AREA_OVERGROWN_CLEARING, (Vector2){76.0f, 184.0f},
+        (Vector2){1.0f, 0.0f}, INTERACT_RANGE, false);
+    CHECK(!Room_CollidesInArea(ROOM_AREA_OVERGROWN_CLEARING,
+                               FeetAt(76.0f, 184.0f)));
+    CHECK(fruit != NULL);
+    if (fruit != NULL) {
+        CHECK(strcmp(fruit->id, "jungle.palm_fruit_collected") == 0);
+        CHECK(fruit->kind == ROOM_INTERACTABLE_PALM_FRUIT);
+    }
+    CHECK(Room_FindInteractableWithFruitState(
+              ROOM_AREA_OVERGROWN_CLEARING, (Vector2){76.0f, 184.0f},
+              (Vector2){1.0f, 0.0f}, INTERACT_RANGE, true) == NULL);
 }
 
 static void TestRootMarkingsCanBeReviewedAndClosed(void)
