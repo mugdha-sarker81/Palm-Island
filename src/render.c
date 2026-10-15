@@ -25,10 +25,13 @@ void Render_SortItems(RenderItem *items, size_t count)
 }
 
 static void DrawItem(const RenderItem *item, const Player *player,
-                     Texture2D playerSheet, bool debug)
+                     Texture2D playerSheet, const Thornback *thornback,
+                     bool debug)
 {
     if (item->type == RENDER_ITEM_PLAYER) {
         Player_Draw(player, playerSheet, debug);
+    } else if (item->type == RENDER_ITEM_THORNBACK) {
+        Thornback_Draw(thornback);
     } else {
         DrawTexture(item->texture, (int)floorf(item->position.x),
                     (int)floorf(item->position.y), WHITE);
@@ -36,9 +39,11 @@ static void DrawItem(const RenderItem *item, const Player *player,
 }
 
 void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
-                           const RenderItem props[RENDER_PROP_COUNT], bool debug)
+                           const RenderItem props[RENDER_PROP_COUNT],
+                           const Thornback *thornback, bool debug)
 {
-    RenderItem items[RENDER_PROP_COUNT + 1];
+    RenderItem items[RENDER_PROP_COUNT + 2];
+                           size_t itemCount = 1;
     items[0] = (RenderItem){
         .type = RENDER_ITEM_PLAYER,
         .position = player->pos,
@@ -47,10 +52,23 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
         .stableOrder = 0,
         .foreground = false
     };
-    for (size_t i = 0; i < RENDER_PROP_COUNT; i++) items[i + 1] = props[i];
+    if (thornback != NULL &&
+        thornback->state != THORNBACK_STATE_DORMANT) {
+        items[itemCount++] = (RenderItem){
+            .type = RENDER_ITEM_THORNBACK,
+            .position = thornback->position,
+            .feetY = thornback->position.y,
+            .elevation = ROOM_ELEVATION_GROUND,
+            .stableOrder = RENDER_PROP_COUNT + 1,
+            .foreground = false
+        };
+    }
+    for (size_t i = 0; i < RENDER_PROP_COUNT; i++) {
+        items[itemCount++] = props[i];
+    }
 
-    Render_SortItems(items, RENDER_PROP_COUNT + 1);
-    for (size_t i = 0; i < RENDER_PROP_COUNT + 1; i++) {
-        DrawItem(&items[i], player, playerSheet, debug);
+    Render_SortItems(items, itemCount);
+    for (size_t i = 0; i < itemCount; i++) {
+        DrawItem(&items[i], player, playerSheet, thornback, debug);
     }
 }

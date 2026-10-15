@@ -181,6 +181,14 @@ static const RoomInteractable ROOTS_MURAL = {
     .kind = ROOM_INTERACTABLE_ROOTS_MURAL
 };
 
+static const RoomInteractable THORNBACK_TRIAL = {
+    .id = "jungle.thornback_trial_started",
+    .title = "Trial Marker",
+    .text = "The stone answers with a low rumble.",
+    .interactBox = {168.0f, 160.0f, 16.0f, 32.0f},
+    .kind = ROOM_INTERACTABLE_THORNBACK_TRIAL
+};
+
 static const RoomRamp *RampForArea(RoomArea area)
 {
     if (area == ROOM_AREA_JUNGLE_ENTRANCE) return &ENTRANCE_RAMP;
@@ -399,6 +407,8 @@ const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
         targets[targetCount++] = &CLEARING_NOTE;
     } else if (area == ROOM_AREA_SHRINE_APPROACH) {
         targets[targetCount++] = &ROOTS_MURAL;
+    } else if (area == ROOM_AREA_THORNBACK_ARENA) {
+        targets[targetCount++] = &THORNBACK_TRIAL;
     } else {
         return NULL;
     }

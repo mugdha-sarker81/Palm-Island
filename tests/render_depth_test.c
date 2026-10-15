@@ -77,12 +77,28 @@ static void TestUpperElevationDrawsAfterGroundElevation(void)
     CHECK(items[2].stableOrder == 3);
 }
 
+static void TestThornbackSortsWithPlayerAndProps(void)
+{
+    RenderItem items[] = {
+        {.type = RENDER_ITEM_PROP, .feetY = 190.0f, .stableOrder = 1},
+        {.type = RENDER_ITEM_THORNBACK, .feetY = 184.0f, .stableOrder = 11},
+        {.type = RENDER_ITEM_PLAYER, .feetY = 180.0f, .stableOrder = 0}
+    };
+
+    Render_SortItems(items, sizeof(items) / sizeof(items[0]));
+
+    CHECK(items[0].type == RENDER_ITEM_PLAYER);
+    CHECK(items[1].type == RENDER_ITEM_THORNBACK);
+    CHECK(items[2].type == RENDER_ITEM_PROP);
+}
+
 int main(void)
 {
     TestBackToFrontAndStableTies();
     TestPlayerSortsBetweenPropAnchors();
     TestForegroundItemsDrawAfterDepthItems();
     TestUpperElevationDrawsAfterGroundElevation();
+    TestThornbackSortsWithPlayerAndProps();
 
     if (failures != 0) {
         fprintf(stderr, "%d render-depth check(s) failed.\n", failures);

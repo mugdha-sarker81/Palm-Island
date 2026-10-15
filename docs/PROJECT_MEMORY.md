@@ -16,7 +16,7 @@ status, locked decisions, and the next bounded task.
 - The current prototype is a top-down, eight-direction exploration game.
 - The current blockout contains five linked 40×23 (640×368 px) areas:
   Jungle Entrance, Root Path, Overgrown Clearing, Shrine Approach, and a
-  non-combat Thornback Arena shell.
+  Thornback Arena shell with a two-pattern combat encounter prototype.
 
 ### Implemented
 
@@ -43,14 +43,40 @@ status, locked decisions, and the next bounded task.
   doorway, and a reachable Map of Roots mural clue.
 - The Thornback Arena shell has a passable perimeter route, an open central
   floor, placeholder rock/marker props, and a paired return to Shrine Approach.
-  It has no boss, combat, trial activation, or reward behavior.
+- The user visually playtested the Arena route, props, doorway, and return and
+  reported that they work well.
+- The west Arena marker starts a bounded Thornback encounter prototype. It
+  alternates a straight charge with a slow broad sweep across the center lane;
+  each has a distinct ground tell and recovery. The sweep's marked danger band
+  leaves a safe repositioning strip above and below the attack. The user
+  confirmed this Phase 2 pattern works well.
+- The player has five prototype hearts, with visible blink invulnerability and
+  knockback on a hit. Each attack can hit only once; the charge danger zone
+  follows Thornback's body while the sweep uses the telegraphed band.
+- Thornback can be struck once per recovery by pressing Space/controller X
+  while facing it and within range. Three recovery hits defeat the guardian.
+  Defeat sets a session-only Thornfang-acquired flag; zero health retries at
+  the Arena entrance with full health and a visible retry cue, then resets the
+  encounter. These are provisional encounter values, not final balance.
+- Thornback remains a procedural placeholder. The acquired flag does not yet
+  enable a weapon inventory/action or open the thorn gate/return shortcut.
+- The user manually playtested Phase 1 and reports that starting the trial,
+  reading/avoiding the charge lane, recovery, and the Arena return all work
+  well.
 - Placeholder sprites and tiles are prototypes, not production art.
 
 ### Verification
 
-- Windows build: `.\build.bat` succeeded on 2026-10-15.
-- Focused tests: `ctest --test-dir build --output-on-failure` passed all 3
-  tests: `movement_collision`, `camera_follow`, and `render_depth`.
+- Windows build: `.\build.bat` succeeded with the two-pattern encounter,
+  damage, and recovery-strike prototype.
+- Focused tests: `ctest --test-dir build --output-on-failure` passed all 4
+  tests: `movement_collision`, `camera_follow`, `render_depth`, and
+  `thornback_trial`. Tests cover pattern alternation, timing, attack zones,
+  one hit per enemy attack/recovery, facing/range gates, defeat, and player
+  damage invulnerability/knockback.
+- The user confirms the Phase 2 sweep pattern works well.
+- The combat, damage, recovery-strike, defeat, reward, and retry loop has
+  passed automated tests but still needs a user hands-on playtest.
 - The executable launched and remained responsive with the expected
   `Palm Island` window title.
 - The user manually playtested both linked rooms and reported that the
@@ -78,15 +104,18 @@ status, locked decisions, and the next bounded task.
 - The user manually playtested the Thornback Arena shell and reports that
   everything works well, including the route through the arena and return to
   Shrine Approach. Visual details are user-reported, not independently verified.
+- The user manually playtested the Thornback Phase 1 prototype and reports that
+  it works well. Visual details are user-reported, not independently verified.
 - Treat visual and hands-on passes as user-reported; automated tests do not
   verify the game’s appearance or feel.
 
 ### Not implemented
 
-- Thornback encounter/trial and a complete 10–15 minute Forgotten Jungle
-  slice.
-- Additional interactions/clues, checkpoints, persistent progression,
-  enemies, combat, Thornfang, audio, or save/load.
+- The 10–15 minute Forgotten Jungle slice; the current Thornback encounter is
+  still a prototype and its combat/retry loop needs hands-on testing.
+- Persistent checkpoints/progression/save-load, general combat and health
+  systems, Thornfang's vine-cutting action, open gate/shortcut, audio, and
+  additional interactions/clues.
 - Production art, finished UI, and release packaging.
 
 ## Locked Decisions
@@ -119,12 +148,28 @@ Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
 
 ## Next Work Item
 
-Implement the first bounded Thornback trial prototype in the Arena: a clear
-trial start, one readable Phase 1 tell, a straight charge, and a recovery
-window. Keep Phase 2, the proposed perfect-dodge "The Read" mechanic, Thornfang,
-reward/progression, and save/load out of scope. Add focused tests for the
-encounter state transitions and safe Arena traversal, then build and manually
-playtest this first loop before expanding it.
+Manually playtest the encounter prototype: confirm charge and sweep tells are
+readable, hit zones match their warnings, Space/controller X strikes only
+Thornback's recovery when facing it in range, and hits/defeat/retry feedback
+are clear. Values are tunable starting points; change one per tuning pass.
+
+## Upcoming Roadmap
+
+1. Complete the Thornback encounter prototype's user playtest gate.
+2. Implement Thornfang's actual vine-cutting action and the marked thorn-gate
+   route/shortcut back toward the Jungle Entrance.
+3. Playtest the full 10–15 minute Forgotten Jungle slice for route clarity,
+   task completion, return paths, controller use, and softlocks.
+4. After the slice gate passes, add the fixed inventory/health/checkpoint and
+   versioned save foundation described in Stage D.
+5. Polish the slice's licensed art, audio, menus, prompts, accessibility, and
+   measured onboarding; then build and verify a data-driven region template.
+6. Expand one weapon region at a time through its own playtest gate, then
+   implement the Sanctuary/finale and clean Windows packaging.
+
+Keep Thornback signature mechanics such as "The Read" out of scope unless
+separately approved. Do not begin a later stage before the preceding
+playtest gate passes.
 
 ## Feel Gate Record
 

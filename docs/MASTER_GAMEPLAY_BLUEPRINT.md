@@ -1484,18 +1484,16 @@ decision log once chosen.
 |---|---|
 | Existing Windows build and launch | Verified |
 | Existing side-scroll coast prototype | Removed on 2026-10-14 at user direction |
-| Current executable scaffold | Minimal Raylib window; top-down game not implemented |
-| Top-down camera/game direction | Selected for future game; not implemented |
+| Current executable | Five linked Jungle blockout areas, with Thornback Arena trial prototype |
+| Top-down camera/game direction | Implemented for current blockout |
 | 8-region / 24-zone campaign outline | Planned in this document |
-| Top-down eight-direction controller | Not started |
-| Jungle slice in top-down world | Not started |
+| Top-down eight-direction controller | Implemented; Feel Gate reported passed |
+| Jungle slice in top-down world | In progress; current areas are blockouts |
 | Inventory/map/quest/save systems | Planned; not implemented |
 | Health/food/shop/tool-building system | Proposed; not implemented |
 | Ichigo costume/animation set | Appearance direction proposed; no production sprites |
-| Enemy and guardian systems | Planned; not implemented |
+| Enemy and guardian systems | Thornback two-pattern combat/reward prototype; needs hands-on testing |
 
-**Next bounded task:** replace the runnable scaffold with a top-down movement
-test room using normalized eight-direction movement, camera bounds, solid wall
-collision, and one visible ramp/elevation transition. Add code modules only as
-their responsibilities are implemented; the old side-scroller has been
-removed.
+**Next bounded task:** manually playtest Thornback's two-pattern combat
+prototype. Confirm telegraph/hit-zone clarity, recovery strikes, defeat/retry,
+and reward feedback before building the Thornfang vine-gate route.

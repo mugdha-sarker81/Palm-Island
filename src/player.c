@@ -31,6 +31,8 @@ void Player_Init(Player *p, Vector2 feet)
     p->elevation = ROOM_ELEVATION_GROUND;
     p->facing = FACING_DOWN;
     p->animTime = 0.0f;
+    p->health = PLAYER_START_HEALTH;
+    p->damageInvulnerability = 0.0f;
 }
 
 /* Keep the current facing while the input stays within FACING_KEEP_DEG of it.
@@ -104,6 +106,13 @@ static float RemainingStep(float step, float assist)
 
 void Player_Update(Player *p, const Input *in, float dt, RoomArea area)
 {
+    if (dt > 0.0f && p->damageInvulnerability > 0.0f) {
+        p->damageInvulnerability -= dt;
+        if (p->damageInvulnerability < 0.0f) {
+            p->damageInvulnerability = 0.0f;
+        }
+    }
+
     float inLen = Length(in->move);
     bool moving = inLen > 0.0f;
 
@@ -180,6 +189,25 @@ void Player_Update(Player *p, const Input *in, float dt, RoomArea area)
 
 float Player_Speed(const Player *p) { return Length(p->vel); }
 
+bool Player_TakeDamage(Player *p, Vector2 source, RoomArea area)
+{
+    if (p->health <= 0 || p->damageInvulnerability > 0.0f) return false;
+
+    p->health--;
+    p->damageInvulnerability = PLAYER_HIT_INVULNERABILITY;
+    Vector2 away = {p->pos.x - source.x, p->pos.y - source.y};
+    float distance = Length(away);
+    if (distance > 0.0f) {
+        Vector2 destination = {
+            p->pos.x + away.x / distance * PLAYER_HIT_KNOCKBACK,
+            p->pos.y + away.y / distance * PLAYER_HIT_KNOCKBACK
+        };
+        (void)TryMoveTo(p, destination, area);
+    }
+    p->vel = (Vector2){0.0f, 0.0f};
+    return true;
+}
+
 void Player_Draw(const Player *p, Texture2D sheet, bool debug)
 {
     /* Whole-pixel snapping happens only at draw time. */
@@ -204,5 +232,10 @@ void Player_Draw(const Player *p, Texture2D sheet, bool debug)
         (float)PLAYER_SPRITE_H
     };
     Vector2 dst = {(float)(fx - PLAYER_SPRITE_W / 2), (float)(fy - PLAYER_SPRITE_H)};
-    DrawTextureRec(sheet, src, dst, WHITE);
+    Color tint = WHITE;
+    if (p->damageInvulnerability > 0.0f &&
+        ((int)(p->damageInvulnerability * 20.0f) % 2) == 0) {
+        tint = Fade(WHITE, 0.25f);
+    }
+    DrawTextureRec(sheet, src, dst, tint);
 }

@@ -7,13 +7,14 @@ and understanding the island—not grinding or constant combat.
 
 > **Honest status:** this is not the complete game or the planned Forgotten
 > Jungle vertical slice. The previous side-scrolling prototype was removed.
-> The current executable is a top-down movement prototype with five linked
-> Forgotten Jungle blockout areas: the Entrance, Root Path, Overgrown Clearing,
-> Shrine Approach, and a non-combat Thornback Arena shell. It has placeholder
-> terrain and props, player collision, a scrolling camera, ramps, a closed
+> The current executable is a top-down prototype with five linked Forgotten
+> Jungle blockout areas: the Entrance, Root Path, Overgrown Clearing, Shrine
+> Approach, and a Thornback Arena shell with a two-pattern encounter
+> prototype. It has placeholder terrain and props, player collision, a
+> scrolling camera, ramps, a closed
 > thorn gate, and fade transitions between the areas. A few landmarks have
-> small inspect interactions. Persistent progression, enemies, combat,
-> dialogue, audio, and saving are not implemented.
+> small inspect interactions. Persistent progression, general combat, dialogue,
+> audio, and saving are not implemented.
 >
 > **Direction:** the game is planned as top-down 2D pixel art with
 > eight-direction movement and 3D-like depth cues (layering, occlusion, and
@@ -62,24 +63,35 @@ rejoins an exposed central route and reaches a hinted side nook with an
 inspectable explorer's note. The Clearing connects to a non-combat Shrine
 Approach with a courtyard and a Map of Roots mural; the open north doorway
 leads into a traversable Thornback Arena shell with a clear perimeter route
-and a safe return path. The arena has no boss or combat behavior yet.
+and a safe return path. The west marker starts a Thornback encounter prototype
+that alternates a straight charge with a slower, broad sweep. Each attack has
+a distinct ground tell and recovery window; the sweep's marked danger band
+leaves a safe repositioning strip above and below it. The player can strike
+once during each recovery, and must face Thornback and be in range. The
+prototype includes five hearts, visible invulnerability/knockback, a full-
+health retry cue at the Arena entrance, and a session-only Thornfang reward flag;
+general combat, persistent progression, and the Thornfang vine-cutting route
+are not implemented.
 In Root Path, the thorn weave can be inspected and a visible root marker
 activated with E or controller A when approached from the front. Activating
 the marker traces the bypass around the gate; clue panels can be reviewed or
 closed with the same action. The bounded, smoothed camera follows Ichigo and
 resets at room transitions. Solid prop bases and walls block the 10×6 feet
 collider; prop drawing is sorted by foot/base Y. F3 shows the live input
-source/magnitude, frame time, player speed, position, and elevation. Further
-interactions, checkpoints, enemies, combat, and progression are not
+source/magnitude, frame time, player speed, position, and elevation. Persistent
+checkpoints/saves, general combat systems, and Jungle progression are not
 implemented. The user reports the Feel Gate, existing Jungle areas, clue
 prompt/panel, marker trace, and Clearing note work well. The Shrine Approach
-was hands-on tested before its doorway was opened; the arena shell still needs
-a visual playtest.
+was hands-on tested before its doorway was opened; the user reports that the
+completed Arena shell route and return worked well. The user also confirmed
+the Phase 2 Thornback sweep looks and works well; the new combat/retry loop
+still needs a hands-on playtest.
 
 ## Optional focused tests
 
-The focused movement, camera, and draw-order tests are opt-in. From PowerShell
-in the repository, configure and run them with MSYS2 MinGW64 available:
+The focused movement, camera, render, and Thornback trial tests are opt-in. From
+PowerShell in the repository, configure and run them with MSYS2 MinGW64
+available:
 
 ```powershell
 $env:Path = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;$env:Path"
@@ -92,6 +104,7 @@ ctest --test-dir build --output-on-failure
 |---|---|---|
 | Move (8 directions) | WASD or arrow keys | Left stick / D-pad |
 | Interact / close panel | E | A (right face button) |
+| Strike during Thornback recovery | Space | X (left face button) |
 | Debug overlay (FPS, speed, position) | F3 | — |
 | Borderless windowed | F11 | — |
 | Quit | Esc | — |
@@ -104,13 +117,14 @@ src/main.c                Window, pixel canvas, fixed-step loop, asset lookup
 build.bat                 Configure and build for Windows
 run.bat                   Build, then launch the game
 src/tuning.h              Centralized movement, interaction, camera, and canvas tuning
-src/player.[ch]            Eight-way movement, feet collider, collision, animation
+src/player.[ch]            Eight-way movement, feet collider, health, collision, animation
 src/room.[ch]              Jungle blockout layouts, transitions, props, collision, ramps, clue target
-src/input.[ch]             Keyboard and gamepad movement and interaction input
+src/input.[ch]             Keyboard and gamepad movement, interaction, and attack input
 src/interaction.[ch]       Small inspect-panel open/close state
 src/camera.[ch]            Bounded smoothed camera follow, look-ahead, pixel snap
 tests/                     Opt-in gameplay, camera, and render behavior tests
-src/render.[ch]            Player/prop depth sorting and foreground draw pass
+src/render.[ch]            Player/prop/Thornback depth sorting and foreground draw pass
+src/thornback.[ch]         Thornback charge/sweep encounter and recovery vulnerability
 assets/concept_art/       Visual references and art guide
 assets/sprites/           Starter player and prop sprites
 assets/tilesets/          Starter 16x16 tileset

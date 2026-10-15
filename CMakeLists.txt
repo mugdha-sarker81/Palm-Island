@@ -57,13 +57,14 @@ add_executable(PalmIsland
     src/room.c
     src/camera.c
     src/render.c
+    src/thornback.c
 )
 if(NOT MSVC)
     target_compile_options(PalmIsland PRIVATE -Wall -Wextra)
 endif()
 target_link_libraries(PalmIsland PRIVATE raylib)
 
-option(PALM_BUILD_TESTS "Build Palm Island movement tests" OFF)
+option(PALM_BUILD_TESTS "Build focused Palm Island gameplay tests" OFF)
 if(PALM_BUILD_TESTS)
     enable_testing()
     add_executable(PalmIslandMovementTests
@@ -96,6 +97,7 @@ if(PALM_BUILD_TESTS)
         src/render.c
         src/player.c
         src/room.c
+        src/thornback.c
     )
     target_include_directories(PalmIslandRenderTests PRIVATE src)
     target_link_libraries(PalmIslandRenderTests PRIVATE raylib)
@@ -103,4 +105,15 @@ if(PALM_BUILD_TESTS)
         target_compile_options(PalmIslandRenderTests PRIVATE -Wall -Wextra)
     endif()
     add_test(NAME render_depth COMMAND PalmIslandRenderTests)
+
+    add_executable(PalmIslandThornbackTests
+        tests/thornback_trial_test.c
+        src/thornback.c
+    )
+    target_include_directories(PalmIslandThornbackTests PRIVATE src)
+    target_link_libraries(PalmIslandThornbackTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandThornbackTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME thornback_trial COMMAND PalmIslandThornbackTests)
 endif()

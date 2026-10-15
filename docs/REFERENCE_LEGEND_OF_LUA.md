@@ -13,6 +13,9 @@ reuse.
 
 - The project is a Lua/LÖVE top-down action-adventure with separate modules
   for player, levels, items, enemies, effects, and UI.
+- The README links to a browser-playable build, but the game code is a
+  single-player project; the reviewed repository does not provide cloud saves,
+  accounts, multiplayer, or an online backend.
 - Its save model groups player location/current map, progression, health,
   currency/keys, equipment and consumable counts, plus stable IDs for opened
   chests and destroyed breakables.

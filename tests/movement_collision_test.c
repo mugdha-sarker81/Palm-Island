@@ -133,6 +133,46 @@ static void TestStoppingMeetsFeelGate(void)
     CHECK(drift <= WALK_SPEED * DECEL_TIME * 0.5f + 0.05f);
 }
 
+static void TestPlayerDamageHasInvulnerabilityAndKnockback(void)
+{
+    Player player;
+    Player_Init(&player, (Vector2){320.0f, 184.0f});
+    CHECK(player.health == PLAYER_START_HEALTH);
+    CHECK(Player_TakeDamage(&player, (Vector2){312.0f, 184.0f},
+                            ROOM_AREA_THORNBACK_ARENA));
+    CHECK(player.health == PLAYER_START_HEALTH - 1);
+    CHECK(fabsf(player.pos.x - (320.0f + PLAYER_HIT_KNOCKBACK)) < 0.01f);
+    CHECK(player.damageInvulnerability == PLAYER_HIT_INVULNERABILITY);
+    CHECK(!Player_TakeDamage(&player, (Vector2){312.0f, 184.0f},
+                             ROOM_AREA_THORNBACK_ARENA));
+    CHECK(player.health == PLAYER_START_HEALTH - 1);
+
+    Input released = {0};
+    for (int i = 0; i < SIM_HZ; i++) {
+        Player_Update(&player, &released, SIM_DT, ROOM_AREA_THORNBACK_ARENA);
+    }
+    CHECK(player.damageInvulnerability == 0.0f);
+    CHECK(Player_TakeDamage(&player, (Vector2){312.0f, 184.0f},
+                            ROOM_AREA_THORNBACK_ARENA));
+    CHECK(player.health == PLAYER_START_HEALTH - 2);
+
+    while (player.health > 0) {
+        for (int i = 0; i < SIM_HZ; i++) {
+            Player_Update(&player, &released, SIM_DT,
+                          ROOM_AREA_THORNBACK_ARENA);
+        }
+        CHECK(Player_TakeDamage(&player, (Vector2){312.0f, 184.0f},
+                                ROOM_AREA_THORNBACK_ARENA));
+    }
+    CHECK(player.health == 0);
+    CHECK(!Player_TakeDamage(&player, (Vector2){312.0f, 184.0f},
+                             ROOM_AREA_THORNBACK_ARENA));
+
+    Player_Init(&player, (Vector2){320.0f, 184.0f});
+    CHECK(player.health == PLAYER_START_HEALTH);
+    CHECK(player.damageInvulnerability == 0.0f);
+}
+
 static void TestRampTransitionsAndSideBlocking(void)
 {
     Player player;
@@ -371,6 +411,10 @@ static void TestShrineApproachLayoutAndConnections(void)
                                FeetAt(80.0f, 192.0f)));
     CHECK(!Room_CollidesInArea(ROOM_AREA_THORNBACK_ARENA,
                                FeetAt(560.0f, 192.0f)));
+    for (float x = 200.0f; x <= 440.0f; x += 8.0f) {
+        CHECK(!Room_CollidesInArea(ROOM_AREA_THORNBACK_ARENA,
+                                   FeetAt(x, 184.0f)));
+    }
     CHECK(Room_CollidesInArea(ROOM_AREA_THORNBACK_ARENA,
                               FeetAt(4.9f, 192.0f)));
     CHECK(!Room_CollidesInArea(ROOM_AREA_THORNBACK_ARENA,
@@ -385,6 +429,21 @@ static void TestShrineApproachLayoutAndConnections(void)
                                FeetAt(spawn.x, spawn.y)));
     CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 353.0f},
                               &destination, &spawn));
+
+    const RoomInteractable *trial = Room_FindInteractable(
+        ROOM_AREA_THORNBACK_ARENA, (Vector2){150.0f, 176.0f},
+        (Vector2){1.0f, 0.0f}, INTERACT_PROMPT_RANGE);
+    CHECK(trial != NULL);
+    CHECK(trial != NULL &&
+          trial->kind == ROOM_INTERACTABLE_THORNBACK_TRIAL);
+    CHECK(Room_FindInteractable(ROOM_AREA_THORNBACK_ARENA,
+                                (Vector2){150.0f, 176.0f},
+                                (Vector2){-1.0f, 0.0f},
+                                INTERACT_PROMPT_RANGE) == NULL);
+    CHECK(Room_FindInteractable(ROOM_AREA_THORNBACK_ARENA,
+                                (Vector2){100.0f, 176.0f},
+                                (Vector2){1.0f, 0.0f},
+                                INTERACT_PROMPT_RANGE) == NULL);
 }
 
 static void SimulateFixedStepFrame(float frameTime, float *accumulator, int *stepsTaken)
@@ -613,6 +672,7 @@ int main(void)
     TestTreeBasesBlockAndCanopiesStayWalkable();
     TestWallSlideAndDiagonalSpeed();
     TestStoppingMeetsFeelGate();
+    TestPlayerDamageHasInvulnerabilityAndKnockback();
     TestRampTransitionsAndSideBlocking();
     TestRootPathGateHasAReconnectingSideRoute();
     TestRootPathTransitionPairsAndRamp();

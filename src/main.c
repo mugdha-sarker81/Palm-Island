@@ -6,6 +6,7 @@
 #include "interaction.h"
 #include "camera.h"
 #include "render.h"
+#include "thornback.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -88,6 +89,7 @@ static bool InteractionWasSeen(const InteractionState *state,
         case ROOM_INTERACTABLE_ROOT_MARKER: return state->rootMarkerActivated;
         case ROOM_INTERACTABLE_CLEARING_NOTE: return state->clearingNoteSeen;
         case ROOM_INTERACTABLE_ROOTS_MURAL: return state->rootsMuralSeen;
+        case ROOM_INTERACTABLE_THORNBACK_TRIAL: return false;
         default: return false;
     }
 }
@@ -114,9 +116,14 @@ static void DrawInteractionUI(const RoomInteractable *target, float promptFade,
         DrawRectangleLines(8, 154, 304, 18,
                            Fade(edgeColor, promptFade));
         bool alreadyUsed = InteractionWasSeen(state, target);
-        const char *action = target->kind == ROOM_INTERACTABLE_ROOT_MARKER
-                                 ? (alreadyUsed ? "Review" : "Activate")
-                                 : (alreadyUsed ? "Review" : "Read");
+        const char *action;
+        if (target->kind == ROOM_INTERACTABLE_THORNBACK_TRIAL) {
+            action = "Begin";
+        } else if (target->kind == ROOM_INTERACTABLE_ROOT_MARKER) {
+            action = alreadyUsed ? "Review" : "Activate";
+        } else {
+            action = alreadyUsed ? "Review" : "Read";
+        }
         DrawText(TextFormat("E / A %s %s", action,
                             target->title),
                  14, 158, 8, Fade(RAYWHITE, promptFade));
@@ -196,8 +203,14 @@ int main(void)
     RoomArea destinationArea = room.area;
     Vector2 destinationSpawn = player.pos;
     float interactBuffer = 0.0f;
+    float attackBuffer = 0.0f;
+    float attackFeedbackTime = 0.0f;
+    float retryFeedbackTime = 0.0f;
     float promptFade = 0.0f;
     InteractionState interaction = {0};
+    Thornback thornback;
+    Thornback_Init(&thornback);
+    bool thornfangAcquired = false;
     const RoomInteractable *activeInteractable = NULL;
     const RoomInteractable *promptInteractable = NULL;
 
@@ -215,6 +228,11 @@ int main(void)
         } else if (transitionPhase != TRANSITION_NONE) {
             interactBuffer = 0.0f;
         }
+        if (transitionPhase == TRANSITION_NONE && input.attackPressed) {
+            attackBuffer = 0.10f;
+        } else if (transitionPhase != TRANSITION_NONE) {
+            attackBuffer = 0.0f;
+        }
 
         int steps = 0;
         while (accumulator >= SIM_DT && steps < MAX_SIM_STEPS) {
@@ -223,9 +241,14 @@ int main(void)
                     Player_Update(&player, &input, SIM_DT, room.area);
                     Camera_Update(&camera, player.pos, player.vel, SIM_DT);
                     Vector2 facingDirection = FacingDirection(player.facing);
-                    activeInteractable = Room_FindInteractable(
-                        room.area, player.pos, facingDirection,
-                        INTERACT_PROMPT_RANGE);
+                    activeInteractable =
+                        room.area == ROOM_AREA_THORNBACK_ARENA &&
+                                (thornback.state != THORNBACK_STATE_DORMANT ||
+                                 thornfangAcquired)
+                            ? NULL
+                            : Room_FindInteractable(
+                                  room.area, player.pos, facingDirection,
+                                  INTERACT_PROMPT_RANGE);
                     if (activeInteractable != NULL) {
                         promptInteractable = activeInteractable;
                         promptFade += SIM_DT / INTERACT_PROMPT_FADE;
@@ -244,7 +267,15 @@ int main(void)
                             room.area, player.pos, facingDirection,
                             INTERACT_RANGE);
                         if (inRange != NULL) {
-                            InteractionState_Activate(&interaction, inRange);
+                            if (inRange->kind ==
+                                ROOM_INTERACTABLE_THORNBACK_TRIAL) {
+                                if (!thornfangAcquired) {
+                                    Thornback_Start(&thornback, player.pos);
+                                }
+                            } else {
+                                InteractionState_Activate(&interaction,
+                                                          inRange);
+                            }
                             interactBuffer = 0.0f;
                         } else {
                             interactBuffer -= SIM_DT;
@@ -270,8 +301,15 @@ int main(void)
                     if (transitionTime >= 0.2f) {
                         transitionTime = 0.0f;
                         if (transitionPhase == TRANSITION_FADE_OUT) {
+                            int health = player.health;
+                            float damageInvulnerability =
+                                player.damageInvulnerability;
                             Room_SetArea(&room, destinationArea);
+                            Thornback_Init(&thornback);
                             Player_Init(&player, destinationSpawn);
+                            player.health = health;
+                            player.damageInvulnerability =
+                                damageInvulnerability;
                             Camera_Init(&camera, player.pos, Room_Bounds(),
                                         (Vector2){(float)VIRTUAL_W, (float)VIRTUAL_H});
                             BuildRenderProps(props, room.area);
@@ -285,6 +323,51 @@ int main(void)
                         }
                     }
                 }
+            }
+            if (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                transitionPhase == TRANSITION_NONE) {
+                Thornback_Update(&thornback, SIM_DT);
+                if (thornback.state == THORNBACK_STATE_DEFEATED) {
+                    thornfangAcquired = true;
+                } else if (Thornback_TryPlayerContact(&thornback,
+                                                     player.pos)) {
+                    Player_TakeDamage(&player, thornback.position,
+                                      room.area);
+                    if (player.health <= 0) {
+                        Player_Init(&player, Room_SpawnPoint(
+                                                 ROOM_AREA_THORNBACK_ARENA));
+                        Thornback_Init(&thornback);
+                        Camera_Init(&camera, player.pos, Room_Bounds(),
+                                    (Vector2){(float)VIRTUAL_W,
+                                              (float)VIRTUAL_H});
+                        attackBuffer = 0.0f;
+                        attackFeedbackTime = 0.0f;
+                        retryFeedbackTime = 1.5f;
+                    }
+                }
+                if (attackBuffer > 0.0f) {
+                    if (Thornback_TryHit(&thornback, player.pos,
+                                         FacingDirection(player.facing))) {
+                        attackFeedbackTime = 0.25f;
+                        if (thornback.state == THORNBACK_STATE_DEFEATED) {
+                            thornfangAcquired = true;
+                        }
+                        attackBuffer = 0.0f;
+                    } else {
+                        attackBuffer -= SIM_DT;
+                        if (attackBuffer < 0.0f) attackBuffer = 0.0f;
+                    }
+                }
+            } else {
+                attackBuffer = 0.0f;
+            }
+            if (attackFeedbackTime > 0.0f) {
+                attackFeedbackTime -= SIM_DT;
+                if (attackFeedbackTime < 0.0f) attackFeedbackTime = 0.0f;
+            }
+            if (retryFeedbackTime > 0.0f) {
+                retryFeedbackTime -= SIM_DT;
+                if (retryFeedbackTime < 0.0f) retryFeedbackTime = 0.0f;
             }
             worldTime += SIM_DT;
             accumulator -= SIM_DT;
@@ -302,7 +385,13 @@ int main(void)
                 interaction.rootMarkerActivated) {
                 DrawRootMarkerRoute();
             }
-            Render_DrawDepthScene(&player, sheet, props, debug);
+            if (room.area == ROOM_AREA_THORNBACK_ARENA) {
+                Thornback_DrawWarning(&thornback);
+            }
+            Render_DrawDepthScene(
+                &player, sheet, props,
+                room.area == ROOM_AREA_THORNBACK_ARENA ? &thornback : NULL,
+                debug);
             EndMode2D();
             if (transitionPhase != TRANSITION_NONE) {
                 float alpha = transitionTime / 0.2f;
@@ -314,6 +403,40 @@ int main(void)
             }
             DrawInteractionUI(promptInteractable, promptFade,
                               &interaction);
+            DrawText(TextFormat("HP %d/%d", player.health,
+                                PLAYER_START_HEALTH),
+                     8, 8, 8, (Color){245, 214, 124, 255});
+            if (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                retryFeedbackTime > 0.0f) {
+                DrawRectangle(6, 22, 210, 15, (Color){11, 26, 34, 220});
+                DrawText("TRIAL RESET - RETURN TO MARKER", 10, 26, 8,
+                         (Color){245, 214, 124, 255});
+            } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                thornfangAcquired) {
+                DrawRectangle(6, 22, 146, 15, (Color){11, 26, 34, 220});
+                DrawText("THORNFANG CLAIMED", 10, 26, 8,
+                         (Color){127, 196, 192, 255});
+            } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                       thornback.state != THORNBACK_STATE_DORMANT) {
+                const char *cue = "WATCH THE LINE - MOVE CLEAR";
+                if (thornback.state == THORNBACK_STATE_CHARGE) {
+                    cue = "CHARGE!";
+                } else if (thornback.state ==
+                           THORNBACK_STATE_SWEEP_TELL) {
+                    cue = "SWEEP TELL - STEP CLEAR";
+                } else if (thornback.state == THORNBACK_STATE_SWEEP) {
+                    cue = "SWEEP - MOVE CLEAR";
+                } else if (thornback.state == THORNBACK_STATE_RECOVERY) {
+                    cue = attackFeedbackTime > 0.0f
+                              ? "THORNBACK HIT!"
+                              : "RECOVERY - FACE + SPACE / X";
+                }
+                DrawRectangle(6, 22, 210, 15, (Color){11, 26, 34, 220});
+                DrawText(cue, 10, 26, 8, (Color){245, 214, 124, 255});
+                DrawText(TextFormat("THORNBACK %d/%d", thornback.health,
+                                    THORNBACK_HEALTH),
+                         224, 26, 8, (Color){245, 214, 124, 255});
+            }
         } else {
             DrawText("Assets not found.", 8, 8, 10, WHITE);
             DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);

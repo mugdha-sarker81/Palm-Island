@@ -19,6 +19,8 @@ typedef struct Player {
     RoomElevation elevation;
     Facing facing;
     float animTime;  /* seconds spent walking since last stop */
+    int health;
+    float damageInvulnerability;
 } Player;
 
 void  Player_Init(Player *p, Vector2 feet);
@@ -26,6 +28,7 @@ void  Player_Init(Player *p, Vector2 feet);
 void  Player_Update(Player *p, const Input *in, float dt, RoomArea area);
 Rectangle Player_FeetCollider(const Player *p);
 float Player_Speed(const Player *p);
+bool Player_TakeDamage(Player *p, Vector2 source, RoomArea area);
 /* Draw shadow and sprite. Snaps to whole pixels only here. */
 void  Player_Draw(const Player *p, Texture2D sheet, bool debug);
 
