@@ -90,9 +90,11 @@ bool AshSkitter_TryPlayerContact(AshSkitter *skitter,
 
 bool AshSkitter_TryHit(AshSkitter *skitter, Vector2 playerPosition,
                        Vector2 facingDirection, RoomElevation playerElevation,
-                       bool hasThornfang)
+                       InventoryWeapon weapon)
 {
-    if (playerElevation != ROOM_ELEVATION_GROUND || !hasThornfang ||
+    bool canStrike = weapon == INVENTORY_WEAPON_PALMWOOD_CLUB ||
+                     weapon == INVENTORY_WEAPON_THORNFANG;
+    if (playerElevation != ROOM_ELEVATION_GROUND || !canStrike ||
         skitter->state != ASH_SKITTER_STATE_RECOVERY ||
         skitter->hitThisRecovery) {
         return false;

@@ -15,15 +15,18 @@ and understanding the island—not grinding or constant combat.
 > checkpoint. Amber vent warnings precede damaging orange steam bursts; a safe
 > upper route avoids them. The user reports the route, hazard fairness, and
 > checkpoint passed hands-on playtesting. Ashfall now also has one two-hit
-> Ash Skitter, with a bright route tell, dash contact, and a Thornfang recovery
-> window; this encounter awaits its own playtest. The areas use shared
-> movement, collision, room transitions, and save behavior. They have
+> Ash Skitter, with a bright route tell, dash contact, and a Palmwood Club or
+> Thornfang recovery window and a brief color-coded strike cue; this encounter
+> awaits its own playtest. Ichigo
+> starts with the Palmwood Club, while Thornfang remains the Arena reward
+> required to cut marked vines. The areas use shared movement, collision, room
+> transitions, and save behavior. They have
 > placeholder terrain and props, a scrolling camera, a Thornfang-cuttable gate,
 > and fade transitions. A few landmarks have small inspect interactions. A
-> versioned autosave preserves Jungle checkpoints, health, the Thornfang
-> weapon, discovered evidence, both Palm Fruit nodes, and the opened gate. A
+> versioned autosave preserves Jungle checkpoints, health, owned/selected
+> weapons, discovered evidence, both Palm Fruit nodes, and the opened gate. A
 > compact inventory overlay and two prototype food pickups are implemented;
-> broader food, general combat, dialogue, and settings persistence are not.
+> broader enemy combat, dialogue, and settings persistence are not.
 >
 > **Direction:** the game is planned as top-down 2D pixel art with
 > eight-direction movement and 3D-like depth cues (layering, occlusion, and
@@ -78,8 +81,9 @@ steam vents; the west ramp links ground and upper elevation. Touching active
 steam costs a heart, with the existing invulnerability and knockback, and
 depleting health resets to Ashfall's entry checkpoint. The southern exit
 returns to the Arena. One Ash Skitter patrols between marked safe patches,
-telegraphs its route, dashes across it, and can be hit with Thornfang during
-recovery; the encounter resets when the room is re-entered. Inspect the
+telegraphs its route, dashes across it, and can be hit with the Palmwood Club
+or Thornfang during recovery; the encounter resets when the room is re-entered.
+Inspect the
 pulsing cracked mineral seal on the central path to add it to key-item
 discoveries, or look for the optional cooled seam on the west lower path.
 No Ashfall boss or completed cavern progression has been implemented. The

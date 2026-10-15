@@ -18,8 +18,17 @@ int main(void)
     CHECK(!Inventory_HasWeapon(&inventory, INVENTORY_WEAPON_THORNFANG));
     CHECK(!Inventory_SelectWeapon(&inventory, INVENTORY_WEAPON_THORNFANG));
 
+    CHECK(Inventory_AddWeapon(&inventory,
+                              INVENTORY_WEAPON_PALMWOOD_CLUB));
+    CHECK(Inventory_HasWeapon(&inventory,
+                              INVENTORY_WEAPON_PALMWOOD_CLUB));
+    CHECK(inventory.selectedWeapon == INVENTORY_WEAPON_PALMWOOD_CLUB);
+    CHECK(Inventory_IsValid(&inventory));
+
     CHECK(Inventory_AddWeapon(&inventory, INVENTORY_WEAPON_THORNFANG));
     CHECK(Inventory_HasWeapon(&inventory, INVENTORY_WEAPON_THORNFANG));
+    CHECK(inventory.selectedWeapon == INVENTORY_WEAPON_PALMWOOD_CLUB);
+    CHECK(Inventory_SelectWeapon(&inventory, INVENTORY_WEAPON_THORNFANG));
     CHECK(inventory.selectedWeapon == INVENTORY_WEAPON_THORNFANG);
     CHECK(Inventory_IsValid(&inventory));
 

@@ -7,6 +7,7 @@
 typedef enum InventoryWeapon {
     INVENTORY_WEAPON_NONE,
     INVENTORY_WEAPON_THORNFANG,
+    INVENTORY_WEAPON_PALMWOOD_CLUB,
     INVENTORY_WEAPON_COUNT
 } InventoryWeapon;
 

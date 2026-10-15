@@ -2,6 +2,7 @@
 #define PALM_ASH_SKITTER_H
 
 #include "raylib.h"
+#include "inventory.h"
 #include "room.h"
 #include <stdbool.h>
 
@@ -30,7 +31,7 @@ bool AshSkitter_TryPlayerContact(AshSkitter *skitter,
                                  RoomElevation playerElevation);
 bool AshSkitter_TryHit(AshSkitter *skitter, Vector2 playerPosition,
                        Vector2 facingDirection, RoomElevation playerElevation,
-                       bool hasThornfang);
+                       InventoryWeapon weapon);
 void AshSkitter_DrawWarning(const AshSkitter *skitter);
 void AshSkitter_Draw(const AshSkitter *skitter);
 

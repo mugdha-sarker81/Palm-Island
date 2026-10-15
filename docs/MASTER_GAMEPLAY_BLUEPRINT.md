@@ -225,6 +225,9 @@ Keep the inventory small and legible:
 1. **Weapons:** permanent collection of five weapons; one selected active
    weapon, with quick switch once multiple are acquired. Weapons are not
    consumed.
+   - Prototype exception: Ichigo starts with a Palmwood Club for basic combat.
+     It does not open traversal gates; Thornfang remains the earned thorn-cut
+     ability.
 2. **Key items:** family symbol, clue fragments, map tokens, and story objects.
    Key items are not sellable/droppable.
 3. **Consumables:** initially one healing item type; capacity starts small.

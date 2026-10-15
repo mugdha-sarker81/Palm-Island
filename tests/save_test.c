@@ -75,6 +75,8 @@ static void TestMissingAndVersionedRoundTrip(const char *path)
     CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);
     CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
     CHECK(SaveDataMatches(&loaded, &expected));
+    CHECK(!Inventory_HasWeapon(&loaded.inventory,
+                               INVENTORY_WEAPON_PALMWOOD_CLUB));
     CHECK(Inventory_HasKeyItem(
         &loaded.inventory, INVENTORY_KEY_ITEM_CRACKED_MINERAL_SEAL));
 
@@ -82,6 +84,15 @@ static void TestMissingAndVersionedRoundTrip(const char *path)
     CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);
     CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
     CHECK(SaveDataMatches(&loaded, &expected));
+
+    expected.inventory.ownedWeapons |=
+        UINT32_C(1) << (INVENTORY_WEAPON_PALMWOOD_CLUB - 1);
+    expected.inventory.selectedWeapon = INVENTORY_WEAPON_PALMWOOD_CLUB;
+    CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);
+    CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
+    CHECK(SaveDataMatches(&loaded, &expected));
+    CHECK(Inventory_HasWeapon(&loaded.inventory,
+                              INVENTORY_WEAPON_PALMWOOD_CLUB));
 }
 
 static void TestVersionOneMigration(const char *path)

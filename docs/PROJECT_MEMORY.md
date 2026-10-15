@@ -40,9 +40,9 @@ status, locked decisions, and the next bounded task.
   the Arena, and room-entry checkpoint saving. Amber telegraphs precede active
   damaging steam; health depletion returns Ichigo to the Ashfall spawn.
 - One Ash Skitter now patrols between marked patches, shows a bright route tell,
-  dashes with once-per-pass contact damage, and accepts one Thornfang hit per
-  recovery window until defeated. Its state resets on room re-entry or death;
-  it adds no save flags or drops.
+  dashes with once-per-pass contact damage, and accepts one Palmwood Club or
+  Thornfang hit per recovery window until defeated. Its state resets on room
+  re-entry or death; it adds no save flags or drops.
 - Ashfall's central path now has a pulsing, inspectable Cracked Mineral Seal.
   Reading it adds a persistent key-item discovery and reveals a small clue
   about airflow below; reach it from the south and face north. Interaction,
@@ -51,9 +51,14 @@ status, locked decisions, and the next bounded task.
   Inspecting it records a persistent discovery of the seam's forked heat-flow
   pattern; reach it from the south and face north. Reachability, review, and
   inventory round-trip coverage are automated.
-- Ashfall is still accessible before Thornfang; its HUD now tells unequipped
-  players to return to the Arena trial rather than leaving the weapon
-  requirement implicit.
+- A Palmwood Club is granted on a new game and added to older valid saves;
+  it becomes active when no weapon was previously selected and can strike the
+  Ash Skitter during its existing recovery window. Thornfang remains the Arena
+  reward and the only weapon that cuts marked thorn barriers. The version-4
+  save format and existing weapon enum values remain unchanged.
+- Confirmed weapon hits now show a short, pixel-scale forward strike cue. Its
+  club/Thornfang colors take direction from the supplied weapon concept board;
+  the board remains a reference image, not a runtime sprite sheet.
 - The Arena trial now has a pulsing world beacon and a west-center HUD locator
   while Thornfang is missing and the trial is dormant, addressing the reported
   difficulty finding the marker. This locator still needs a hands-on check.
@@ -264,6 +269,10 @@ status, locked decisions, and the next bounded task.
   keyboard first.
 - **First deliverable:** one 10–15 minute Forgotten Jungle slice. Validate
   handcrafted spaces before expanding the island.
+- **Approved campaign target:** implement the full blueprint campaign of eight
+  regions, 24 authored zones, five permanent legendary weapons, guardian
+  encounters, and the Sanctuary finale. This is the destination, not a single
+  implementation batch; build and playtest it one region at a time.
 - **Progression:** Thornfang is the first planned traversal ability;
   Excalibur is a temporary final transformation, not a sixth open-world
   weapon.
@@ -290,16 +299,19 @@ warnings/fairness, damage/reset feedback, and checkpoint persistence after
 relaunch were confirmed. The Arena trial has a pulsing marker, HUD locator, and
 an island map of all six playable rooms with the player's position and a trial
 icon while the trial is available; hands-on verification is pending. The first
-Ash Skitter is implemented as a two-hit Thornfang encounter with a bright
-route tell, dash/contact, and recovery; automated checks cover alert-range
-boundary, once-per-dash contact, and reinitialization. Next, verify the island
-map and locator in play, then hands-on test Ash Skitter's warning readability,
-evasion, elevation safety, attack range/facing, recovery timing, and
-defeat/reset behavior. The cracked mineral seal is now an inspectable, saved
-Ashfall discovery, and the optional west-lower cooled seam records its forked
-crack pattern. The next expansion is Forge Veins, one zone at a time, but only
-after the Ashfall map and Ash Skitter playtest gate passes. Do not add the Forge
-Warden or a guardian.
+Ash Skitter is implemented as a two-hit Palmwood Club/Thornfang encounter with
+a bright route tell, dash/contact, and recovery; automated checks cover weapon
+eligibility, alert-range boundary, once-per-dash contact, and reinitialization.
+The Palmwood Club is granted for new and previously saved games; it becomes
+active if the save has no selected weapon. Thornfang remains the Arena reward
+and marked-vine cutting ability. Next, verify the island map and locator in
+play, then hands-on test starter-weapon combat and Ash Skitter's warning
+readability, evasion, elevation safety, attack range/facing, recovery timing,
+and defeat/reset behavior. The cracked mineral seal is now an inspectable,
+saved Ashfall discovery, and the optional west-lower cooled seam records its
+forked crack pattern. The next expansion is Forge Veins, one zone at a time,
+but only after the Ashfall map and Ash Skitter playtest gate passes. Do not add
+the Forge Warden or a guardian.
 
 ## Upcoming Roadmap
 

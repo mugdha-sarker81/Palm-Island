@@ -122,6 +122,13 @@ static bool HasThornfang(const Inventory *inventory)
     return Inventory_HasWeapon(inventory, INVENTORY_WEAPON_THORNFANG);
 }
 
+static bool HasCombatWeapon(const Inventory *inventory)
+{
+    return Inventory_HasWeapon(inventory, inventory->selectedWeapon) &&
+           (inventory->selectedWeapon == INVENTORY_WEAPON_PALMWOOD_CLUB ||
+            inventory->selectedWeapon == INVENTORY_WEAPON_THORNFANG);
+}
+
 static void RecordKeyItem(Inventory *inventory,
                           RoomInteractableKind interactionKind)
 {
@@ -174,6 +181,38 @@ static Vector2 FacingDirection(Facing facing)
         case FACING_DOWN:
         default: return (Vector2){0.0f, 1.0f};
     }
+}
+
+static void DrawWeaponHitEffect(Vector2 position, Facing facing,
+                                InventoryWeapon weapon, float remainingTime)
+{
+    const float effectDuration = 0.25f;
+    if (remainingTime <= 0.0f || remainingTime > effectDuration) return;
+
+    float alpha = remainingTime / effectDuration;
+    Vector2 forward = FacingDirection(facing);
+    Vector2 side = {-forward.y, forward.x};
+    Vector2 start = {
+        position.x + forward.x * 5.0f - side.x * 6.0f,
+        position.y + forward.y * 5.0f - side.y * 6.0f
+    };
+    Vector2 tip = {
+        position.x + forward.x * 13.0f,
+        position.y + forward.y * 13.0f
+    };
+    Vector2 end = {
+        position.x + forward.x * 5.0f + side.x * 6.0f,
+        position.y + forward.y * 5.0f + side.y * 6.0f
+    };
+    Color color = weapon == INVENTORY_WEAPON_THORNFANG
+                      ? (Color){114, 220, 133, 255}
+                      : (Color){245, 214, 124, 255};
+    color.a = (unsigned char)(255.0f * alpha);
+
+    DrawLineEx(start, tip, 3.0f, Fade(color, 0.4f));
+    DrawLineEx(tip, end, 3.0f, Fade(color, 0.4f));
+    DrawLineEx(start, tip, 1.0f, color);
+    DrawLineEx(tip, end, 1.0f, color);
 }
 
 static bool InteractionWasSeen(const InteractionState *state,
@@ -250,18 +289,28 @@ static void DrawInventoryUI(const Inventory *inventory)
     DrawRectangleLines(12, 12, 296, 156, edgeColor);
     DrawText("INVENTORY", 20, 18, 12, headingColor);
     DrawText("WEAPONS", 20, 38, 8, headingColor);
+    if (Inventory_HasWeapon(inventory,
+                            INVENTORY_WEAPON_PALMWOOD_CLUB)) {
+        DrawText(inventory->selectedWeapon ==
+                         INVENTORY_WEAPON_PALMWOOD_CLUB
+                     ? "> Palmwood Club  ACTIVE"
+                     : "  Palmwood Club  OWNED",
+                 24, 50, 8, RAYWHITE);
+        DrawText("A simple strike for Ashfall foes", 32, 61, 8,
+                 mutedColor);
+    } else {
+        DrawText("No starter weapon", 24, 50, 8, mutedColor);
+    }
     if (Inventory_HasWeapon(inventory, INVENTORY_WEAPON_THORNFANG)) {
         DrawText(inventory->selectedWeapon == INVENTORY_WEAPON_THORNFANG
                      ? "> Thornfang  ACTIVE"
                      : "  Thornfang  OWNED",
-                 24, 50, 8, RAYWHITE);
-        DrawText("Cuts marked thorn barriers", 32, 61, 8, mutedColor);
-    } else {
-        DrawText("No weapons discovered", 24, 50, 8, mutedColor);
+                 24, 76, 8, RAYWHITE);
+        DrawText("Cuts marked thorn barriers", 32, 87, 8, mutedColor);
     }
     DrawText(TextFormat("Palm fruit %d/%d  H / B to eat",
                         inventory->foodServings, FOOD_SERVING_CAPACITY),
-             24, 78, 8, inventory->foodServings > 0 ? RAYWHITE : mutedColor);
+             24, 105, 8, inventory->foodServings > 0 ? RAYWHITE : mutedColor);
 
     DrawText("KEY ITEMS / DISCOVERIES", 164, 38, 8, headingColor);
     for (int i = 0; i < INVENTORY_KEY_ITEM_COUNT; i++) {
@@ -545,16 +594,21 @@ int main(void)
                 interaction = (InteractionState){0};
                 Player_Init(&player, Room_SpawnPoint(checkpointArea));
             }
-        } else if (loadResult == SAVE_LOAD_MISSING) {
-            if (!PersistProgress(savePath, checkpointArea, player.health,
-                                 &inventory,
-                                 thornGateOpen, collectedFoodNodes,
-                                 saveNotice,
-                                 sizeof(saveNotice), &saveNoticeTime)) {
-                saveAvailable = false;
-                saveError = true;
-            }
         }
+    }
+
+    bool starterWeaponGranted =
+        !Inventory_HasWeapon(&inventory, INVENTORY_WEAPON_PALMWOOD_CLUB);
+    if (starterWeaponGranted) {
+        Inventory_AddWeapon(&inventory, INVENTORY_WEAPON_PALMWOOD_CLUB);
+    }
+    if (saveAvailable &&
+        (loadResult == SAVE_LOAD_MISSING || starterWeaponGranted) &&
+        !PersistProgress(savePath, checkpointArea, player.health, &inventory,
+                         thornGateOpen, collectedFoodNodes, saveNotice,
+                         sizeof(saveNotice), &saveNoticeTime)) {
+        saveAvailable = false;
+        saveError = true;
     }
 
     RenderItem props[RENDER_PROP_COUNT];
@@ -953,7 +1007,7 @@ int main(void)
                             &ashSkitter, player.pos,
                             FacingDirection(player.facing),
                             player.elevation,
-                            HasThornfang(&inventory))) {
+                            inventory.selectedWeapon)) {
                         attackFeedbackTime = 0.25f;
                         attackBuffer = 0.0f;
                     } else {
@@ -1039,6 +1093,9 @@ int main(void)
                 room.area == ROOM_AREA_THORNBACK_ARENA ? &thornback : NULL,
                 room.area == ROOM_AREA_ASHFALL_DESCENT ? &ashSkitter : NULL,
                 foodPickupPtr, debug);
+            DrawWeaponHitEffect(player.pos, player.facing,
+                                inventory.selectedWeapon,
+                                attackFeedbackTime);
             if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                 !HasThornfang(&inventory) &&
                 thornback.state == THORNBACK_STATE_DORMANT) {
@@ -1069,10 +1126,7 @@ int main(void)
                   thornback.state != THORNBACK_STATE_DORMANT));
             if (room.area == ROOM_AREA_ASHFALL_DESCENT) {
                 const char *ashfallCue;
-                if (!HasThornfang(&inventory)) {
-                    ashfallCue =
-                        "SKITTER NEEDS THORNFANG - ARENA TRIAL";
-                } else if (ashSkitter.state == ASH_SKITTER_STATE_DORMANT) {
+                if (ashSkitter.state == ASH_SKITTER_STATE_DORMANT) {
                     ashfallCue =
                         "ASHFALL: AMBER TELLS - ORANGE VENTS HARM";
                 } else if (ashSkitter.state == ASH_SKITTER_STATE_TELL) {
@@ -1083,9 +1137,9 @@ int main(void)
                            ASH_SKITTER_STATE_RECOVERY) {
                     ashfallCue = attackFeedbackTime > 0.0f
                                      ? "SKITTER HIT!"
-                                     : HasThornfang(&inventory)
+                                     : HasCombatWeapon(&inventory)
                                            ? "RECOVERY - FACE + SPACE / X"
-                                           : "RECOVERY - THORNFANG NEEDED";
+                                           : "RECOVERY - WEAPON NEEDED";
                 } else if (ashSkitter.state ==
                            ASH_SKITTER_STATE_DEFEATED) {
                     ashfallCue = "ASH SKITTER DOWN - ROUTE CLEAR";

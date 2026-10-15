@@ -15,6 +15,24 @@ typedef enum RoomArea {
     ROOM_AREA_SHRINE_APPROACH,
     ROOM_AREA_THORNBACK_ARENA,
     ROOM_AREA_ASHFALL_DESCENT,
+    ROOM_AREA_PALMSHORE_BEACH,
+    ROOM_AREA_PALMSHORE_SHIPWRECK,
+    ROOM_AREA_DRIFTWOOD_DOCKS,
+    ROOM_AREA_DRIFTWOOD_VILLAGE,
+    ROOM_AREA_EMBER_FORGE_VEINS,
+    ROOM_AREA_SUNKEN_TEMPLE_SHORE,
+    ROOM_AREA_SUNKEN_TEMPLE_HALL,
+    ROOM_AREA_SUNKEN_TEMPLE_DEPTHS,
+    ROOM_AREA_SKYWATCH_FOOTHILLS,
+    ROOM_AREA_SKYWATCH_CLIFFSIDE,
+    ROOM_AREA_SKYWATCH_PEAK,
+    ROOM_AREA_LOST_KINGDOM_GATE,
+    ROOM_AREA_LOST_KINGDOM_COURT,
+    ROOM_AREA_LOST_KINGDOM_ARCHIVES,
+    ROOM_AREA_LOST_KINGDOM_KEEP,
+    ROOM_AREA_SANCTUARY_THRESHOLD,
+    ROOM_AREA_SANCTUARY_TRIALS,
+    ROOM_AREA_SANCTUARY_CORE,
     ROOM_AREA_COUNT
 } RoomArea;
 
@@ -95,6 +113,7 @@ const char *Room_AreaLabel(RoomArea area);
 Vector2   Room_WorldMapPlayerPosition(RoomArea area, Vector2 playerPosition);
 Rectangle Room_Bounds(void);
 Vector2   Room_SpawnPoint(RoomArea area);
+Vector2   Room_WorldMapFullPosition(RoomArea area);
 const RoomProp *Room_Props(RoomArea area);
 /* Returns the area's inspect target when it is in front and within range. */
 const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,

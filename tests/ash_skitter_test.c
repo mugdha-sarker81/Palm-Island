@@ -134,7 +134,7 @@ static void TestContactCanHitAgainOnNextDash(void)
                                       ROOM_ELEVATION_GROUND));
 }
 
-static void TestThornfangCanHitOnceInEachRecovery(void)
+static void TestCombatWeaponsCanHitOnceInEachRecovery(void)
 {
     AshSkitter skitter;
     StartSkitter(&skitter);
@@ -142,19 +142,28 @@ static void TestThornfangCanHitOnceInEachRecovery(void)
 
     Vector2 inRange = {skitter.position.x - 16.0f, skitter.position.y};
     CHECK(!AshSkitter_TryHit(&skitter, inRange, (Vector2){1.0f, 0.0f},
-                             ROOM_ELEVATION_GROUND, false));
-    CHECK(!AshSkitter_TryHit(&skitter, inRange, (Vector2){-1.0f, 0.0f},
-                             ROOM_ELEVATION_GROUND, true));
+                             ROOM_ELEVATION_GROUND,
+                             INVENTORY_WEAPON_NONE));
     CHECK(!AshSkitter_TryHit(&skitter, inRange, (Vector2){1.0f, 0.0f},
-                             ROOM_ELEVATION_UPPER, true));
+                             ROOM_ELEVATION_GROUND,
+                             INVENTORY_WEAPON_COUNT));
+    CHECK(!AshSkitter_TryHit(&skitter, inRange, (Vector2){-1.0f, 0.0f},
+                             ROOM_ELEVATION_GROUND,
+                             INVENTORY_WEAPON_PALMWOOD_CLUB));
+    CHECK(!AshSkitter_TryHit(&skitter, inRange, (Vector2){1.0f, 0.0f},
+                             ROOM_ELEVATION_UPPER,
+                             INVENTORY_WEAPON_THORNFANG));
     CHECK(!AshSkitter_TryHit(
         &skitter, (Vector2){skitter.position.x - 40.0f, skitter.position.y},
-        (Vector2){1.0f, 0.0f}, ROOM_ELEVATION_GROUND, true));
+        (Vector2){1.0f, 0.0f}, ROOM_ELEVATION_GROUND,
+        INVENTORY_WEAPON_PALMWOOD_CLUB));
     CHECK(AshSkitter_TryHit(&skitter, inRange, (Vector2){1.0f, 0.0f},
-                            ROOM_ELEVATION_GROUND, true));
+                            ROOM_ELEVATION_GROUND,
+                            INVENTORY_WEAPON_PALMWOOD_CLUB));
     CHECK(skitter.health == ASH_SKITTER_HEALTH - 1);
     CHECK(!AshSkitter_TryHit(&skitter, inRange, (Vector2){1.0f, 0.0f},
-                             ROOM_ELEVATION_GROUND, true));
+                             ROOM_ELEVATION_GROUND,
+                             INVENTORY_WEAPON_PALMWOOD_CLUB));
 
     AshSkitter_Update(&skitter, (Vector2){320.0f, ASH_SKITTER_LANE_Y},
                       ASH_SKITTER_RECOVERY_TIME);
@@ -162,7 +171,8 @@ static void TestThornfangCanHitOnceInEachRecovery(void)
     Vector2 oppositeSide = {skitter.position.x + 16.0f, skitter.position.y};
     CHECK(skitter.direction == -1);
     CHECK(AshSkitter_TryHit(&skitter, oppositeSide, (Vector2){-1.0f, 0.0f},
-                            ROOM_ELEVATION_GROUND, true));
+                            ROOM_ELEVATION_GROUND,
+                            INVENTORY_WEAPON_THORNFANG));
     CHECK(skitter.health == 0);
     CHECK(skitter.state == ASH_SKITTER_STATE_DEFEATED);
     AshSkitter_Update(&skitter, (Vector2){320.0f, ASH_SKITTER_LANE_Y}, 10.0f);
@@ -195,7 +205,7 @@ int main(void)
     TestSkitterDashesBetweenPatchesAndReverses();
     TestDashContactOnlyHitsOncePerPass();
     TestContactCanHitAgainOnNextDash();
-    TestThornfangCanHitOnceInEachRecovery();
+    TestCombatWeaponsCanHitOnceInEachRecovery();
     TestNonPositiveUpdatesDoNothing();
 
     if (failures != 0) {
