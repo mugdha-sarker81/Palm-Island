@@ -1,4 +1,4 @@
-# Palm Island Asset Index
+# Palm Island Asset Index 
 
 This page inventories concept references, generated starter art, and bundled
 source archives. The starter sprites and tileset are prototypes, not production
