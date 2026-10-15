@@ -966,36 +966,43 @@ void Room_DrawWorldMap(RoomArea currentArea, Vector2 playerPosition,
                                    sizeof(connectedAreas[0]); i++) {
         Vector2 from = WorldMapNodeCenter(connectedAreas[i]);
         Vector2 to = WorldMapNodeCenter(connectedAreas[i + 1]);
-        DrawLineEx(from, to, 1.0f, pathColor);
+        DrawLineEx(from, to, 1.5f, pathColor);
     }
 
     for (size_t i = 0; i < sizeof(connectedAreas) /
                                 sizeof(connectedAreas[0]); i++) {
         RoomArea area = connectedAreas[i];
         Vector2 center = WorldMapNodeCenter(area);
-        Rectangle node = {center.x - 12.0f, center.y - 5.0f, 24.0f, 10.0f};
+        /* Slightly larger nodes for clarity */
+        Rectangle node = {center.x - 14.0f, center.y - 6.0f, 28.0f, 12.0f};
         bool isCurrent = area == currentArea;
         DrawRectangleRec(node, isCurrent ? (Color){49, 97, 87, 255}
                                          : (Color){30, 54, 52, 255});
-        DrawRectangleLinesEx(node, isCurrent ? 1.5f : 1.0f,
+        DrawRectangleLinesEx(node, isCurrent ? 2.0f : 1.0f,
                              isCurrent ? playerColor : borderColor);
         const char *label = Room_AreaLabel(area);
         int labelWidth = MeasureText(label, 5);
         DrawText(label, (int)(center.x - labelWidth * 0.5f),
-                 (int)(center.y + 7.0f), 5,
+                 (int)(center.y + 8.0f), 5,
                  isCurrent ? RAYWHITE : (Color){176, 194, 182, 255});
     }
 
     if (showTrialMarker) {
         Vector2 trialPosition = Room_WorldMapPlayerPosition(
             ROOM_AREA_THORNBACK_ARENA, (Vector2){176.0f, 176.0f});
+        /* Make the trial marker more visible with a subtle pulse */
+        float pulse = 0.65f + 0.35f * sinf(GetTime() * 4.0f);
+        Color trialColor = Fade((Color){255, 214, 112, 255}, pulse);
+        DrawCircleV(trialPosition, 2.5f + 1.0f * (pulse - 0.65f), trialColor);
         DrawCircleV(trialPosition, 1.5f, (Color){255, 214, 112, 255});
     }
 
     Vector2 playerMapPosition =
         Room_WorldMapPlayerPosition(currentArea, playerPosition);
-    DrawCircleV(playerMapPosition, 2.0f, BLACK);
-    DrawCircleV(playerMapPosition, 1.0f, playerColor);
+    /* Add a faint halo and increase the player dot for readability */
+    DrawCircleV(playerMapPosition, 4.0f, Fade(playerColor, 0.12f));
+    DrawCircleV(playerMapPosition, 3.0f, BLACK);
+    DrawCircleV(playerMapPosition, 2.0f, playerColor);
 }
 
 static bool IsSolid(char tile)
