@@ -54,6 +54,7 @@ add_executable(PalmIsland
     src/input.c
     src/interaction.c
     src/inventory.c
+    src/jungle_task.c
     src/save.c
     src/player.c
     src/room.c
@@ -140,4 +141,14 @@ if(PALM_BUILD_TESTS)
         target_compile_options(PalmIslandInventoryTests PRIVATE -Wall -Wextra)
     endif()
     add_test(NAME inventory_state COMMAND PalmIslandInventoryTests)
+
+    add_executable(PalmIslandJungleTaskTests
+        tests/jungle_task_test.c
+        src/jungle_task.c
+    )
+    target_include_directories(PalmIslandJungleTaskTests PRIVATE src)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandJungleTaskTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME jungle_task COMMAND PalmIslandJungleTaskTests)
 endif()

@@ -65,6 +65,10 @@ void Input_Poll(Input *in)
     bool gamepadInventory = IsGamepadAvailable(0) &&
                             IsGamepadButtonPressed(
                                 0, GAMEPAD_BUTTON_RIGHT_FACE_UP);
+    bool keyboardHelp = IsKeyPressed(KEY_F1);
+    bool gamepadHelp = IsGamepadAvailable(0) &&
+                       IsGamepadButtonPressed(
+                           0, GAMEPAD_BUTTON_MIDDLE_RIGHT);
     bool keyboardUseFood = IsKeyPressed(KEY_H);
     bool gamepadUseFood = IsGamepadAvailable(0) &&
                           IsGamepadButtonPressed(
@@ -75,6 +79,7 @@ void Input_Poll(Input *in)
     in->interactPressed = keyboardInteract || gamepadInteract;
     in->attackPressed = keyboardAttack || gamepadAttack;
     in->inventoryPressed = keyboardInventory || gamepadInventory;
+    in->helpPressed = keyboardHelp || gamepadHelp;
     in->useFoodPressed = keyboardUseFood || gamepadUseFood;
 
     /* Whichever device is actually being pushed wins; gamepad first. */

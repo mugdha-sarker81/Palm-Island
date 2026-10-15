@@ -11,6 +11,7 @@ typedef struct Input {
     bool interactPressed;
     bool attackPressed;
     bool inventoryPressed;
+    bool helpPressed;
     bool useFoodPressed;
 } Input;
 

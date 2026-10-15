@@ -27,14 +27,21 @@ status, locked decisions, and the next bounded task.
   marker, palms, foreground grass, and ramp.
 - Overgrown Clearing with a central exposed route, reconnecting safe outer
   loop, marked optional nook, rock thickets, palms, and foreground grass.
-- Paired fade transitions, destination spawns, and camera resets connect
-  Entrance/Root Path and Root Path/Overgrown Clearing.
+- Paired fade transitions and camera resets connect the five Jungle areas.
+  All eight directed exits and their destination spawns are authored in a
+  static room-transition table.
 - Root Path root markings have a minimal inspect interaction: E/controller A,
   in-front distance targeting, a fading prompt, buffered input, and a
   repeatable clue panel. Its clue state is included in autosaves.
 - The Living Thorn Weave clue and first Root Path marker are separate targets.
   Activating the marker produces a route trace around the gate; its state is
   included in autosaves.
+- The "Roots Remember" objective HUD advances through the root markings,
+  marker, Map of Roots, Thornback, thorn gate, and return to the Jungle
+  Entrance using existing saved flags, without a generic quest framework.
+- A modal controls-help panel is available with F1/controller Start, lists
+  keyboard/gamepad bindings, pauses the simulation, and switches exclusively
+  with the inventory overlay.
 - An optional Explorer's Note in the Overgrown Clearing nook uses the same
   inspect panel with a separate saved seen flag.
 - A non-combat Shrine Approach connects to Overgrown Clearing and the
@@ -62,7 +69,7 @@ status, locked decisions, and the next bounded task.
   the gate prop and collision, opens a walkable corridor through the root wall,
   and persists the opened state across relaunches. A nearby prompt explains
   the required weapon or cut input.
-- A version-3 autosave in `%APPDATA%/PalmIsland.sav` records the current safe
+- A version-4 autosave in `%APPDATA%/PalmIsland.sav` records the current safe
   room-entry checkpoint, health, owned/selected weapons, four discovered
   Jungle evidence entries, and the opened thorn gate. Version-1 saves migrate
   their Thornfang and clue flags into the new inventory state. Autosave runs at
@@ -75,14 +82,17 @@ status, locked decisions, and the next bounded task.
   overlay opens with I/Tab or controller Y, shows weapon/evidence status, and
   pauses simulation while open. Quick weapon switching is deferred until a
   second weapon is implemented.
-- One finite Palm Fruit pickup is placed in the Overgrown Clearing nook. E/A
-  collects it into a three-serving food capacity; H/controller B consumes one
-  serving to restore up to two hearts, capped at current max health. Full
-  health does not consume food. Pickup, food count, and node-collected state
-  autosave in version 3; version-1 and version-2 saves migrate with no food
-  and the fruit node available. Capacity/healing are prototype tunables.
+- Finite Palm Fruit pickups are placed in the Overgrown Clearing nook and
+  Shrine Approach courtyard. E/A collects them into a three-serving food
+  capacity; H/controller B consumes one serving to restore up to two hearts,
+  capped at current max health. Full health does not consume food. Pickup
+  nodes and food count autosave in version 4; version-1/version-2 saves
+  migrate with no food and both nodes available, while version-3 saves retain
+  the Clearing node state. Capacity/healing are prototype tunables.
 - Health is displayed as five pixel hearts with an adjacent numeric count for
-  readability; empty hearts use an outlined, muted treatment.
+  readability; empty hearts use an outlined, muted treatment. At two hearts or
+  fewer, an explicit amber "LOW" label supplements the heart colors without
+  flashing.
 - Manual save was deferred by user choice; autosaving at checkpoints and major
   progress is the selected prototype behavior.
 - The user manually playtested the full Thornback encounter and reports that
@@ -103,16 +113,39 @@ status, locked decisions, and the next bounded task.
   evidence, and that migrated inventory progress persists across relaunch.
 - The user confirmed the inventory overlay displays saved state, opens/closes
   with its keyboard/controller inputs, and pauses/resumes gameplay.
-- The Windows build succeeded with version-3 food persistence.
-- All six focused Windows tests passed: movement/collision, camera,
-  render-depth, Thornback trial, versioned save (including version-1 and
-  version-2 migration), and inventory/food state. Tests cover food capacity,
-  healing/clamping, no consumption at full health, and collectible reachability.
+- The Windows build succeeded with version-4 food persistence.
+- All seven focused Windows tests passed: movement/collision, camera,
+  render-depth, Thornback trial, versioned save (including version-1 through
+  version-3 migration), inventory/food state, and Jungle
+  objective progression. Tests cover food capacity, healing/clamping, no
+  consumption at full health, and both collectible nodes' reachability and
+  collected-state hiding.
+- Movement tests cover all eight directed room links, inclusive exit
+  thresholds, and collision-free paired spawns.
 - Inventory overlay hands-on check is user-confirmed.
 - The user reports that Palm Fruit collection/eating, full-health no-consume,
-  and food/node persistence across relaunch and defeat/respawn all work.
-- Pixel-heart HUD builds and is automated-build verified; visual readability
-  still needs hands-on confirmation.
+  and first-pickup persistence across relaunch and defeat/respawn all work.
+- The user confirmed the pixel-heart HUD is readable and correctly updates at
+  full/reduced health, including damage and healing.
+- The user confirmed the steady amber "LOW" label is readable at 2/5 and 1/5
+  health, does not overlap the fruit/objective HUD, and clears after healing
+  above two hearts.
+- The user confirmed the Shrine Approach Palm Fruit is visible/reachable,
+  collects correctly, persists across relaunch, and remains available when
+  the food pack is full.
+- The user confirmed the Roots Remember objective advances through its
+  markings, marker, mural, Thornback, gate, return, and completion steps without
+  obscuring the rest of the HUD or combat cues.
+- The user reports the end-to-end Jungle slice pass met the 10–15 minute
+  target, with no unclear required steps or softlocks; exact elapsed minutes
+  were not provided.
+- A new tester completed the Jungle slice, explained the Map of Roots clue,
+  Thornfang, and shortcut without coaching or a waypoint, and reported no route
+  blockers or softlocks. The clues felt complex but understandable; elapsed
+  time was not reported.
+- The user confirmed the controls-help panel opens/closes from keyboard and
+  controller, pauses play, switches cleanly with inventory, and has readable
+  bindings.
 - The user confirms the Phase 2 sweep pattern works well.
 - The user reports the combat, damage, recovery-strike, defeat, reward, and
   retry loop passed hands-on playtesting.
@@ -152,8 +185,9 @@ status, locked decisions, and the next bounded task.
 
 ### Not implemented
 
-- The planned 10–15 minute Forgotten Jungle slice; the end-to-end user pass
-  confirmed no softlocks but did not report completion time.
+- The current Jungle slice still uses placeholder art and audio. The existing
+  user reports a 10–15 minute pass; a new tester completed it and understood
+  the required clue/ability/shortcut progression with no reported blockers.
 - Quick weapon-switch controls, additional food varieties, discovered-map/
   settings persistence, general combat, audio, and additional interactions/clues.
 - Production art, finished UI, and release packaging.
@@ -190,18 +224,18 @@ Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
 
 ## Next Work Item
 
-Playtest the pixel-heart HUD at full and reduced health, confirming each heart
-tracks damage and healing and the adjacent numeric count remains readable.
-Then choose the next single-slice polish item from measured playtest feedback.
+Continue Stage F by adding a compact definition table for the existing Jungle
+areas that associates each area's spawn and authored prop array. Keep collision,
+elevation, task, and progression logic unchanged in this increment.
 
 ## Upcoming Roadmap
 
-1. Complete the pixel-heart HUD hands-on check; defer quick-switch UX until
-   another weapon exists.
-2. Only add another food or pickup after the first collectible's visibility,
-   controls, persistence, and recovery behavior pass.
-3. Polish the slice's licensed art, audio, menus, prompts, accessibility, and
-   measured onboarding; then build and verify a data-driven region template.
+1. Stage E usability gate passed; the tester found the clues complex but
+   understandable. Defer licensed art/audio until the plan is clear.
+2. With both food nodes, health HUD, and objective tracker user-tested, keep
+   food to this single healing item type until measured playtests call for a
+   tactical alternative.
+3. Build and verify a data-driven region template in small steps.
 4. Expand one weapon region at a time through its own playtest gate, then
    implement the Sanctuary/finale and clean Windows packaging.
 

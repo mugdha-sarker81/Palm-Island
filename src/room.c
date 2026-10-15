@@ -17,6 +17,46 @@ typedef struct RoomRamp {
     float transitionY;
 } RoomRamp;
 
+typedef enum RoomExitSide {
+    ROOM_EXIT_TOP,
+    ROOM_EXIT_BOTTOM
+} RoomExitSide;
+
+typedef struct RoomTransition {
+    RoomArea source;
+    RoomArea destination;
+    RoomExitSide side;
+    float thresholdY;
+    Vector2 spawnPoint;
+} RoomTransition;
+
+static const Vector2 ROOM_SPAWN_POINTS[] = {
+    {320.0f, 336.0f},
+    {320.0f, 336.0f},
+    {320.0f, 336.0f},
+    {320.0f, 336.0f},
+    {320.0f, 336.0f}
+};
+
+static const RoomTransition ROOM_TRANSITIONS[] = {
+    {ROOM_AREA_JUNGLE_ENTRANCE, ROOM_AREA_ROOT_PATH,
+     ROOM_EXIT_TOP, 56.0f, {320.0f, 336.0f}},
+    {ROOM_AREA_ROOT_PATH, ROOM_AREA_JUNGLE_ENTRANCE,
+     ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 336.0f}},
+    {ROOM_AREA_ROOT_PATH, ROOM_AREA_OVERGROWN_CLEARING,
+     ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}},
+    {ROOM_AREA_OVERGROWN_CLEARING, ROOM_AREA_ROOT_PATH,
+     ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}},
+    {ROOM_AREA_OVERGROWN_CLEARING, ROOM_AREA_SHRINE_APPROACH,
+     ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}},
+    {ROOM_AREA_SHRINE_APPROACH, ROOM_AREA_OVERGROWN_CLEARING,
+     ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}},
+    {ROOM_AREA_SHRINE_APPROACH, ROOM_AREA_THORNBACK_ARENA,
+     ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}},
+    {ROOM_AREA_THORNBACK_ARENA, ROOM_AREA_SHRINE_APPROACH,
+     ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}}
+};
+
 static const RoomRamp ENTRANCE_RAMP = {
     .bounds = {RAMP_TILE_X * TILE_SIZE, RAMP_TILE_Y * TILE_SIZE,
                2.0f * TILE_SIZE, TILE_SIZE},
@@ -178,6 +218,14 @@ static const RoomInteractable PALM_FRUIT = {
     .title = "Palm Fruit",
     .text = "A ripe palm fruit. It should restore a little strength.",
     .interactBox = {96.0f, 176.0f, 16.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_PALM_FRUIT
+};
+
+static const RoomInteractable SHRINE_PALM_FRUIT = {
+    .id = "jungle.shrine_palm_fruit_collected",
+    .title = "Palm Fruit",
+    .text = "A ripe palm fruit. It should restore a little strength.",
+    .interactBox = {144.0f, 176.0f, 16.0f, 16.0f},
     .kind = ROOM_INTERACTABLE_PALM_FRUIT
 };
 
@@ -415,8 +463,22 @@ const RoomProp *Room_Props(RoomArea area)
     return PropsForArea(area);
 }
 
-Vector2 Room_PalmFruitPosition(void)
+uint32_t Room_FoodNodeForArea(RoomArea area)
 {
+    if (area == ROOM_AREA_OVERGROWN_CLEARING) {
+        return ROOM_FOOD_NODE_CLEARING;
+    }
+    if (area == ROOM_AREA_SHRINE_APPROACH) {
+        return ROOM_FOOD_NODE_SHRINE_APPROACH;
+    }
+    return ROOM_FOOD_NODE_NONE;
+}
+
+Vector2 Room_PalmFruitPosition(RoomArea area)
+{
+    if (area == ROOM_AREA_SHRINE_APPROACH) {
+        return (Vector2){152.0f, 184.0f};
+    }
     return (Vector2){104.0f, 184.0f};
 }
 
@@ -425,13 +487,13 @@ const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
                                                float maxDistance)
 {
     return Room_FindInteractableWithFruitState(
-        area, feet, facingDirection, maxDistance, false);
+        area, feet, facingDirection, maxDistance, ROOM_FOOD_NODE_NONE);
 }
 
 const RoomInteractable *Room_FindInteractableWithFruitState(
     RoomArea area, Vector2 feet, Vector2 facingDirection,
                                                float maxDistance,
-                                               bool palmFruitCollected)
+                                               uint32_t collectedFoodNodes)
 {
     if (maxDistance < 0.0f) return NULL;
     const RoomInteractable *targets[2];
@@ -441,9 +503,14 @@ const RoomInteractable *Room_FindInteractableWithFruitState(
         targets[targetCount++] = &ROOT_MARKER;
     } else if (area == ROOM_AREA_OVERGROWN_CLEARING) {
         targets[targetCount++] = &CLEARING_NOTE;
-        if (!palmFruitCollected) targets[targetCount++] = &PALM_FRUIT;
+        if ((collectedFoodNodes & ROOM_FOOD_NODE_CLEARING) == 0) {
+            targets[targetCount++] = &PALM_FRUIT;
+        }
     } else if (area == ROOM_AREA_SHRINE_APPROACH) {
         targets[targetCount++] = &ROOTS_MURAL;
+        if ((collectedFoodNodes & ROOM_FOOD_NODE_SHRINE_APPROACH) == 0) {
+            targets[targetCount++] = &SHRINE_PALM_FRUIT;
+        }
     } else if (area == ROOM_AREA_THORNBACK_ARENA) {
         targets[targetCount++] = &THORNBACK_TRIAL;
     } else {
@@ -490,63 +557,30 @@ const RoomInteractable *Room_FindInteractableWithFruitState(
 
 Vector2 Room_SpawnPoint(RoomArea area)
 {
-    if (area == ROOM_AREA_ROOT_PATH) return (Vector2){320.0f, 336.0f};
-    if (area == ROOM_AREA_OVERGROWN_CLEARING) return (Vector2){320.0f, 336.0f};
-    if (area == ROOM_AREA_SHRINE_APPROACH) return (Vector2){320.0f, 336.0f};
-    if (area == ROOM_AREA_THORNBACK_ARENA) return (Vector2){320.0f, 336.0f};
+    if (area >= ROOM_AREA_JUNGLE_ENTRANCE &&
+        area <= ROOM_AREA_THORNBACK_ARENA) {
+        return ROOM_SPAWN_POINTS[area];
+    }
     return (Vector2){320.0f, 336.0f};
 }
 
 bool Room_GetTransition(const Room *r, Vector2 feet, RoomArea *destination,
                         Vector2 *spawnPoint)
 {
-    if (destination == NULL || spawnPoint == NULL) return false;
-    if (r->area == ROOM_AREA_JUNGLE_ENTRANCE &&
-        feet.x >= 288.0f && feet.x <= 352.0f && feet.y <= 56.0f) {
-        *destination = ROOM_AREA_ROOT_PATH;
-        *spawnPoint = Room_SpawnPoint(*destination);
-        return true;
-    }
-    if (r->area == ROOM_AREA_ROOT_PATH &&
-        feet.x >= 288.0f && feet.x <= 352.0f && feet.y >= 352.0f) {
-        *destination = ROOM_AREA_JUNGLE_ENTRANCE;
-        *spawnPoint = Room_SpawnPoint(*destination);
-        return true;
-    }
-    if (r->area == ROOM_AREA_ROOT_PATH &&
-        feet.x >= 288.0f && feet.x <= 352.0f && feet.y <= 16.0f) {
-        *destination = ROOM_AREA_OVERGROWN_CLEARING;
-        *spawnPoint = Room_SpawnPoint(*destination);
-        return true;
-    }
-    if (r->area == ROOM_AREA_OVERGROWN_CLEARING &&
-        feet.x >= 288.0f && feet.x <= 352.0f && feet.y >= 352.0f) {
-        *destination = ROOM_AREA_ROOT_PATH;
-        *spawnPoint = (Vector2){320.0f, 32.0f};
-        return true;
-    }
-    if (r->area == ROOM_AREA_OVERGROWN_CLEARING &&
-        feet.x >= 288.0f && feet.x <= 352.0f && feet.y <= 16.0f) {
-        *destination = ROOM_AREA_SHRINE_APPROACH;
-        *spawnPoint = Room_SpawnPoint(*destination);
-        return true;
-    }
-    if (r->area == ROOM_AREA_SHRINE_APPROACH &&
-        feet.x >= 288.0f && feet.x <= 352.0f && feet.y >= 352.0f) {
-        *destination = ROOM_AREA_OVERGROWN_CLEARING;
-        *spawnPoint = (Vector2){320.0f, 32.0f};
-        return true;
-    }
-    if (r->area == ROOM_AREA_SHRINE_APPROACH &&
-        feet.x >= 288.0f && feet.x <= 352.0f && feet.y <= 16.0f) {
-        *destination = ROOM_AREA_THORNBACK_ARENA;
-        *spawnPoint = Room_SpawnPoint(*destination);
-        return true;
-    }
-    if (r->area == ROOM_AREA_THORNBACK_ARENA &&
-        feet.x >= 288.0f && feet.x <= 352.0f && feet.y >= 352.0f) {
-        *destination = ROOM_AREA_SHRINE_APPROACH;
-        *spawnPoint = (Vector2){320.0f, 32.0f};
+    if (r == NULL || destination == NULL || spawnPoint == NULL) return false;
+    if (feet.x < 288.0f || feet.x > 352.0f) return false;
+
+    for (size_t i = 0; i < sizeof(ROOM_TRANSITIONS) /
+                            sizeof(ROOM_TRANSITIONS[0]); i++) {
+        const RoomTransition *transition = &ROOM_TRANSITIONS[i];
+        if (transition->source != r->area) continue;
+        bool reachedExit = transition->side == ROOM_EXIT_TOP
+                               ? feet.y <= transition->thresholdY
+                               : feet.y >= transition->thresholdY;
+        if (!reachedExit) continue;
+
+        *destination = transition->destination;
+        *spawnPoint = transition->spawnPoint;
         return true;
     }
     return false;

@@ -2,6 +2,7 @@
 #define PALM_ROOM_H
 
 #include "raylib.h"
+#include <stdint.h>
 
 #define ROOM_COLS 40
 #define ROOM_ROWS 23
@@ -14,6 +15,15 @@ typedef enum RoomArea {
     ROOM_AREA_SHRINE_APPROACH,
     ROOM_AREA_THORNBACK_ARENA
 } RoomArea;
+
+typedef enum RoomFoodNode {
+    ROOM_FOOD_NODE_NONE = 0,
+    ROOM_FOOD_NODE_CLEARING = 1u << 0,
+    ROOM_FOOD_NODE_SHRINE_APPROACH = 1u << 1
+} RoomFoodNode;
+
+#define ROOM_FOOD_NODE_ALL \
+    (ROOM_FOOD_NODE_CLEARING | ROOM_FOOD_NODE_SHRINE_APPROACH)
 
 typedef enum RoomSprite {
     ROOM_SPRITE_PALM,
@@ -84,8 +94,9 @@ const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
                                                float maxDistance);
 const RoomInteractable *Room_FindInteractableWithFruitState(
     RoomArea area, Vector2 feet, Vector2 facingDirection, float maxDistance,
-    bool palmFruitCollected);
-Vector2   Room_PalmFruitPosition(void);
+    uint32_t collectedFoodNodes);
+uint32_t  Room_FoodNodeForArea(RoomArea area);
+Vector2   Room_PalmFruitPosition(RoomArea area);
 /* Returns the paired spawn for a simple in-room connection, if reached. */
 bool      Room_GetTransition(const Room *r, Vector2 feet, RoomArea *destination,
                              Vector2 *spawnPoint);

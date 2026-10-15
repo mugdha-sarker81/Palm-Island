@@ -279,15 +279,18 @@ static void TestRootPathTransitionPairsAndRamp(void)
     Room_SetArea(&room, ROOM_AREA_JUNGLE_ENTRANCE);
     RoomArea destination;
     Vector2 spawn;
-    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 55.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){288.0f, 56.0f},
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_ROOT_PATH);
     CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
-    CHECK(!Room_GetTransition(&room, (Vector2){200.0f, 55.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){352.0f, 56.0f},
+                             &destination, &spawn));
+    CHECK(destination == ROOM_AREA_ROOT_PATH);
+    CHECK(!Room_GetTransition(&room, (Vector2){200.0f, 56.0f},
                               &destination, &spawn));
 
     Room_SetArea(&room, ROOM_AREA_ROOT_PATH);
-    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 353.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 352.0f},
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_JUNGLE_ENTRANCE);
     CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
@@ -376,23 +379,23 @@ static void TestOvergrownClearingRoutesAndTransition(void)
     Room_SetArea(&room, ROOM_AREA_ROOT_PATH);
     RoomArea destination;
     Vector2 spawn;
-    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 15.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 16.0f},
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_OVERGROWN_CLEARING);
     CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
     CHECK(!Room_CollidesInArea(ROOM_AREA_OVERGROWN_CLEARING,
                                FeetAt(spawn.x, spawn.y)));
-    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 15.0f},
+    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 16.0f},
                               &destination, &spawn));
 
     Room_SetArea(&room, ROOM_AREA_OVERGROWN_CLEARING);
-    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 353.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 352.0f},
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_ROOT_PATH);
     CHECK(spawn.x == 320.0f && spawn.y == 32.0f);
     CHECK(!Room_CollidesInArea(ROOM_AREA_ROOT_PATH,
                                FeetAt(spawn.x, spawn.y)));
-    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 353.0f},
+    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 352.0f},
                               &destination, &spawn));
 }
 
@@ -423,31 +426,31 @@ static void TestShrineApproachLayoutAndConnections(void)
     Room_SetArea(&room, ROOM_AREA_OVERGROWN_CLEARING);
     RoomArea destination;
     Vector2 spawn;
-    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 15.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 16.0f},
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_SHRINE_APPROACH);
     CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
     CHECK(!Room_CollidesInArea(ROOM_AREA_SHRINE_APPROACH,
                                FeetAt(spawn.x, spawn.y)));
-    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 15.0f},
+    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 16.0f},
                               &destination, &spawn));
 
     Room_SetArea(&room, ROOM_AREA_SHRINE_APPROACH);
-    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 353.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 352.0f},
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_OVERGROWN_CLEARING);
     CHECK(spawn.x == 320.0f && spawn.y == 32.0f);
     CHECK(!Room_CollidesInArea(ROOM_AREA_OVERGROWN_CLEARING,
                                FeetAt(spawn.x, spawn.y)));
-    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 353.0f},
+    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 352.0f},
                               &destination, &spawn));
-    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 15.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 16.0f},
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_THORNBACK_ARENA);
     CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
     CHECK(!Room_CollidesInArea(ROOM_AREA_THORNBACK_ARENA,
                                FeetAt(spawn.x, spawn.y)));
-    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 15.0f},
+    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 16.0f},
                               &destination, &spawn));
 
     CHECK(!Room_CollidesInArea(ROOM_AREA_THORNBACK_ARENA,
@@ -466,13 +469,13 @@ static void TestShrineApproachLayoutAndConnections(void)
                                FeetAt(5.0f, 192.0f)));
 
     Room_SetArea(&room, ROOM_AREA_THORNBACK_ARENA);
-    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 353.0f},
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 352.0f},
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_SHRINE_APPROACH);
     CHECK(spawn.x == 320.0f && spawn.y == 32.0f);
     CHECK(!Room_CollidesInArea(ROOM_AREA_SHRINE_APPROACH,
                                FeetAt(spawn.x, spawn.y)));
-    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 353.0f},
+    CHECK(!Room_GetTransition(&room, (Vector2){240.0f, 352.0f},
                               &destination, &spawn));
 
     const RoomInteractable *trial = Room_FindInteractable(
@@ -610,7 +613,7 @@ static void TestRootMarkingsTargetRangeAndFacing(void)
 
     const RoomInteractable *fruit = Room_FindInteractableWithFruitState(
         ROOM_AREA_OVERGROWN_CLEARING, (Vector2){76.0f, 184.0f},
-        (Vector2){1.0f, 0.0f}, INTERACT_RANGE, false);
+        (Vector2){1.0f, 0.0f}, INTERACT_RANGE, ROOM_FOOD_NODE_NONE);
     CHECK(!Room_CollidesInArea(ROOM_AREA_OVERGROWN_CLEARING,
                                FeetAt(76.0f, 184.0f)));
     CHECK(fruit != NULL);
@@ -620,7 +623,23 @@ static void TestRootMarkingsTargetRangeAndFacing(void)
     }
     CHECK(Room_FindInteractableWithFruitState(
               ROOM_AREA_OVERGROWN_CLEARING, (Vector2){76.0f, 184.0f},
-              (Vector2){1.0f, 0.0f}, INTERACT_RANGE, true) == NULL);
+              (Vector2){1.0f, 0.0f}, INTERACT_RANGE,
+              ROOM_FOOD_NODE_CLEARING) == NULL);
+
+    fruit = Room_FindInteractableWithFruitState(
+        ROOM_AREA_SHRINE_APPROACH, (Vector2){124.0f, 184.0f},
+        (Vector2){1.0f, 0.0f}, INTERACT_RANGE, ROOM_FOOD_NODE_NONE);
+    CHECK(!Room_CollidesInArea(ROOM_AREA_SHRINE_APPROACH,
+                               FeetAt(124.0f, 184.0f)));
+    CHECK(fruit != NULL);
+    if (fruit != NULL) {
+        CHECK(strcmp(fruit->id, "jungle.shrine_palm_fruit_collected") == 0);
+        CHECK(fruit->kind == ROOM_INTERACTABLE_PALM_FRUIT);
+    }
+    CHECK(Room_FindInteractableWithFruitState(
+              ROOM_AREA_SHRINE_APPROACH, (Vector2){124.0f, 184.0f},
+              (Vector2){1.0f, 0.0f}, INTERACT_RANGE,
+              ROOM_FOOD_NODE_SHRINE_APPROACH) == NULL);
 }
 
 static void TestRootMarkingsCanBeReviewedAndClosed(void)

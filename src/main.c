@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "render.h"
 #include "thornback.h"
+#include "jungle_task.h"
 #include "save.h"
 #include <math.h>
 #include <stdio.h>
@@ -78,25 +79,27 @@ static void BuildRenderProps(RenderItem renderProps[RENDER_PROP_COUNT],
 
 static SaveData CurrentSaveData(RoomArea checkpointArea, int health,
                                 const Inventory *inventory,
-                                bool thornGateOpen, bool palmFruitCollected)
+                                bool thornGateOpen,
+                                uint32_t collectedFoodNodes)
 {
     return (SaveData){
         .checkpointArea = checkpointArea,
         .health = health,
         .inventory = *inventory,
         .thornGateOpen = thornGateOpen,
-        .palmFruitCollected = palmFruitCollected
+        .collectedFoodNodes = collectedFoodNodes
     };
 }
 
 static bool PersistProgress(const char *savePath, RoomArea checkpointArea,
                             int health, const Inventory *inventory,
-                            bool thornGateOpen, bool palmFruitCollected,
+                            bool thornGateOpen,
+                            uint32_t collectedFoodNodes,
                             char *notice, size_t noticeCapacity,
                             float *noticeTime)
 {
     SaveData data = CurrentSaveData(checkpointArea, health, inventory,
-                                    thornGateOpen, palmFruitCollected);
+                                    thornGateOpen, collectedFoodNodes);
     SaveWriteResult result = Save_Write(savePath, &data);
     if (result == SAVE_WRITE_OK) {
         snprintf(notice, noticeCapacity, "GAME SAVED");
@@ -257,6 +260,61 @@ static void DrawInventoryUI(const Inventory *inventory)
     DrawText("World paused", 226, 145, 8, mutedColor);
 }
 
+static void DrawHelpUI(void)
+{
+    const Color panelColor = {11, 26, 34, 250};
+    const Color edgeColor = {127, 196, 192, 255};
+    const Color headingColor = {245, 214, 124, 255};
+    const Color mutedColor = {164, 184, 181, 255};
+    const char *actions[] = {
+        "Move",
+        "Interact / close",
+        "Strike / cut",
+        "Eat Palm Fruit",
+        "Inventory",
+        "Help",
+        "Debug overlay",
+        "Window mode",
+        "Quit"
+    };
+    const char *keys[] = {
+        "WASD / arrows",
+        "E",
+        "Space",
+        "H",
+        "I / Tab",
+        "F1",
+        "F3",
+        "F11",
+        "Esc"
+    };
+    const char *controller[] = {
+        "Left stick / D-pad",
+        "A",
+        "X",
+        "B",
+        "Y",
+        "Start",
+        "--",
+        "--",
+        "--"
+    };
+
+    DrawRectangle(20, 16, 280, 148, Fade(panelColor, 0.98f));
+    DrawRectangleLines(20, 16, 280, 148, edgeColor);
+    DrawText("PALM ISLAND - CONTROLS", 32, 23, 10, headingColor);
+    DrawText("ACTION", 32, 38, 8, mutedColor);
+    DrawText("KEYBOARD", 132, 38, 8, mutedColor);
+    DrawText("CONTROLLER", 216, 38, 8, mutedColor);
+    for (int i = 0; i < (int)(sizeof(actions) / sizeof(actions[0])); i++) {
+        int y = 50 + i * 11;
+        DrawText(actions[i], 32, y, 8, RAYWHITE);
+        DrawText(keys[i], 132, y, 8, RAYWHITE);
+        DrawText(controller[i], 216, y, 8, RAYWHITE);
+    }
+    DrawText("WORLD PAUSED - F1 / START CLOSES", 32, 150, 8, headingColor);
+}
+
 static void DrawHealthHUD(int health)
 {
     static const unsigned char heartRows[] = {
@@ -289,13 +347,17 @@ static void DrawHealthHUD(int health)
             }
         }
     }
-    DrawText(TextFormat("%d/%d", health, PLAYER_START_HEALTH),
-             102, 9, 8, RAYWHITE);
+    bool lowHealth = health <= PLAYER_LOW_HEALTH_THRESHOLD;
+    DrawText(lowHealth
+                 ? TextFormat("%d/%d LOW", health, PLAYER_START_HEALTH)
+                 : TextFormat("%d/%d", health, PLAYER_START_HEALTH),
+             102, 9, 8,
+             lowHealth ? (Color){255, 192, 112, 255} : RAYWHITE);
 }
 
-static RenderItem PalmFruitRenderItem(void)
+static RenderItem PalmFruitRenderItem(RoomArea area)
 {
-    Vector2 position = Room_PalmFruitPosition();
+    Vector2 position = Room_PalmFruitPosition(area);
     return (RenderItem){
         .type = RENDER_ITEM_FOOD,
         .position = position,
@@ -353,7 +415,7 @@ int main(void)
     InteractionState interaction = {0};
     Inventory inventory = {0};
     bool thornGateOpen = false;
-    bool palmFruitCollected = false;
+    uint32_t collectedFoodNodes = ROOM_FOOD_NODE_NONE;
     RoomArea checkpointArea = room.area;
     bool saveAvailable = false;
     bool saveError = false;
@@ -371,7 +433,7 @@ int main(void)
             Room_SetArea(&room, checkpointArea);
             inventory = loaded.inventory;
             thornGateOpen = loaded.thornGateOpen;
-            palmFruitCollected = loaded.palmFruitCollected;
+            collectedFoodNodes = loaded.collectedFoodNodes;
             interaction.rootWeaveSeen = Inventory_HasKeyItem(
                 &inventory, INVENTORY_KEY_ITEM_ROOT_WEAVE);
             interaction.rootMarkerActivated = Inventory_HasKeyItem(
@@ -421,14 +483,14 @@ int main(void)
                 Room_SetArea(&room, checkpointArea);
                 inventory = (Inventory){0};
                 thornGateOpen = false;
-                palmFruitCollected = false;
+                collectedFoodNodes = ROOM_FOOD_NODE_NONE;
                 interaction = (InteractionState){0};
                 Player_Init(&player, Room_SpawnPoint(checkpointArea));
             }
         } else if (loadResult == SAVE_LOAD_MISSING) {
             if (!PersistProgress(savePath, checkpointArea, player.health,
                                  &inventory,
-                                 thornGateOpen, palmFruitCollected,
+                                 thornGateOpen, collectedFoodNodes,
                                  saveNotice,
                                  sizeof(saveNotice), &saveNoticeTime)) {
                 saveAvailable = false;
@@ -456,6 +518,7 @@ int main(void)
     double accumulator = 0.0;
     float worldTime = 0.0f;
     bool inventoryOpen = false;
+    bool helpOpen = false;
     enum { TRANSITION_NONE, TRANSITION_FADE_OUT, TRANSITION_FADE_IN };
     int transitionPhase = TRANSITION_NONE;
     float transitionTime = 0.0f;
@@ -485,28 +548,36 @@ int main(void)
         Input_Poll(&input);
         if (input.inventoryPressed) {
             inventoryOpen = !inventoryOpen;
+            if (inventoryOpen) helpOpen = false;
+        }
+        if (input.helpPressed) {
+            helpOpen = !helpOpen;
+            if (helpOpen) inventoryOpen = false;
+        }
+        bool overlayOpen = inventoryOpen || helpOpen;
+        if (overlayOpen) {
             interactBuffer = 0.0f;
             attackBuffer = 0.0f;
             foodUseBuffer = 0.0f;
         }
-        if (inventoryOpen) {
+        if (overlayOpen) {
             accumulator = 0.0;
         } else {
             accumulator += frame;
         }
-        if (!inventoryOpen && transitionPhase == TRANSITION_NONE &&
+        if (!overlayOpen && transitionPhase == TRANSITION_NONE &&
             input.interactPressed) {
             interactBuffer = INTERACT_INPUT_BUFFER;
         } else if (transitionPhase != TRANSITION_NONE) {
             interactBuffer = 0.0f;
         }
-        if (!inventoryOpen && transitionPhase == TRANSITION_NONE &&
+        if (!overlayOpen && transitionPhase == TRANSITION_NONE &&
             input.attackPressed) {
             attackBuffer = THORNFANG_CUT_BUFFER;
         } else if (transitionPhase != TRANSITION_NONE) {
             attackBuffer = 0.0f;
         }
-        if (!inventoryOpen && transitionPhase == TRANSITION_NONE &&
+        if (!overlayOpen && transitionPhase == TRANSITION_NONE &&
             input.useFoodPressed) {
             foodUseBuffer = INTERACT_INPUT_BUFFER;
         } else if (transitionPhase != TRANSITION_NONE) {
@@ -514,7 +585,7 @@ int main(void)
         }
 
         int steps = 0;
-        while (!inventoryOpen && accumulator >= SIM_DT &&
+        while (!overlayOpen && accumulator >= SIM_DT &&
                steps < MAX_SIM_STEPS) {
             if (assetsOk) {
                 if (transitionPhase == TRANSITION_NONE) {
@@ -532,7 +603,7 @@ int main(void)
                                 !PersistProgress(
                                     savePath, checkpointArea, player.health,
                                     &inventory, thornGateOpen,
-                                    palmFruitCollected, saveNotice,
+                                    collectedFoodNodes, saveNotice,
                                     sizeof(saveNotice), &saveNoticeTime)) {
                                 saveAvailable = false;
                                 saveError = true;
@@ -554,7 +625,7 @@ int main(void)
                             : Room_FindInteractableWithFruitState(
                                   room.area, player.pos, facingDirection,
                                   INTERACT_PROMPT_RANGE,
-                                  palmFruitCollected);
+                                  collectedFoodNodes);
                     if (activeInteractable != NULL) {
                         promptInteractable = activeInteractable;
                         promptFade += SIM_DT / INTERACT_PROMPT_FADE;
@@ -572,12 +643,13 @@ int main(void)
                         const RoomInteractable *inRange =
                             Room_FindInteractableWithFruitState(
                                 room.area, player.pos, facingDirection,
-                                INTERACT_RANGE, palmFruitCollected);
+                                INTERACT_RANGE, collectedFoodNodes);
                         if (inRange != NULL) {
                             if (inRange->kind ==
                                 ROOM_INTERACTABLE_PALM_FRUIT) {
                                 if (Inventory_AddFood(&inventory)) {
-                                    palmFruitCollected = true;
+                                    collectedFoodNodes |=
+                                        Room_FoodNodeForArea(room.area);
                                     pickupNotice = "PALM FRUIT +1";
                                     pickupNoticeTime = 1.5f;
                                     if (saveAvailable &&
@@ -585,7 +657,7 @@ int main(void)
                                             savePath, checkpointArea,
                                             player.health, &inventory,
                                             thornGateOpen,
-                                            palmFruitCollected,
+                                            collectedFoodNodes,
                                             saveNotice, sizeof(saveNotice),
                                             &saveNoticeTime)) {
                                         saveAvailable = false;
@@ -608,7 +680,7 @@ int main(void)
                                     !PersistProgress(
                                         savePath, checkpointArea,
                                         player.health, &inventory,
-                                        thornGateOpen, palmFruitCollected,
+                                        thornGateOpen, collectedFoodNodes,
                                         saveNotice, sizeof(saveNotice),
                                         &saveNoticeTime)) {
                                     saveAvailable = false;
@@ -656,7 +728,7 @@ int main(void)
                                 !PersistProgress(
                                     savePath, checkpointArea, player.health,
                                     &inventory,
-                                    thornGateOpen, palmFruitCollected,
+                                    thornGateOpen, collectedFoodNodes,
                                     saveNotice,
                                     sizeof(saveNotice), &saveNoticeTime)) {
                                 saveAvailable = false;
@@ -684,7 +756,7 @@ int main(void)
                     if (saveAvailable &&
                         !PersistProgress(
                             savePath, checkpointArea, player.health,
-                            &inventory, thornGateOpen, palmFruitCollected,
+                            &inventory, thornGateOpen, collectedFoodNodes,
                             saveNotice, sizeof(saveNotice),
                             &saveNoticeTime)) {
                         saveAvailable = false;
@@ -710,7 +782,7 @@ int main(void)
                             !PersistProgress(
                                 savePath, checkpointArea, player.health,
                                 &inventory,
-                                thornGateOpen, palmFruitCollected, saveNotice,
+                                thornGateOpen, collectedFoodNodes, saveNotice,
                                 sizeof(saveNotice), &saveNoticeTime)) {
                             saveAvailable = false;
                             saveError = true;
@@ -744,7 +816,7 @@ int main(void)
                             !PersistProgress(
                                 savePath, checkpointArea, player.health,
                                 &inventory,
-                                thornGateOpen, palmFruitCollected, saveNotice,
+                                thornGateOpen, collectedFoodNodes, saveNotice,
                                 sizeof(saveNotice), &saveNoticeTime)) {
                             saveAvailable = false;
                             saveError = true;
@@ -801,9 +873,10 @@ int main(void)
             }
             RenderItem foodPickup;
             const RenderItem *foodPickupPtr = NULL;
-            if (room.area == ROOM_AREA_OVERGROWN_CLEARING &&
-                !palmFruitCollected) {
-                foodPickup = PalmFruitRenderItem();
+            uint32_t roomFoodNode = Room_FoodNodeForArea(room.area);
+            if (roomFoodNode != ROOM_FOOD_NODE_NONE &&
+                (collectedFoodNodes & roomFoodNode) == 0) {
+                foodPickup = PalmFruitRenderItem(room.area);
                 foodPickupPtr = &foodPickup;
             }
             Render_DrawDepthScene(
@@ -821,6 +894,30 @@ int main(void)
             }
             DrawInteractionUI(promptInteractable, promptFade,
                               &interaction);
+            bool objectiveCueVisible =
+                (room.area == ROOM_AREA_ROOT_PATH &&
+                 thornGateOpen && thornGateFeedbackTime > 0.0f) ||
+                (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                 (retryFeedbackTime > 0.0f ||
+                  HasThornfang(&inventory) ||
+                  thornback.state != THORNBACK_STATE_DORMANT));
+            if (!objectiveCueVisible) {
+                JungleTaskProgress taskProgress = {
+                    .rootWeaveSeen = interaction.rootWeaveSeen,
+                    .rootMarkerActivated =
+                        interaction.rootMarkerActivated,
+                    .rootsMuralSeen = interaction.rootsMuralSeen,
+                    .thornfangAcquired = HasThornfang(&inventory),
+                    .thornGateOpen = thornGateOpen,
+                    .returnedToJungleEntrance =
+                        room.area == ROOM_AREA_JUNGLE_ENTRANCE
+                };
+                DrawRectangle(6, 22, 308, 15,
+                              (Color){11, 26, 34, 220});
+                DrawText(TextFormat("OBJECTIVE: %s",
+                                    JungleTask_CurrentObjective(taskProgress)),
+                         10, 26, 8, (Color){245, 214, 124, 255});
+            }
             bool thornGatePrompt = Room_IsFacingThornGate(
                 room.area, player.pos, FacingDirection(player.facing),
                 thornGateOpen);
@@ -884,6 +981,7 @@ int main(void)
                          224, 26, 8, (Color){245, 214, 124, 255});
             }
             if (inventoryOpen) DrawInventoryUI(&inventory);
+            if (helpOpen) DrawHelpUI();
         } else {
             DrawText("Assets not found.", 8, 8, 10, WHITE);
             DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);

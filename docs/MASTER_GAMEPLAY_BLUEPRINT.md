@@ -281,9 +281,10 @@ dialogue, and route choices, not a morality meter.
 | Death/respawn | return to checkpoint with full health; keep weapons, clues, tools, opened routes |
 
 Health appears as five clear pixel hearts in the HUD; upgraded hearts use a
-consistent visual treatment. Show low-health feedback gently and accessibly;
-do not flash the screen harshly. The initial numbers are intentionally small
-and readable, not a promise of final difficulty.
+consistent visual treatment. At two hearts or fewer, pair the amber heart
+count with a plain "LOW" label; do not flash the screen harshly. The initial
+numbers are intentionally small and readable, not a promise of final
+difficulty.
 
 Damage must be avoidable through reading tells, moving out of marked lanes,
 and using cover or a learned response. No unavoidable contact damage from
@@ -1401,13 +1402,19 @@ penetration. Review art scale only after movement feels right.
 
 1. Implement the 4 Jungle zones in placeholder art.
 2. Add the thorn gate and explicit state flags.
-3. Add Map of Roots task/subtasks and one optional secret.
+3. Implemented: the Roots Remember objective tracker advances through root
+   markings, marker, Map of Roots, Thornback, thorn gate, and return to the
+   Jungle Entrance using existing saved progress flags; no generic quest
+   framework. The user confirmed its steps advance and its HUD does not
+   obscure health, food, interactions, or combat cues.
 4. Add Thornback with two fair patterns.
 5. Add Thornfang, cut gate, activate shortcut, return to entrance.
 6. Playtest timing, route readability, health/failure, controller.
 
 **Gate:** 10–15 minute slice test, no softlocks, progression persists per
 session, and every mandatory step can be understood without a waypoint arrow.
+The user reports a 10–15 minute pass with no unclear mandatory steps or
+softlocks; exact elapsed time was not reported.
 
 ### Stage D — Save/inventory foundation
 
@@ -1415,12 +1422,13 @@ session, and every mandatory step can be understood without a waypoint arrow.
    discovered Jungle evidence, migrating existing version-1 saves. A compact
    pause overlay shows the currently implemented weapon and discovered
    evidence. Defer quick-switch controls until another weapon exists.
-2. Prototype implemented: one finite Palm Fruit in the Clearing nook; E/A
-   collects it, H/controller B eats it, servings cap at three, and each serving
-   restores up to two hearts. Both numbers are provisional tuning values.
-   Version-3 save data persists the food count and collected node while
-   migrating version-1/version-2 saves. The user reports collection, healing,
-   full-health use, and relaunch/defeat persistence pass.
+2. Prototype implemented: finite Palm Fruit pickups in the Clearing nook and
+   Shrine Approach courtyard; E/A collects them, H/controller B eats a serving,
+   servings cap at three, and each serving restores up to two hearts. Both
+   numbers are provisional tuning values. Version-4 saves persist both node
+   states and food count, migrating versions 1-3. The user reports the first
+   pickups' collection, capacity, and relaunch checks pass. The first pickup's
+   healing/full-health/defeat checks also pass.
 3. Add the first fixed tool only when its region/task is implemented; include
    its material flags and a clear workbench interaction, not a generic recipe
    engine.
@@ -1435,19 +1443,29 @@ session, and every mandatory step can be understood without a waypoint arrow.
 
 1. Replace only the slice's core path assets with a coherent licensed style.
 2. Add region ambience, interaction/telegraph/reward sounds, and settings.
-3. Add menus, controller prompts, accessibility basics, and route feedback.
-4. Measure player completion time and observe confusion; adjust one issue at a
-   time.
+3. Implemented: a modal keyboard/controller controls-help panel opens with
+   F1/controller Start and pauses play. The user confirmed its controls,
+   pause behavior, readability, and exclusive switching with inventory.
+4. The existing user reports a 10–15 minute pass. A new tester completed the
+   slice and explained the clue, Thornfang, and shortcut without coaching or a
+   waypoint, with no blockers; the clues felt complex but understandable.
 
 **Gate:** a new tester can finish the slice and explain clue, Thornfang use,
 and shortcut.
+The Stage E new-tester gate passed; exact new-tester elapsed time was not
+reported.
 
 ### Stage F — Reusable region template
 
-1. Extract room data, exits, collision/elevation layers, object IDs, task
-   definitions, and stable world state.
-2. Build one tiny test region using data rather than new hardcoded logic.
-3. Verify map transitions, persistence, debug tools, and load/unload cleanup.
+1. **Completed first increment:** the existing eight directed exits and paired
+   destination spawns are in a static table; movement tests cover each link,
+   inclusive exit thresholds, and spawn safety.
+2. Next, associate the existing Jungle-area spawns and authored prop arrays
+   through a compact room-definition table. Leave collision/elevation, task
+   definitions, and stable world-state logic alone in this increment.
+3. Continue extracting collision/elevation layers, object IDs, task
+   definitions, and stable world state in later bounded increments.
+4. Verify map transitions, persistence, debug tools, and load/unload cleanup.
 
 **Gate:** adding a room does not require modifying player physics or duplicating
 progression logic.
@@ -1496,11 +1514,11 @@ decision log once chosen.
 | 8-region / 24-zone campaign outline | Planned in this document |
 | Top-down eight-direction controller | Implemented; Feel Gate reported passed |
 | Jungle slice in top-down world | In progress; current areas are blockouts |
-| Inventory/map/quest/save systems | Version-3 autosave includes Thornfang, discovered evidence, Palm Fruit food count, and collected-node state; overlay implemented, map/settings remain planned |
-| Health/food/shop/tool-building system | One finite Palm Fruit pickup and healing prototype implemented and user-tested; pixel-heart HUD implemented, shop/tools remain planned |
+| Inventory/map/quest/save systems | Version-4 autosave includes Thornfang, discovered evidence, Palm Fruit food count, and both collected-node flags; overlay implemented, map/settings remain planned |
+| Health/food/shop/tool-building system | Two finite Palm Fruit pickups and healing prototype implemented and user-tested; pixel-heart HUD user-tested, shop/tools remain planned |
 | Ichigo costume/animation set | Appearance direction proposed; no production sprites |
 | Enemy and guardian systems | Thornback two-pattern combat/reward prototype; user-reported hands-on pass |
 
-**Current bounded task:** playtest the pixel-heart HUD at full and reduced
-health, including damage/healing updates and numeric readability. Manual save
-is deferred.
+**Current bounded task:** associate each existing Jungle area's spawn and
+authored prop array through a compact room-definition table, without changing
+collision/elevation or gameplay behavior. Manual save is deferred.

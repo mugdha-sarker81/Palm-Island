@@ -11,6 +11,7 @@ static bool SaveData_IsValid(const SaveData *data)
            data->checkpointArea <= ROOM_AREA_THORNBACK_ARENA &&
            data->health >= 1 && data->health <= PLAYER_START_HEALTH &&
            Inventory_IsValid(&data->inventory) &&
+           (data->collectedFoodNodes & ~ROOM_FOOD_NODE_ALL) == 0 &&
            (!data->thornGateOpen ||
             Inventory_HasWeapon(&data->inventory,
                                 INVENTORY_WEAPON_THORNFANG));
@@ -40,7 +41,7 @@ static SaveLoadResult ReadSaveFile(const char *path, SaveData *data)
     SaveData parsed = {0};
     bool valid = fscanf(file, "%31s %d", magic, &version) == 2 &&
                  strcmp(magic, "PALM_ISLAND_SAVE") == 0 &&
-                 (version == 1 || version == 2 || version == 3);
+                 (version >= 1 && version <= 4);
     char checkpointKey[32];
     int checkpoint = 0;
     if (valid) {
@@ -107,13 +108,30 @@ static SaveLoadResult ReadSaveFile(const char *path, SaveData *data)
             parsed.inventory.selectedWeapon =
                 (InventoryWeapon)selectedWeapon;
             parsed.inventory.keyItems = (uint32_t)keyItems;
-            if (version == 3) {
+            if (version >= 3) {
                 valid = fscanf(file, " %31s %d", checkpointKey,
                                &parsed.inventory.foodServings) == 2 &&
                         strcmp(checkpointKey, "food_servings") == 0;
                 if (valid) {
-                    valid = ReadBoolean(file, "palm_fruit_collected",
-                                        &parsed.palmFruitCollected);
+                    if (version == 3) {
+                        bool palmFruitCollected = false;
+                        valid = ReadBoolean(file, "palm_fruit_collected",
+                                            &palmFruitCollected);
+                        if (valid && palmFruitCollected) {
+                            parsed.collectedFoodNodes =
+                                ROOM_FOOD_NODE_CLEARING;
+                        }
+                    } else {
+                        unsigned int collectedFoodNodes = 0;
+                        valid = fscanf(file, " %31s %u", checkpointKey,
+                                       &collectedFoodNodes) == 2 &&
+                                strcmp(checkpointKey,
+                                       "food_nodes_collected") == 0;
+                        if (valid) {
+                            parsed.collectedFoodNodes =
+                                (uint32_t)collectedFoodNodes;
+                        }
+                    }
                 }
             }
         }
@@ -242,20 +260,21 @@ SaveWriteResult Save_Write(const char *path, const SaveData *data)
     if (file == NULL) return SAVE_WRITE_IO_ERROR;
     int written = fprintf(
         file,
-        "PALM_ISLAND_SAVE 3\n"
+        "PALM_ISLAND_SAVE 4\n"
         "checkpoint %d\n"
         "health %d\n"
         "weapons_owned %u\n"
         "weapon_selected %d\n"
         "key_items %u\n"
         "food_servings %d\n"
-        "palm_fruit_collected %d\n"
+        "food_nodes_collected %u\n"
         "thorn_gate_open %d\n",
         (int)data->checkpointArea, data->health,
         (unsigned int)data->inventory.ownedWeapons,
         (int)data->inventory.selectedWeapon,
         (unsigned int)data->inventory.keyItems,
-        data->inventory.foodServings, data->palmFruitCollected,
+        data->inventory.foodServings,
+        (unsigned int)data->collectedFoodNodes,
         data->thornGateOpen);
     bool writeSucceeded = written >= 0 && fflush(file) == 0;
     if (fclose(file) != 0) writeSucceeded = false;

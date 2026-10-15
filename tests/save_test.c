@@ -52,7 +52,7 @@ static bool SaveDataMatches(const SaveData *left, const SaveData *right)
            left->inventory.foodServings ==
                right->inventory.foodServings &&
            left->thornGateOpen == right->thornGateOpen &&
-           left->palmFruitCollected == right->palmFruitCollected;
+           left->collectedFoodNodes == right->collectedFoodNodes;
 }
 
 static void TestMissingAndVersionedRoundTrip(const char *path)
@@ -70,7 +70,7 @@ static void TestMissingAndVersionedRoundTrip(const char *path)
             .foodServings = 2
         },
         .thornGateOpen = true,
-        .palmFruitCollected = true
+        .collectedFoodNodes = ROOM_FOOD_NODE_ALL
     };
     CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);
     CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
@@ -109,6 +109,8 @@ static void TestVersionOneMigration(const char *path)
     CHECK(Inventory_HasKeyItem(&loaded.inventory,
                                INVENTORY_KEY_ITEM_ROOTS_MURAL));
     CHECK(loaded.thornGateOpen);
+    CHECK(loaded.inventory.foodServings == 0);
+    CHECK(loaded.collectedFoodNodes == ROOM_FOOD_NODE_NONE);
 }
 
 static void TestVersionTwoMigration(const char *path)
@@ -128,7 +130,32 @@ static void TestVersionTwoMigration(const char *path)
     SaveData loaded = {0};
     CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
     CHECK(loaded.inventory.foodServings == 0);
-    CHECK(!loaded.palmFruitCollected);
+    CHECK(loaded.collectedFoodNodes == ROOM_FOOD_NODE_NONE);
+    CHECK(Inventory_HasWeapon(&loaded.inventory,
+                              INVENTORY_WEAPON_THORNFANG));
+    CHECK(loaded.thornGateOpen);
+}
+
+static void TestVersionThreeMigration(const char *path)
+{
+    FILE *file = fopen(path, "w");
+    CHECK(file != NULL);
+    if (file == NULL) return;
+    fputs("PALM_ISLAND_SAVE 3\n"
+          "checkpoint 3\n"
+          "health 4\n"
+          "weapons_owned 1\n"
+          "weapon_selected 1\n"
+          "key_items 15\n"
+          "food_servings 2\n"
+          "palm_fruit_collected 1\n"
+          "thorn_gate_open 1\n", file);
+    CHECK(fclose(file) == 0);
+
+    SaveData loaded = {0};
+    CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
+    CHECK(loaded.inventory.foodServings == 2);
+    CHECK(loaded.collectedFoodNodes == ROOM_FOOD_NODE_CLEARING);
     CHECK(Inventory_HasWeapon(&loaded.inventory,
                               INVENTORY_WEAPON_THORNFANG));
     CHECK(loaded.thornGateOpen);
@@ -193,6 +220,9 @@ static void TestInvalidDataAndWriteFailure(const char *path)
         .health = 0
     };
     CHECK(Save_Write(path, &invalid) == SAVE_WRITE_INVALID_DATA);
+    invalid.health = PLAYER_START_HEALTH;
+    invalid.collectedFoodNodes = UINT32_C(1) << 8;
+    CHECK(Save_Write(path, &invalid) == SAVE_WRITE_INVALID_DATA);
 
     SaveData valid = {
         .checkpointArea = ROOM_AREA_JUNGLE_ENTRANCE,
@@ -215,6 +245,8 @@ int main(void)
     TestVersionOneMigration(path);
     RemoveSaveFiles(path);
     TestVersionTwoMigration(path);
+    RemoveSaveFiles(path);
+    TestVersionThreeMigration(path);
     RemoveSaveFiles(path);
     TestInvalidSaveDoesNotModifyOutput(path);
     RemoveSaveFiles(path);
