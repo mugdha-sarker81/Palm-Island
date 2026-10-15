@@ -1497,9 +1497,10 @@ decision log once chosen.
 | Top-down eight-direction controller | Implemented; Feel Gate reported passed |
 | Jungle slice in top-down world | In progress; current areas are blockouts |
 | Inventory/map/quest/save systems | Version-3 autosave includes Thornfang, discovered evidence, Palm Fruit food count, and collected-node state; overlay implemented, map/settings remain planned |
-| Health/food/shop/tool-building system | One finite Palm Fruit pickup and healing prototype implemented; shop/tools and hands-on food verification remain |
+| Health/food/shop/tool-building system | One finite Palm Fruit pickup and healing prototype implemented and user-tested; pixel-heart HUD implemented, shop/tools remain planned |
 | Ichigo costume/animation set | Appearance direction proposed; no production sprites |
 | Enemy and guardian systems | Thornback two-pattern combat/reward prototype; user-reported hands-on pass |
 
-**Current bounded task:** playtest the Palm Fruit pickup, healing, and
-version-3 close/relaunch and defeat/respawn persistence. Manual save is deferred.
+**Current bounded task:** playtest the pixel-heart HUD at full and reduced
+health, including damage/healing updates and numeric readability. Manual save
+is deferred.
