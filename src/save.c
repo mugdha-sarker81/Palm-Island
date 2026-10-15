@@ -8,7 +8,7 @@ static bool SaveData_IsValid(const SaveData *data)
 {
     return data != NULL &&
            data->checkpointArea >= ROOM_AREA_JUNGLE_ENTRANCE &&
-           data->checkpointArea <= ROOM_AREA_THORNBACK_ARENA &&
+           data->checkpointArea < ROOM_AREA_COUNT &&
            data->health >= 1 && data->health <= PLAYER_START_HEALTH &&
            Inventory_IsValid(&data->inventory) &&
            (data->collectedFoodNodes & ~ROOM_FOOD_NODE_ALL) == 0 &&

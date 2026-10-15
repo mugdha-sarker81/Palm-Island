@@ -23,38 +23,65 @@ typedef enum RoomExitSide {
 } RoomExitSide;
 
 typedef struct RoomTransition {
-    RoomArea source;
     RoomArea destination;
     RoomExitSide side;
     float thresholdY;
     Vector2 spawnPoint;
 } RoomTransition;
 
-static const Vector2 ROOM_SPAWN_POINTS[] = {
-    {320.0f, 336.0f},
-    {320.0f, 336.0f},
-    {320.0f, 336.0f},
-    {320.0f, 336.0f},
-    {320.0f, 336.0f}
+typedef char (*RoomTileGenerator)(int x, int y, bool thornGateOpen);
+
+static char EntranceTileAt(int x, int y, bool thornGateOpen);
+static char RootPathTileAt(int x, int y, bool thornGateOpen);
+static char ClearingTileAt(int x, int y, bool thornGateOpen);
+static char ShrineApproachTileAt(int x, int y, bool thornGateOpen);
+static char ThornbackArenaTileAt(int x, int y, bool thornGateOpen);
+static char TemplateTestTileAt(int x, int y, bool thornGateOpen);
+
+typedef struct RoomDefinition {
+    Vector2 spawnPoint;
+    const RoomProp *props;
+    RoomTileGenerator tileGenerator;
+    uint32_t foodNode;
+    Vector2 palmFruitPosition;
+    const RoomTransition *transitions;
+    size_t transitionCount;
+    const struct RoomInteractableEntry *interactables;
+    size_t interactableCount;
+    const RoomRamp *ramp;
+    RoomSprite gatePropSprite;
+} RoomDefinition;
+
+typedef struct RoomInteractableEntry {
+    const RoomInteractable *interactable;
+} RoomInteractableEntry;
+
+static const RoomTransition ENTRANCE_TRANSITIONS[] = {
+    {ROOM_AREA_ROOT_PATH, ROOM_EXIT_TOP, 56.0f, {320.0f, 336.0f}}
 };
 
-static const RoomTransition ROOM_TRANSITIONS[] = {
-    {ROOM_AREA_JUNGLE_ENTRANCE, ROOM_AREA_ROOT_PATH,
-     ROOM_EXIT_TOP, 56.0f, {320.0f, 336.0f}},
-    {ROOM_AREA_ROOT_PATH, ROOM_AREA_JUNGLE_ENTRANCE,
-     ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 336.0f}},
-    {ROOM_AREA_ROOT_PATH, ROOM_AREA_OVERGROWN_CLEARING,
-     ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}},
-    {ROOM_AREA_OVERGROWN_CLEARING, ROOM_AREA_ROOT_PATH,
-     ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}},
-    {ROOM_AREA_OVERGROWN_CLEARING, ROOM_AREA_SHRINE_APPROACH,
-     ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}},
-    {ROOM_AREA_SHRINE_APPROACH, ROOM_AREA_OVERGROWN_CLEARING,
-     ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}},
-    {ROOM_AREA_SHRINE_APPROACH, ROOM_AREA_THORNBACK_ARENA,
-     ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}},
-    {ROOM_AREA_THORNBACK_ARENA, ROOM_AREA_SHRINE_APPROACH,
-     ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}}
+static const RoomTransition ROOT_PATH_TRANSITIONS[] = {
+    {ROOM_AREA_JUNGLE_ENTRANCE, ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 336.0f}},
+    {ROOM_AREA_OVERGROWN_CLEARING, ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}}
+};
+
+static const RoomTransition CLEARING_TRANSITIONS[] = {
+    {ROOM_AREA_ROOT_PATH, ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}},
+    {ROOM_AREA_SHRINE_APPROACH, ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}}
+};
+
+static const RoomTransition SHRINE_APPROACH_TRANSITIONS[] = {
+    {ROOM_AREA_OVERGROWN_CLEARING, ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}},
+    {ROOM_AREA_THORNBACK_ARENA, ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}}
+};
+
+static const RoomTransition THORNBACK_ARENA_TRANSITIONS[] = {
+    {ROOM_AREA_SHRINE_APPROACH, ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}},
+    {ROOM_AREA_TEMPLATE_TEST, ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}}
+};
+
+static const RoomTransition TEMPLATE_TEST_TRANSITIONS[] = {
+    {ROOM_AREA_THORNBACK_ARENA, ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}}
 };
 
 static const RoomRamp ENTRANCE_RAMP = {
@@ -188,6 +215,29 @@ static const RoomProp THORNBACK_ARENA_PROPS[ROOM_PROP_COUNT] = {
      ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER}
 };
 
+static const RoomProp TEMPLATE_TEST_PROPS[ROOM_PROP_COUNT] = {
+    {{128.0f, 88.0f}, 144.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_TALL_GRASS},
+    {{512.0f, 88.0f}, 144.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_TALL_GRASS},
+    {{128.0f, 280.0f}, 336.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_TALL_GRASS},
+    {{512.0f, 280.0f}, 336.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_TALL_GRASS},
+    {{208.0f, 112.0f}, 168.0f, {224.0f, 136.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{384.0f, 112.0f}, 168.0f, {400.0f, 136.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{208.0f, 240.0f}, 296.0f, {224.0f, 264.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{384.0f, 240.0f}, 296.0f, {400.0f, 264.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{176.0f, 176.0f}, 200.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER},
+    {{432.0f, 176.0f}, 200.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER}
+};
+
 static const RoomInteractable ROOT_MARKINGS = {
     .id = "jungle.root_markings_seen",
     .title = "Living Thorn Weave",
@@ -245,20 +295,125 @@ static const RoomInteractable THORNBACK_TRIAL = {
     .kind = ROOM_INTERACTABLE_THORNBACK_TRIAL
 };
 
+static const RoomInteractableEntry ROOT_PATH_INTERACTABLES[] = {
+    {&ROOT_MARKINGS},
+    {&ROOT_MARKER}
+};
+
+static const RoomInteractableEntry CLEARING_INTERACTABLES[] = {
+    {&CLEARING_NOTE},
+    {&PALM_FRUIT}
+};
+
+static const RoomInteractableEntry SHRINE_APPROACH_INTERACTABLES[] = {
+    {&ROOTS_MURAL},
+    {&SHRINE_PALM_FRUIT}
+};
+
+static const RoomInteractableEntry THORNBACK_ARENA_INTERACTABLES[] = {
+    {&THORNBACK_TRIAL}
+};
+
+static const RoomDefinition ROOM_DEFINITIONS[ROOM_AREA_COUNT] = {
+    [ROOM_AREA_JUNGLE_ENTRANCE] = {
+        .spawnPoint = {320.0f, 336.0f},
+        .props = ENTRANCE_PROPS,
+        .tileGenerator = EntranceTileAt,
+        .foodNode = ROOM_FOOD_NODE_NONE,
+        .palmFruitPosition = {104.0f, 184.0f},
+        .transitions = ENTRANCE_TRANSITIONS,
+        .transitionCount = sizeof(ENTRANCE_TRANSITIONS) /
+                           sizeof(ENTRANCE_TRANSITIONS[0]),
+        .ramp = &ENTRANCE_RAMP,
+        .gatePropSprite = ROOM_SPRITE_COUNT
+    },
+    [ROOM_AREA_ROOT_PATH] = {
+        .spawnPoint = {320.0f, 336.0f},
+        .props = ROOT_PATH_PROPS,
+        .tileGenerator = RootPathTileAt,
+        .foodNode = ROOM_FOOD_NODE_NONE,
+        .palmFruitPosition = {104.0f, 184.0f},
+        .transitions = ROOT_PATH_TRANSITIONS,
+        .transitionCount = sizeof(ROOT_PATH_TRANSITIONS) /
+                           sizeof(ROOT_PATH_TRANSITIONS[0]),
+        .interactables = ROOT_PATH_INTERACTABLES,
+        .interactableCount = sizeof(ROOT_PATH_INTERACTABLES) /
+                             sizeof(ROOT_PATH_INTERACTABLES[0]),
+        .ramp = &ROOT_PATH_RAMP,
+        .gatePropSprite = ROOM_SPRITE_THORN_GATE
+    },
+    [ROOM_AREA_OVERGROWN_CLEARING] = {
+        .spawnPoint = {320.0f, 336.0f},
+        .props = CLEARING_PROPS,
+        .tileGenerator = ClearingTileAt,
+        .foodNode = ROOM_FOOD_NODE_CLEARING,
+        .palmFruitPosition = {104.0f, 184.0f},
+        .transitions = CLEARING_TRANSITIONS,
+        .transitionCount = sizeof(CLEARING_TRANSITIONS) /
+                           sizeof(CLEARING_TRANSITIONS[0]),
+        .interactables = CLEARING_INTERACTABLES,
+        .interactableCount = sizeof(CLEARING_INTERACTABLES) /
+                             sizeof(CLEARING_INTERACTABLES[0]),
+        .gatePropSprite = ROOM_SPRITE_COUNT
+    },
+    [ROOM_AREA_SHRINE_APPROACH] = {
+        .spawnPoint = {320.0f, 336.0f},
+        .props = SHRINE_APPROACH_PROPS,
+        .tileGenerator = ShrineApproachTileAt,
+        .foodNode = ROOM_FOOD_NODE_SHRINE_APPROACH,
+        .palmFruitPosition = {152.0f, 184.0f},
+        .transitions = SHRINE_APPROACH_TRANSITIONS,
+        .transitionCount = sizeof(SHRINE_APPROACH_TRANSITIONS) /
+                           sizeof(SHRINE_APPROACH_TRANSITIONS[0]),
+        .interactables = SHRINE_APPROACH_INTERACTABLES,
+        .interactableCount = sizeof(SHRINE_APPROACH_INTERACTABLES) /
+                             sizeof(SHRINE_APPROACH_INTERACTABLES[0]),
+        .gatePropSprite = ROOM_SPRITE_COUNT
+    },
+    [ROOM_AREA_THORNBACK_ARENA] = {
+        .spawnPoint = {320.0f, 336.0f},
+        .props = THORNBACK_ARENA_PROPS,
+        .tileGenerator = ThornbackArenaTileAt,
+        .foodNode = ROOM_FOOD_NODE_NONE,
+        .palmFruitPosition = {104.0f, 184.0f},
+        .transitions = THORNBACK_ARENA_TRANSITIONS,
+        .transitionCount = sizeof(THORNBACK_ARENA_TRANSITIONS) /
+                           sizeof(THORNBACK_ARENA_TRANSITIONS[0]),
+        .interactables = THORNBACK_ARENA_INTERACTABLES,
+        .interactableCount = sizeof(THORNBACK_ARENA_INTERACTABLES) /
+                             sizeof(THORNBACK_ARENA_INTERACTABLES[0]),
+        .gatePropSprite = ROOM_SPRITE_COUNT
+    },
+    [ROOM_AREA_TEMPLATE_TEST] = {
+        .spawnPoint = {320.0f, 336.0f},
+        .props = TEMPLATE_TEST_PROPS,
+        .tileGenerator = TemplateTestTileAt,
+        .foodNode = ROOM_FOOD_NODE_NONE,
+        .palmFruitPosition = {104.0f, 184.0f},
+        .transitions = TEMPLATE_TEST_TRANSITIONS,
+        .transitionCount = sizeof(TEMPLATE_TEST_TRANSITIONS) /
+                           sizeof(TEMPLATE_TEST_TRANSITIONS[0]),
+        .gatePropSprite = ROOM_SPRITE_COUNT
+    }
+};
+
+static const RoomDefinition *DefinitionForArea(RoomArea area)
+{
+    if (area >= ROOM_AREA_JUNGLE_ENTRANCE &&
+        area < ROOM_AREA_COUNT) {
+        return &ROOM_DEFINITIONS[area];
+    }
+    return &ROOM_DEFINITIONS[ROOM_AREA_JUNGLE_ENTRANCE];
+}
+
 static const RoomRamp *RampForArea(RoomArea area)
 {
-    if (area == ROOM_AREA_JUNGLE_ENTRANCE) return &ENTRANCE_RAMP;
-    if (area == ROOM_AREA_ROOT_PATH) return &ROOT_PATH_RAMP;
-    return NULL;
+    return DefinitionForArea(area)->ramp;
 }
 
 static const RoomProp *PropsForArea(RoomArea area)
 {
-    if (area == ROOM_AREA_ROOT_PATH) return ROOT_PATH_PROPS;
-    if (area == ROOM_AREA_OVERGROWN_CLEARING) return CLEARING_PROPS;
-    if (area == ROOM_AREA_SHRINE_APPROACH) return SHRINE_APPROACH_PROPS;
-    if (area == ROOM_AREA_THORNBACK_ARENA) return THORNBACK_ARENA_PROPS;
-    return ENTRANCE_PROPS;
+    return DefinitionForArea(area)->props;
 }
 
 bool Room_Load(Room *r, const char *tilesetPath)
@@ -307,8 +462,9 @@ static bool EntrancePath(int x, int y)
            northLoop;
 }
 
-static char EntranceTileAt(int x, int y)
+static char EntranceTileAt(int x, int y, bool thornGateOpen)
 {
+    (void)thornGateOpen;
     if (x >= 18 && x <= 21 && y <= 2) return 'S';
     if (x >= 15 && x <= 24 && y >= 11 && y <= 14) return 'N';
     if (x >= RAMP_TILE_X && x < RAMP_TILE_X + 2 && y == RAMP_TILE_Y - 1) return 'S';
@@ -360,8 +516,9 @@ static bool ClearingPath(int x, int y)
            upperJunction || northTrail || exposedTrail || nookTrail;
 }
 
-static char ClearingTileAt(int x, int y)
+static char ClearingTileAt(int x, int y, bool thornGateOpen)
 {
+    (void)thornGateOpen;
     if ((x >= 13 && x <= 16 && y >= 8 && y <= 14) ||
         (x >= 23 && x <= 26 && y >= 8 && y <= 14)) return 'N';
     if (ClearingPath(x, y)) {
@@ -386,8 +543,9 @@ static bool ShrineApproachPath(int x, int y)
            upperPlaza || shrineWalk || muralCourt;
 }
 
-static char ShrineApproachTileAt(int x, int y)
+static char ShrineApproachTileAt(int x, int y, bool thornGateOpen)
 {
+    (void)thornGateOpen;
     if (y <= 2) return x >= 18 && x <= 21 ? 'D' : 'S';
     if ((x >= 14 && x <= 16 && y >= 11 && y <= 14) ||
         (x >= 23 && x <= 25 && y >= 11 && y <= 14)) return 'N';
@@ -410,23 +568,29 @@ static bool ThornbackArenaPath(int x, int y)
            northPerimeter || centerBowl || entrance;
 }
 
-static char ThornbackArenaTileAt(int x, int y)
+static char ThornbackArenaTileAt(int x, int y, bool thornGateOpen)
 {
+    (void)thornGateOpen;
     if (ThornbackArenaPath(x, y)) {
         return (x >= 12 && x <= 27 && y >= 7 && y <= 15) ? 'D' : 'G';
     }
     return ((x * 11 + y * 7) % 4 == 0) ? 'J' : 'G';
 }
 
+static char TemplateTestTileAt(int x, int y, bool thornGateOpen)
+{
+    (void)thornGateOpen;
+    if (y <= 1 || y >= 21) {
+        return x >= 18 && x <= 21 ? 'D' : 'S';
+    }
+    if (x <= 1 || x >= ROOM_COLS - 2) return 'S';
+    if (x >= 16 && x <= 23) return 'D';
+    return ((x * 7 + y * 13) % 5 == 0) ? 'G' : 'J';
+}
+
 static char RoomTileAt(RoomArea area, int x, int y, bool thornGateOpen)
 {
-    if (area == ROOM_AREA_ROOT_PATH) {
-        return RootPathTileAt(x, y, thornGateOpen);
-    }
-    if (area == ROOM_AREA_OVERGROWN_CLEARING) return ClearingTileAt(x, y);
-    if (area == ROOM_AREA_SHRINE_APPROACH) return ShrineApproachTileAt(x, y);
-    if (area == ROOM_AREA_THORNBACK_ARENA) return ThornbackArenaTileAt(x, y);
-    return EntranceTileAt(x, y);
+    return DefinitionForArea(area)->tileGenerator(x, y, thornGateOpen);
 }
 
 void Room_Draw(const Room *r, float time, bool thornGateOpen)
@@ -465,21 +629,12 @@ const RoomProp *Room_Props(RoomArea area)
 
 uint32_t Room_FoodNodeForArea(RoomArea area)
 {
-    if (area == ROOM_AREA_OVERGROWN_CLEARING) {
-        return ROOM_FOOD_NODE_CLEARING;
-    }
-    if (area == ROOM_AREA_SHRINE_APPROACH) {
-        return ROOM_FOOD_NODE_SHRINE_APPROACH;
-    }
-    return ROOM_FOOD_NODE_NONE;
+    return DefinitionForArea(area)->foodNode;
 }
 
 Vector2 Room_PalmFruitPosition(RoomArea area)
 {
-    if (area == ROOM_AREA_SHRINE_APPROACH) {
-        return (Vector2){152.0f, 184.0f};
-    }
-    return (Vector2){104.0f, 184.0f};
+    return DefinitionForArea(area)->palmFruitPosition;
 }
 
 const RoomInteractable *Room_FindInteractable(RoomArea area, Vector2 feet,
@@ -496,30 +651,17 @@ const RoomInteractable *Room_FindInteractableWithFruitState(
                                                uint32_t collectedFoodNodes)
 {
     if (maxDistance < 0.0f) return NULL;
-    const RoomInteractable *targets[2];
-    size_t targetCount = 0;
-    if (area == ROOM_AREA_ROOT_PATH) {
-        targets[targetCount++] = &ROOT_MARKINGS;
-        targets[targetCount++] = &ROOT_MARKER;
-    } else if (area == ROOM_AREA_OVERGROWN_CLEARING) {
-        targets[targetCount++] = &CLEARING_NOTE;
-        if ((collectedFoodNodes & ROOM_FOOD_NODE_CLEARING) == 0) {
-            targets[targetCount++] = &PALM_FRUIT;
-        }
-    } else if (area == ROOM_AREA_SHRINE_APPROACH) {
-        targets[targetCount++] = &ROOTS_MURAL;
-        if ((collectedFoodNodes & ROOM_FOOD_NODE_SHRINE_APPROACH) == 0) {
-            targets[targetCount++] = &SHRINE_PALM_FRUIT;
-        }
-    } else if (area == ROOM_AREA_THORNBACK_ARENA) {
-        targets[targetCount++] = &THORNBACK_TRIAL;
-    } else {
-        return NULL;
-    }
+    const RoomDefinition *definition = DefinitionForArea(area);
     const RoomInteractable *nearest = NULL;
     float nearestDistanceSquared = maxDistance * maxDistance;
-    for (size_t i = 0; i < targetCount; i++) {
-        const RoomInteractable *target = targets[i];
+    for (size_t i = 0; i < definition->interactableCount; i++) {
+        const RoomInteractableEntry *entry = &definition->interactables[i];
+        if (entry->interactable->kind == ROOM_INTERACTABLE_PALM_FRUIT &&
+            definition->foodNode != ROOM_FOOD_NODE_NONE &&
+            (collectedFoodNodes & definition->foodNode) != 0) {
+            continue;
+        }
+        const RoomInteractable *target = entry->interactable;
         float closestX = fmaxf(target->interactBox.x,
                                fminf(feet.x, target->interactBox.x +
                                                target->interactBox.width));
@@ -557,23 +699,20 @@ const RoomInteractable *Room_FindInteractableWithFruitState(
 
 Vector2 Room_SpawnPoint(RoomArea area)
 {
-    if (area >= ROOM_AREA_JUNGLE_ENTRANCE &&
-        area <= ROOM_AREA_THORNBACK_ARENA) {
-        return ROOM_SPAWN_POINTS[area];
-    }
-    return (Vector2){320.0f, 336.0f};
+    return DefinitionForArea(area)->spawnPoint;
 }
 
 bool Room_GetTransition(const Room *r, Vector2 feet, RoomArea *destination,
                         Vector2 *spawnPoint)
 {
     if (r == NULL || destination == NULL || spawnPoint == NULL) return false;
+    if (r->area < ROOM_AREA_JUNGLE_ENTRANCE ||
+        r->area >= ROOM_AREA_COUNT) return false;
     if (feet.x < 288.0f || feet.x > 352.0f) return false;
 
-    for (size_t i = 0; i < sizeof(ROOM_TRANSITIONS) /
-                            sizeof(ROOM_TRANSITIONS[0]); i++) {
-        const RoomTransition *transition = &ROOM_TRANSITIONS[i];
-        if (transition->source != r->area) continue;
+    const RoomDefinition *definition = DefinitionForArea(r->area);
+    for (size_t i = 0; i < definition->transitionCount; i++) {
+        const RoomTransition *transition = &definition->transitions[i];
         bool reachedExit = transition->side == ROOM_EXIT_TOP
                                ? feet.y <= transition->thresholdY
                                : feet.y >= transition->thresholdY;
@@ -677,10 +816,11 @@ bool Room_CollidesAtElevationWithGate(RoomArea area, Rectangle collider,
         }
     }
 
-    const RoomProp *props = PropsForArea(area);
+    const RoomDefinition *definition = DefinitionForArea(area);
+    const RoomProp *props = definition->props;
     for (int i = 0; i < ROOM_PROP_COUNT; i++) {
-        if (thornGateOpen && area == ROOM_AREA_ROOT_PATH &&
-            props[i].sprite == ROOM_SPRITE_THORN_GATE) continue;
+        if (thornGateOpen &&
+            props[i].sprite == definition->gatePropSprite) continue;
         if (props[i].elevation != elevation) continue;
         Rectangle obstacle = props[i].collider;
         if (obstacle.width <= 0.0f || obstacle.height <= 0.0f) continue;

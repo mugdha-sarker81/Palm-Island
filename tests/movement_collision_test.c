@@ -53,6 +53,74 @@ static void TestEntranceBoundsAndRouteLayout(void)
     CHECK(!Room_Collides(FeetAt(5.0f, spawn.y)));
 }
 
+static void TestAreaDefinitionsHaveSafeSpawnsAndProps(void)
+{
+    for (RoomArea area = ROOM_AREA_JUNGLE_ENTRANCE;
+         area < ROOM_AREA_COUNT;
+         area = (RoomArea)(area + 1)) {
+        Vector2 spawn = Room_SpawnPoint(area);
+        CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
+        CHECK(Room_Props(area) != NULL);
+        CHECK(!Room_CollidesInArea(area, FeetAt(spawn.x, spawn.y)));
+    }
+    CHECK(Room_Props((RoomArea)-1) ==
+          Room_Props(ROOM_AREA_JUNGLE_ENTRANCE));
+    Vector2 fallback = Room_SpawnPoint((RoomArea)-1);
+    CHECK(fallback.x == 320.0f && fallback.y == 336.0f);
+}
+
+static void TestAreaDefinitionsHaveFruitMetadata(void)
+{
+    CHECK(Room_FoodNodeForArea(ROOM_AREA_JUNGLE_ENTRANCE) ==
+          ROOM_FOOD_NODE_NONE);
+    CHECK(Room_FoodNodeForArea(ROOM_AREA_ROOT_PATH) ==
+          ROOM_FOOD_NODE_NONE);
+    CHECK(Room_FoodNodeForArea(ROOM_AREA_OVERGROWN_CLEARING) ==
+          ROOM_FOOD_NODE_CLEARING);
+    CHECK(Room_FoodNodeForArea(ROOM_AREA_SHRINE_APPROACH) ==
+          ROOM_FOOD_NODE_SHRINE_APPROACH);
+    CHECK(Room_FoodNodeForArea(ROOM_AREA_THORNBACK_ARENA) ==
+          ROOM_FOOD_NODE_NONE);
+
+    Vector2 clearingFruit =
+        Room_PalmFruitPosition(ROOM_AREA_OVERGROWN_CLEARING);
+    CHECK(clearingFruit.x == 104.0f && clearingFruit.y == 184.0f);
+    Vector2 shrineFruit = Room_PalmFruitPosition(ROOM_AREA_SHRINE_APPROACH);
+    CHECK(shrineFruit.x == 152.0f && shrineFruit.y == 184.0f);
+    Vector2 fallbackFruit = Room_PalmFruitPosition((RoomArea)-1);
+    CHECK(fallbackFruit.x == 104.0f && fallbackFruit.y == 184.0f);
+    CHECK(Room_FoodNodeForArea((RoomArea)-1) == ROOM_FOOD_NODE_NONE);
+}
+
+static void TestTemplateRoomUsesSharedMovementAndTransitions(void)
+{
+    Room room = {0};
+    RoomArea destination;
+    Vector2 spawn;
+
+    Room_SetArea(&room, ROOM_AREA_THORNBACK_ARENA);
+    CHECK(Room_GetTransition(&room, (Vector2){320.0f, 16.0f},
+                             &destination, &spawn));
+    CHECK(destination == ROOM_AREA_TEMPLATE_TEST);
+    CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
+    CHECK(!Room_CollidesInArea(destination, FeetAt(spawn.x, spawn.y)));
+
+    Player player;
+    Player_Init(&player, spawn);
+    AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 5,
+                  ROOM_AREA_TEMPLATE_TEST);
+    CHECK(player.pos.y <= 16.0f);
+    CHECK(!Room_CollidesInArea(ROOM_AREA_TEMPLATE_TEST,
+                               Player_FeetCollider(&player)));
+    AdvanceInArea(&player, (Vector2){0.0f, 1.0f}, SIM_HZ * 5,
+                  ROOM_AREA_TEMPLATE_TEST);
+    Room_SetArea(&room, ROOM_AREA_TEMPLATE_TEST);
+    CHECK(Room_GetTransition(&room, player.pos, &destination, &spawn));
+    CHECK(destination == ROOM_AREA_THORNBACK_ARENA);
+    CHECK(spawn.x == 320.0f && spawn.y == 32.0f);
+    CHECK(!Room_CollidesInArea(destination, FeetAt(spawn.x, spawn.y)));
+}
+
 static void TestPlayerCanLoopAroundRootCluster(void)
 {
     Player player;
@@ -287,6 +355,9 @@ static void TestRootPathTransitionPairsAndRamp(void)
                              &destination, &spawn));
     CHECK(destination == ROOM_AREA_ROOT_PATH);
     CHECK(!Room_GetTransition(&room, (Vector2){200.0f, 56.0f},
+                              &destination, &spawn));
+    Room_SetArea(&room, (RoomArea)-1);
+    CHECK(!Room_GetTransition(&room, (Vector2){320.0f, 56.0f},
                               &destination, &spawn));
 
     Room_SetArea(&room, ROOM_AREA_ROOT_PATH);
@@ -746,6 +817,9 @@ static void TestMapOfRootsMuralIsReachableAndIndependent(void)
 int main(void)
 {
     TestEntranceBoundsAndRouteLayout();
+    TestAreaDefinitionsHaveSafeSpawnsAndProps();
+    TestAreaDefinitionsHaveFruitMetadata();
+    TestTemplateRoomUsesSharedMovementAndTransitions();
     TestPlayerCanLoopAroundRootCluster();
     TestTreeBasesBlockAndCanopiesStayWalkable();
     TestWallSlideAndDiagonalSpeed();

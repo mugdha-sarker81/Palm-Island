@@ -1460,12 +1460,37 @@ reported.
 1. **Completed first increment:** the existing eight directed exits and paired
    destination spawns are in a static table; movement tests cover each link,
    inclusive exit thresholds, and spawn safety.
-2. Next, associate the existing Jungle-area spawns and authored prop arrays
-   through a compact room-definition table. Leave collision/elevation, task
-   definitions, and stable world-state logic alone in this increment.
-3. Continue extracting collision/elevation layers, object IDs, task
-   definitions, and stable world state in later bounded increments.
-4. Verify map transitions, persistence, debug tools, and load/unload cleanup.
+2. **Completed second increment:** a compact room-definition table associates
+   each existing Jungle area's entry spawn and authored prop array; movement
+   tests verify every area has props and a collision-free spawn.
+3. **Completed third increment:** the same per-area definitions list existing
+   inspectable targets and their optional food-node flags. Existing target,
+   facing/range, food-persistence, and progression tests pass unchanged.
+4. **Completed fourth increment:** per-area definitions now own ramp metadata
+   and identify the optional gate prop removed from collision when opened;
+   existing ramp/elevation and gate collision tests pass.
+5. **Completed fifth increment:** `RoomTileAt` selects the five authored
+   layout generators from an indexed table; only Root Path uses the gate-open
+   tile-state parameter. Existing movement/collision, render, and gate tests
+   pass.
+6. **Completed sixth increment:** outgoing transitions are associated directly
+   with each room definition; movement tests continue to cover all eight links,
+   inclusive thresholds, invalid-area rejection, and safe paired spawns.
+7. **Completed seventh increment:** area-specific food-node identity and Palm
+   Fruit positions are stored with each room definition. Movement tests verify
+   both current pickup locations and that unrelated areas have no food node.
+8. **Completed eighth increment:** tile generation is stored in each room
+   definition, and save validation uses `ROOM_AREA_COUNT` as its exclusive
+   bound. Existing areas use shared movement and collision without
+   area-specific player-physics changes.
+9. **Template gate passed:** a minimal non-campaign test area is backed by a
+   room definition, connects to and returns from the Arena, and uses existing
+   movement, collision, transition, and save-validation code. Automated tests
+   cover its safe path, paired spawns, and save round-trip without
+   area-specific physics or progression logic.
+10. Continue extracting terrain, object IDs, task definitions, and stable world
+   state in later bounded increments.
+11. Verify map transitions, persistence, debug tools, and load/unload cleanup.
 
 **Gate:** adding a room does not require modifying player physics or duplicating
 progression logic.
@@ -1509,7 +1534,7 @@ decision log once chosen.
 |---|---|
 | Existing Windows build and launch | Verified |
 | Existing side-scroll coast prototype | Removed on 2026-10-14 at user direction |
-| Current executable | Five linked Jungle blockout areas, with Thornback Arena trial prototype |
+| Current executable | Five linked Jungle slice areas plus a non-campaign room-template pilot; Thornback Arena trial prototype |
 | Top-down camera/game direction | Implemented for current blockout |
 | 8-region / 24-zone campaign outline | Planned in this document |
 | Top-down eight-direction controller | Implemented; Feel Gate reported passed |
@@ -1519,6 +1544,7 @@ decision log once chosen.
 | Ichigo costume/animation set | Appearance direction proposed; no production sprites |
 | Enemy and guardian systems | Thornback two-pattern combat/reward prototype; user-reported hands-on pass |
 
-**Current bounded task:** associate each existing Jungle area's spawn and
-authored prop array through a compact room-definition table, without changing
-collision/elevation or gameplay behavior. Manual save is deferred.
+**Current bounded task:** greybox Ashfall Descent, the first Ember Caverns
+zone: author its entrance, telegraphed-vent route, explicit ramp/elevation
+connector, and return/checkpoint path. Playtest navigation before adding its
+enemy or guardian. Manual save is deferred.

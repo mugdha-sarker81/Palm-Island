@@ -8,14 +8,16 @@ and understanding the island—not grinding or constant combat.
 > **Honest status:** this is not the complete game or the planned Forgotten
 > Jungle vertical slice. The previous side-scrolling prototype was removed.
 > The current executable is a top-down prototype with five linked Forgotten
-> Jungle blockout areas: the Entrance, Root Path, Overgrown Clearing, Shrine
+> Jungle slice areas: the Entrance, Root Path, Overgrown Clearing, Shrine
 > Approach, and a Thornback Arena shell with a two-pattern encounter
-> prototype. It has placeholder terrain and props, player collision, a
+> prototype. A sixth, non-campaign room-template test area connects to the
+> Arena to exercise room data and shared movement, collision, transitions, and
+> save behavior. It has placeholder terrain and props, player collision, a
 > scrolling camera, ramps, a Thornfang-cuttable gate, and fade transitions
 > between the areas. A few landmarks have small inspect interactions. A
 > versioned autosave preserves Jungle checkpoints, health, the Thornfang
-> weapon, discovered evidence, one Palm Fruit node, and the opened gate. A
-> compact inventory overlay and one prototype food pickup are implemented;
+> weapon, discovered evidence, both Palm Fruit nodes, and the opened gate. A
+> compact inventory overlay and two prototype food pickups are implemented;
 > broader food, general combat, dialogue, and settings persistence are not.
 >
 > **Direction:** the game is planned as top-down 2D pixel art with
@@ -65,7 +67,9 @@ rejoins an exposed central route and reaches a hinted side nook with an
 inspectable explorer's note. The Clearing connects to a non-combat Shrine
 Approach with a courtyard and a Map of Roots mural; the open north doorway
 leads into a traversable Thornback Arena shell with a clear perimeter route
-and a safe return path. The west marker starts a Thornback encounter prototype
+and a safe return path. The Arena's north exit leads into the non-campaign
+room-template test area, which returns to the Arena and has no story or
+progression content. The west marker starts a Thornback encounter prototype
 that alternates a straight charge with a slower, broad sweep. Each attack has
 a distinct ground tell and recovery window; the sweep's marked danger band
 leaves a safe repositioning strip above and below it. The player can strike

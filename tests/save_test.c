@@ -75,6 +75,11 @@ static void TestMissingAndVersionedRoundTrip(const char *path)
     CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);
     CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
     CHECK(SaveDataMatches(&loaded, &expected));
+
+    expected.checkpointArea = ROOM_AREA_TEMPLATE_TEST;
+    CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);
+    CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
+    CHECK(SaveDataMatches(&loaded, &expected));
 }
 
 static void TestVersionOneMigration(const char *path)
@@ -221,6 +226,9 @@ static void TestInvalidDataAndWriteFailure(const char *path)
     };
     CHECK(Save_Write(path, &invalid) == SAVE_WRITE_INVALID_DATA);
     invalid.health = PLAYER_START_HEALTH;
+    invalid.checkpointArea = ROOM_AREA_COUNT;
+    CHECK(Save_Write(path, &invalid) == SAVE_WRITE_INVALID_DATA);
+    invalid.checkpointArea = ROOM_AREA_ROOT_PATH;
     invalid.collectedFoodNodes = UINT32_C(1) << 8;
     CHECK(Save_Write(path, &invalid) == SAVE_WRITE_INVALID_DATA);
 

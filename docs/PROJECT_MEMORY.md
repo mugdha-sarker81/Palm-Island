@@ -14,9 +14,10 @@ status, locked decisions, and the next bounded task.
 - Windows, offline, single-player game written in C11 with CMake and Raylib
   5.5.
 - The current prototype is a top-down, eight-direction exploration game.
-- The current blockout contains five linked 40×23 (640×368 px) areas:
-  Jungle Entrance, Root Path, Overgrown Clearing, Shrine Approach, and a
-  Thornback Arena shell with a two-pattern combat encounter prototype.
+- The current blockout contains five linked 40×23 (640×368 px) Jungle slice
+  areas plus a small, non-campaign room-template test area. The test area is
+  reached from the arena and returns using the same room data, movement,
+  collision, transitions, and save validation as the existing areas.
 
 ### Implemented
 
@@ -27,9 +28,15 @@ status, locked decisions, and the next bounded task.
   marker, palms, foreground grass, and ramp.
 - Overgrown Clearing with a central exposed route, reconnecting safe outer
   loop, marked optional nook, rock thickets, palms, and foreground grass.
-- Paired fade transitions and camera resets connect the five Jungle areas.
-  All eight directed exits and their destination spawns are authored in a
-  static room-transition table.
+- Paired fade transitions and camera resets connect the five Jungle slice
+  areas and the non-campaign template test area. The ten directed exits and
+  their destination spawns are authored in the room definitions.
+- A compact room-definition table associates each of the five Jungle areas
+  with its safe entry spawn, authored prop array, inspectable targets, ramp
+  metadata, optional gate prop used by collision, outgoing transitions, and
+  area-specific food-node identity, Palm Fruit position, and tile generator.
+- Each existing area's authored tile-layout generator is selected through an
+  indexed table; Root Path alone receives the gate-open tile-state flag.
 - Root Path root markings have a minimal inspect interaction: E/controller A,
   in-front distance targeting, a fading prompt, buffered input, and a
   repeatable clue panel. Its clue state is included in autosaves.
@@ -121,7 +128,21 @@ status, locked decisions, and the next bounded task.
   consumption at full health, and both collectible nodes' reachability and
   collected-state hiding.
 - Movement tests cover all eight directed room links, inclusive exit
-  thresholds, and collision-free paired spawns.
+  thresholds, invalid-area rejection, and collision-free paired spawns.
+- Movement tests check that every area's definition supplies props and a
+  collision-free spawn.
+- Existing ramp/elevation and open-gate collision tests cover the ramp and
+  gate metadata now stored in the per-area definitions.
+- Interaction tests continue to cover target IDs, facing/range limits,
+  collected-food filtering, and independent progression flags through the
+  per-area authored interactable definitions.
+- Movement tests verify the Clearing and Shrine Approach food-node identities
+  and Palm Fruit positions, while confirming other areas have no food node.
+- Save validation uses `ROOM_AREA_COUNT` as its exclusive area bound, avoiding
+  a separate final-area constant when room IDs are extended.
+- The non-campaign room-template pilot has a paired Arena connection, authored
+  layout/props/spawn, safe movement path, and round-trips as a save checkpoint.
+  Tests verify it without any new player-physics or progression branches.
 - Inventory overlay hands-on check is user-confirmed.
 - The user reports that Palm Fruit collection/eating, full-health no-consume,
   and first-pickup persistence across relaunch and defeat/respawn all work.
@@ -224,9 +245,11 @@ Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
 
 ## Next Work Item
 
-Continue Stage F by adding a compact definition table for the existing Jungle
-areas that associates each area's spawn and authored prop array. Keep collision,
-elevation, task, and progression logic unchanged in this increment.
+Stage F's room-template gate is complete. Begin Stage G with a bounded greybox
+of the first Ember Caverns zone, Ashfall Descent: establish its entrance,
+telegraphed-vent route, explicit ramp/elevation connector, and return/checkpoint
+path. Do not add enemies or the guardian until the navigation layout is
+playtested.
 
 ## Upcoming Roadmap
 
@@ -235,7 +258,8 @@ elevation, task, and progression logic unchanged in this increment.
 2. With both food nodes, health HUD, and objective tracker user-tested, keep
    food to this single healing item type until measured playtests call for a
    tactical alternative.
-3. Build and verify a data-driven region template in small steps.
+3. Stage F room-template gate passed with a non-campaign pilot area using
+   shared movement, collision, transitions, and save validation.
 4. Expand one weapon region at a time through its own playtest gate, then
    implement the Sanctuary/finale and clean Windows packaging.
 
