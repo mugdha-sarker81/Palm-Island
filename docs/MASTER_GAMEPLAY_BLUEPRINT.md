@@ -412,6 +412,9 @@ which random weapon opens a gate.
 
 - A diegetic world map is acquired early and fills in as Ichigo observes
   landmarks and visits exits.
+- Prototype note: a current-room minimap is implemented in the upper-right HUD.
+  It names the current generated room and shows Ichigo's position; it is not
+  the planned acquired, discovery-based regional/island map.
 - Show region names, visited routes, known exits, checkpoints, and discovered
   landmarks. Show locked ability gates with a clear icon/name only after
   Ichigo has seen them.
@@ -1534,7 +1537,7 @@ decision log once chosen.
 |---|---|
 | Existing Windows build and launch | Verified |
 | Existing side-scroll coast prototype | Removed on 2026-10-14 at user direction |
-| Current executable | Five linked Jungle slice areas plus a non-campaign room-template pilot; Thornback Arena trial prototype |
+| Current executable | Five linked Jungle slice areas plus the Ashfall Descent greybox with its first Ash Skitter; Thornback Arena trial prototype |
 | Top-down camera/game direction | Implemented for current blockout |
 | 8-region / 24-zone campaign outline | Planned in this document |
 | Top-down eight-direction controller | Implemented; Feel Gate reported passed |
@@ -1542,9 +1545,11 @@ decision log once chosen.
 | Inventory/map/quest/save systems | Version-4 autosave includes Thornfang, discovered evidence, Palm Fruit food count, and both collected-node flags; overlay implemented, map/settings remain planned |
 | Health/food/shop/tool-building system | Two finite Palm Fruit pickups and healing prototype implemented and user-tested; pixel-heart HUD user-tested, shop/tools remain planned |
 | Ichigo costume/animation set | Appearance direction proposed; no production sprites |
-| Enemy and guardian systems | Thornback two-pattern combat/reward prototype; user-reported hands-on pass |
+| Enemy and guardian systems | Thornback two-pattern combat/reward prototype; Ash Skitter two-hit prototype awaits hands-on playtest |
 
-**Current bounded task:** greybox Ashfall Descent, the first Ember Caverns
-zone: author its entrance, telegraphed-vent route, explicit ramp/elevation
-connector, and return/checkpoint path. Playtest navigation before adding its
-enemy or guardian. Manual save is deferred.
+**Current bounded task:** hands-on playtest Ashfall's Ash Skitter: bright
+route-tell readability, dash evasion/contact, upper-elevation safety,
+Thornfang range/facing and recovery, and defeat/reset. Ashfall's prior
+navigation gate passed in a user-reported test on 2026-10-15. Keep the Forge
+Warden and guardian out of scope until this encounter is validated. Manual save
+is deferred.

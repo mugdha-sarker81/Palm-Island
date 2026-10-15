@@ -76,7 +76,7 @@ static void TestMissingAndVersionedRoundTrip(const char *path)
     CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
     CHECK(SaveDataMatches(&loaded, &expected));
 
-    expected.checkpointArea = ROOM_AREA_TEMPLATE_TEST;
+    expected.checkpointArea = ROOM_AREA_ASHFALL_DESCENT;
     CHECK(Save_Write(path, &expected) == SAVE_WRITE_OK);
     CHECK(Save_Load(path, &loaded) == SAVE_LOAD_LOADED);
     CHECK(SaveDataMatches(&loaded, &expected));

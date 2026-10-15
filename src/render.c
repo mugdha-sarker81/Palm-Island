@@ -26,12 +26,14 @@ void Render_SortItems(RenderItem *items, size_t count)
 
 static void DrawItem(const RenderItem *item, const Player *player,
                      Texture2D playerSheet, const Thornback *thornback,
-                     bool debug)
+                     const AshSkitter *ashSkitter, bool debug)
 {
     if (item->type == RENDER_ITEM_PLAYER) {
         Player_Draw(player, playerSheet, debug);
     } else if (item->type == RENDER_ITEM_THORNBACK) {
         Thornback_Draw(thornback);
+    } else if (item->type == RENDER_ITEM_ASH_SKITTER) {
+        AshSkitter_Draw(ashSkitter);
     } else if (item->type == RENDER_ITEM_FOOD) {
         int x = (int)floorf(item->position.x);
         int y = (int)floorf(item->position.y);
@@ -48,9 +50,10 @@ static void DrawItem(const RenderItem *item, const Player *player,
 void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
                            const RenderItem props[RENDER_PROP_COUNT],
                            const Thornback *thornback,
+                           const AshSkitter *ashSkitter,
                            const RenderItem *foodPickup, bool debug)
 {
-    RenderItem items[RENDER_PROP_COUNT + 3];
+    RenderItem items[RENDER_PROP_COUNT + 4];
                            size_t itemCount = 1;
     items[0] = (RenderItem){
         .type = RENDER_ITEM_PLAYER,
@@ -71,6 +74,17 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
             .foreground = false
         };
     }
+    if (ashSkitter != NULL &&
+        ashSkitter->state != ASH_SKITTER_STATE_DORMANT) {
+        items[itemCount++] = (RenderItem){
+            .type = RENDER_ITEM_ASH_SKITTER,
+            .position = ashSkitter->position,
+            .feetY = ashSkitter->position.y,
+            .elevation = ROOM_ELEVATION_GROUND,
+            .stableOrder = RENDER_PROP_COUNT + 2,
+            .foreground = false
+        };
+    }
     if (foodPickup != NULL) items[itemCount++] = *foodPickup;
     for (size_t i = 0; i < RENDER_PROP_COUNT; i++) {
         items[itemCount++] = props[i];
@@ -78,6 +92,6 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
 
     Render_SortItems(items, itemCount);
     for (size_t i = 0; i < itemCount; i++) {
-        DrawItem(&items[i], player, playerSheet, thornback, debug);
+        DrawItem(&items[i], player, playerSheet, thornback, ashSkitter, debug);
     }
 }

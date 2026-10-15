@@ -15,9 +15,9 @@ status, locked decisions, and the next bounded task.
   5.5.
 - The current prototype is a top-down, eight-direction exploration game.
 - The current blockout contains five linked 40×23 (640×368 px) Jungle slice
-  areas plus a small, non-campaign room-template test area. The test area is
-  reached from the arena and returns using the same room data, movement,
-  collision, transitions, and save validation as the existing areas.
+  areas plus the first Ember Caverns greybox, Ashfall Descent. Ashfall is
+  reached from the Arena and returns using the shared room data, movement,
+  collision, transitions, and save validation.
 
 ### Implemented
 
@@ -29,12 +29,36 @@ status, locked decisions, and the next bounded task.
 - Overgrown Clearing with a central exposed route, reconnecting safe outer
   loop, marked optional nook, rock thickets, palms, and foreground grass.
 - Paired fade transitions and camera resets connect the five Jungle slice
-  areas and the non-campaign template test area. The ten directed exits and
-  their destination spawns are authored in the room definitions.
+  areas and Ashfall Descent. The twelve directed exits and their destination
+  spawns are authored in the room definitions.
 - A compact room-definition table associates each of the five Jungle areas
   with its safe entry spawn, authored prop array, inspectable targets, ramp
   metadata, optional gate prop used by collision, outgoing transitions, and
   area-specific food-node identity, Palm Fruit position, and tile generator.
+- Ashfall Descent reuses the former room-template pilot slot and adds a
+  branching vent-route greybox, one explicit elevation ramp, a safe return to
+  the Arena, and room-entry checkpoint saving. Amber telegraphs precede active
+  damaging steam; health depletion returns Ichigo to the Ashfall spawn.
+- One Ash Skitter now patrols between marked patches, shows a bright route tell,
+  dashes with once-per-pass contact damage, and accepts one Thornfang hit per
+  recovery window until defeated. Its state resets on room re-entry or death;
+  it adds no save flags or drops.
+- Ashfall is still accessible before Thornfang; its HUD now tells unequipped
+  players to return to the Arena trial rather than leaving the weapon
+  requirement implicit.
+- The Arena trial now has a pulsing world beacon and a west-center HUD locator
+  while Thornfang is missing and the trial is dormant, addressing the reported
+  difficulty finding the marker. This locator still needs a hands-on check.
+- A current-room minimap now appears in the upper-right HUD, showing the
+  current area name, generated paths/terrain, and a player-position dot.
+  While the Thornback trial is dormant and Thornfang is missing, the map also
+  marks the trial. It does not reveal other rooms; visual playtest is pending.
+- The user reports that the Ashfall route, vent warning/fairness, damage/reset,
+  and checkpoint after leaving/relaunching all passed hands-on testing on
+  2026-10-15. This is a user-reported playtest result.
+- The Ash Skitter implementation and its automated state, hit, damage-contact,
+  reset, and depth-order checks are complete; its readability and combat feel
+  still need a hands-on playtest.
 - Each existing area's authored tile-layout generator is selected through an
   indexed table; Root Path alone receives the gate-open tile-state flag.
 - Root Path root markings have a minimal inspect interaction: E/controller A,
@@ -121,8 +145,8 @@ status, locked decisions, and the next bounded task.
 - The user confirmed the inventory overlay displays saved state, opens/closes
   with its keyboard/controller inputs, and pauses/resumes gameplay.
 - The Windows build succeeded with version-4 food persistence.
-- All seven focused Windows tests passed: movement/collision, camera,
-  render-depth, Thornback trial, versioned save (including version-1 through
+- All eight focused Windows tests passed: movement/collision, camera,
+  render-depth, Thornback trial, Ash Skitter, versioned save (including version-1 through
   version-3 migration), inventory/food state, and Jungle
   objective progression. Tests cover food capacity, healing/clamping, no
   consumption at full health, and both collectible nodes' reachability and
@@ -140,9 +164,15 @@ status, locked decisions, and the next bounded task.
   and Palm Fruit positions, while confirming other areas have no food node.
 - Save validation uses `ROOM_AREA_COUNT` as its exclusive area bound, avoiding
   a separate final-area constant when room IDs are extended.
-- The non-campaign room-template pilot has a paired Arena connection, authored
-  layout/props/spawn, safe movement path, and round-trips as a save checkpoint.
-  Tests verify it without any new player-physics or progression branches.
+- The Stage F room-template gate was verified with a paired Arena connection,
+  authored layout/props/spawn, safe movement path, and save-checkpoint
+  round-trip; that pilot slot is now the Ashfall Descent greybox.
+- Ashfall's shared-movement route, ramp elevation change, paired return
+  transition, vent telegraph/active/recovery windows, and save-checkpoint
+  round-trip are covered by automated checks; the user reports passing a
+  hands-on navigation/hazard/checkpoint playtest on 2026-10-15. Ash Skitter
+  state, combat, contact, and depth ordering are automated; that encounter
+  still needs hands-on validation.
 - Inventory overlay hands-on check is user-confirmed.
 - The user reports that Palm Fruit collection/eating, full-health no-consume,
   and first-pickup persistence across relaunch and defeat/respawn all work.
@@ -245,11 +275,18 @@ Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
 
 ## Next Work Item
 
-Stage F's room-template gate is complete. Begin Stage G with a bounded greybox
-of the first Ember Caverns zone, Ashfall Descent: establish its entrance,
-telegraphed-vent route, explicit ramp/elevation connector, and return/checkpoint
-path. Do not add enemies or the guardian until the navigation layout is
-playtested.
+Stage F's room-template gate is complete. The Ashfall Descent navigation gate
+passed in a user-reported hands-on playtest on 2026-10-15: route, vent
+warnings/fairness, damage/reset feedback, and checkpoint persistence after
+relaunch were confirmed. The Arena trial has a pulsing marker, HUD locator, and
+a current-room minimap with the player's position and a trial icon while the
+trial is active; hands-on verification is pending. The first Ash Skitter is
+implemented as a two-hit Thornfang encounter with a bright route tell,
+dash/contact, and recovery; automated checks cover alert-range boundary,
+once-per-dash contact, and reinitialization. Next, verify the Arena map and
+locator in play, then hands-on test Ash Skitter's warning readability,
+evasion, elevation safety, attack range/facing, recovery timing, and
+defeat/reset behavior. Do not add the Forge Warden or a guardian.
 
 ## Upcoming Roadmap
 

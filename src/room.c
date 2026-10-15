@@ -29,6 +29,27 @@ typedef struct RoomTransition {
     Vector2 spawnPoint;
 } RoomTransition;
 
+typedef struct RoomVent {
+    Rectangle bounds;
+    float phaseOffset;
+} RoomVent;
+
+typedef enum RoomVentPhase {
+    ROOM_VENT_RESTING,
+    ROOM_VENT_WARNING,
+    ROOM_VENT_ACTIVE
+} RoomVentPhase;
+
+static RoomVentPhase VentPhase(const RoomVent *vent, float time)
+{
+    float phase = fmodf(time + vent->phaseOffset, ASHFALL_VENT_CYCLE);
+    if (phase < ASHFALL_VENT_TELL_TIME) return ROOM_VENT_WARNING;
+    if (phase < ASHFALL_VENT_TELL_TIME + ASHFALL_VENT_ACTIVE_TIME) {
+        return ROOM_VENT_ACTIVE;
+    }
+    return ROOM_VENT_RESTING;
+}
+
 typedef char (*RoomTileGenerator)(int x, int y, bool thornGateOpen);
 
 static char EntranceTileAt(int x, int y, bool thornGateOpen);
@@ -36,7 +57,7 @@ static char RootPathTileAt(int x, int y, bool thornGateOpen);
 static char ClearingTileAt(int x, int y, bool thornGateOpen);
 static char ShrineApproachTileAt(int x, int y, bool thornGateOpen);
 static char ThornbackArenaTileAt(int x, int y, bool thornGateOpen);
-static char TemplateTestTileAt(int x, int y, bool thornGateOpen);
+static char AshfallDescentTileAt(int x, int y, bool thornGateOpen);
 
 typedef struct RoomDefinition {
     Vector2 spawnPoint;
@@ -49,6 +70,8 @@ typedef struct RoomDefinition {
     const struct RoomInteractableEntry *interactables;
     size_t interactableCount;
     const RoomRamp *ramp;
+    const RoomVent *vents;
+    size_t ventCount;
     RoomSprite gatePropSprite;
 } RoomDefinition;
 
@@ -77,10 +100,10 @@ static const RoomTransition SHRINE_APPROACH_TRANSITIONS[] = {
 
 static const RoomTransition THORNBACK_ARENA_TRANSITIONS[] = {
     {ROOM_AREA_SHRINE_APPROACH, ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}},
-    {ROOM_AREA_TEMPLATE_TEST, ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}}
+    {ROOM_AREA_ASHFALL_DESCENT, ROOM_EXIT_TOP, 16.0f, {320.0f, 336.0f}}
 };
 
-static const RoomTransition TEMPLATE_TEST_TRANSITIONS[] = {
+static const RoomTransition ASHFALL_DESCENT_TRANSITIONS[] = {
     {ROOM_AREA_THORNBACK_ARENA, ROOM_EXIT_BOTTOM, 352.0f, {320.0f, 32.0f}}
 };
 
@@ -98,6 +121,20 @@ static const RoomRamp ROOT_PATH_RAMP = {
     .upperLanding = {8.0f * TILE_SIZE, 11.0f * TILE_SIZE,
                      2.0f * TILE_SIZE, TILE_SIZE},
     .transitionY = 12.5f * TILE_SIZE
+};
+
+static const RoomRamp ASHFALL_DESCENT_RAMP = {
+    .bounds = {8.0f * TILE_SIZE, 12.0f * TILE_SIZE,
+               2.0f * TILE_SIZE, TILE_SIZE},
+    .upperLanding = {8.0f * TILE_SIZE, 11.0f * TILE_SIZE,
+                     2.0f * TILE_SIZE, TILE_SIZE},
+    .transitionY = 12.5f * TILE_SIZE
+};
+
+static const RoomVent ASHFALL_DESCENT_VENTS[] = {
+    {{296.0f, 232.0f, 48.0f, 16.0f}, 0.0f},
+    {{296.0f, 152.0f, 48.0f, 16.0f}, 1.0f},
+    {{296.0f, 72.0f, 48.0f, 16.0f}, 2.0f}
 };
 
 static const RoomProp ENTRANCE_PROPS[ROOM_PROP_COUNT] = {
@@ -215,15 +252,15 @@ static const RoomProp THORNBACK_ARENA_PROPS[ROOM_PROP_COUNT] = {
      ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER}
 };
 
-static const RoomProp TEMPLATE_TEST_PROPS[ROOM_PROP_COUNT] = {
+static const RoomProp ASHFALL_DESCENT_PROPS[ROOM_PROP_COUNT] = {
     {{128.0f, 88.0f}, 144.0f, {0.0f, 0.0f, 0.0f, 0.0f},
-     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_TALL_GRASS},
-    {{512.0f, 88.0f}, 144.0f, {0.0f, 0.0f, 0.0f, 0.0f},
-     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_TALL_GRASS},
-    {{128.0f, 280.0f}, 336.0f, {0.0f, 0.0f, 0.0f, 0.0f},
-     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_TALL_GRASS},
-    {{512.0f, 280.0f}, 336.0f, {0.0f, 0.0f, 0.0f, 0.0f},
-     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_TALL_GRASS},
+     ROOM_ELEVATION_UPPER, false, ROOM_SPRITE_ROCK},
+    {{512.0f, 88.0f}, 144.0f, {528.0f, 132.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
+    {{128.0f, 280.0f}, 336.0f, {144.0f, 324.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_ROCK},
+    {{512.0f, 280.0f}, 336.0f, {528.0f, 324.0f, 16.0f, 16.0f},
+     ROOM_ELEVATION_GROUND, true, ROOM_SPRITE_ROCK},
     {{208.0f, 112.0f}, 168.0f, {224.0f, 136.0f, 16.0f, 16.0f},
      ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
     {{384.0f, 112.0f}, 168.0f, {400.0f, 136.0f, 16.0f, 16.0f},
@@ -233,8 +270,8 @@ static const RoomProp TEMPLATE_TEST_PROPS[ROOM_PROP_COUNT] = {
     {{384.0f, 240.0f}, 296.0f, {400.0f, 264.0f, 16.0f, 16.0f},
      ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_ROCK},
     {{176.0f, 176.0f}, 200.0f, {0.0f, 0.0f, 0.0f, 0.0f},
-     ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER},
-    {{432.0f, 176.0f}, 200.0f, {0.0f, 0.0f, 0.0f, 0.0f},
+     ROOM_ELEVATION_UPPER, false, ROOM_SPRITE_MARKER},
+    {{464.0f, 176.0f}, 200.0f, {0.0f, 0.0f, 0.0f, 0.0f},
      ROOM_ELEVATION_GROUND, false, ROOM_SPRITE_MARKER}
 };
 
@@ -384,15 +421,19 @@ static const RoomDefinition ROOM_DEFINITIONS[ROOM_AREA_COUNT] = {
                              sizeof(THORNBACK_ARENA_INTERACTABLES[0]),
         .gatePropSprite = ROOM_SPRITE_COUNT
     },
-    [ROOM_AREA_TEMPLATE_TEST] = {
+    [ROOM_AREA_ASHFALL_DESCENT] = {
         .spawnPoint = {320.0f, 336.0f},
-        .props = TEMPLATE_TEST_PROPS,
-        .tileGenerator = TemplateTestTileAt,
+        .props = ASHFALL_DESCENT_PROPS,
+        .tileGenerator = AshfallDescentTileAt,
         .foodNode = ROOM_FOOD_NODE_NONE,
         .palmFruitPosition = {104.0f, 184.0f},
-        .transitions = TEMPLATE_TEST_TRANSITIONS,
-        .transitionCount = sizeof(TEMPLATE_TEST_TRANSITIONS) /
-                           sizeof(TEMPLATE_TEST_TRANSITIONS[0]),
+        .transitions = ASHFALL_DESCENT_TRANSITIONS,
+        .transitionCount = sizeof(ASHFALL_DESCENT_TRANSITIONS) /
+                           sizeof(ASHFALL_DESCENT_TRANSITIONS[0]),
+        .ramp = &ASHFALL_DESCENT_RAMP,
+        .vents = ASHFALL_DESCENT_VENTS,
+        .ventCount = sizeof(ASHFALL_DESCENT_VENTS) /
+                     sizeof(ASHFALL_DESCENT_VENTS[0]),
         .gatePropSprite = ROOM_SPRITE_COUNT
     }
 };
@@ -577,20 +618,54 @@ static char ThornbackArenaTileAt(int x, int y, bool thornGateOpen)
     return ((x * 11 + y * 7) % 4 == 0) ? 'J' : 'G';
 }
 
-static char TemplateTestTileAt(int x, int y, bool thornGateOpen)
+static char AshfallDescentTileAt(int x, int y, bool thornGateOpen)
 {
     (void)thornGateOpen;
-    if (y <= 1 || y >= 21) {
-        return x >= 18 && x <= 21 ? 'D' : 'S';
-    }
+    bool centralTrail = x >= 18 && x <= 21;
+    bool junction = (y >= 17 && y <= 18) || (y >= 4 && y <= 5);
+    bool eastTrail = x >= 28 && x <= 31 && y >= 5 && y <= 17;
+    bool westLowerTrail = x >= 8 && x <= 11 && y >= 12 && y <= 17;
+    bool westUpperTrail = x >= 8 && x <= 11 && y >= 5 && y <= 10;
+    bool westRampLanding = x >= 8 && x <= 9 && y == 11;
+    bool westRamp = x >= 8 && x <= 9 && y == 12;
+
     if (x <= 1 || x >= ROOM_COLS - 2) return 'S';
-    if (x >= 16 && x <= 23) return 'D';
-    return ((x * 7 + y * 13) % 5 == 0) ? 'G' : 'J';
+    if (y <= 2 || y >= 21) return centralTrail ? 'D' : 'S';
+    if (westRampLanding) return 'S';
+    if (x >= 10 && x <= 11 && y == 11) return 'S';
+    if (westRamp) return 'R';
+    if (centralTrail || junction || eastTrail || westLowerTrail ||
+        westUpperTrail) return 'D';
+    return ((x * 11 + y * 7) % 4 == 0) ? 'G' : 'J';
 }
 
 static char RoomTileAt(RoomArea area, int x, int y, bool thornGateOpen)
 {
     return DefinitionForArea(area)->tileGenerator(x, y, thornGateOpen);
+}
+
+const char *Room_AreaLabel(RoomArea area)
+{
+    switch (area) {
+        case ROOM_AREA_JUNGLE_ENTRANCE: return "ENTRANCE";
+        case ROOM_AREA_ROOT_PATH: return "ROOT PATH";
+        case ROOM_AREA_OVERGROWN_CLEARING: return "CLEARING";
+        case ROOM_AREA_SHRINE_APPROACH: return "SHRINE";
+        case ROOM_AREA_THORNBACK_ARENA: return "ARENA";
+        case ROOM_AREA_ASHFALL_DESCENT: return "ASHFALL";
+        case ROOM_AREA_COUNT: break;
+    }
+    return "UNKNOWN";
+}
+
+Vector2 Room_MiniMapPlayerPosition(Vector2 playerPosition)
+{
+    const Vector2 mapOrigin = {234.0f, 20.0f};
+    const float mapPixelsPerWorldPixel = 2.0f / TILE_SIZE;
+    return (Vector2){
+        mapOrigin.x + playerPosition.x * mapPixelsPerWorldPixel,
+        mapOrigin.y + playerPosition.y * mapPixelsPerWorldPixel
+    };
 }
 
 void Room_Draw(const Room *r, float time, bool thornGateOpen)
@@ -608,12 +683,67 @@ void Room_Draw(const Room *r, float time, bool thornGateOpen)
             DrawTextureRec(r->tileset, src, dst, WHITE);
         }
     }
+    if (r->area == ROOM_AREA_ASHFALL_DESCENT) {
+        const RoomVent *vents = DefinitionForArea(r->area)->vents;
+        size_t ventCount = DefinitionForArea(r->area)->ventCount;
+        for (size_t i = 0; i < ventCount; i++) {
+            RoomVentPhase phase = VentPhase(&vents[i], time);
+            bool warning = phase == ROOM_VENT_WARNING;
+            bool active = phase == ROOM_VENT_ACTIVE;
+            Rectangle bounds = vents[i].bounds;
+            Color border = active ? (Color){255, 116, 52, 255}
+                                  : warning ? (Color){240, 183, 76, 230}
+                                            : (Color){116, 91, 66, 190};
+            DrawRectangleRec(bounds, active ? (Color){214, 74, 34, 100}
+                                            : (Color){68, 44, 32, 190});
+            DrawRectangleLinesEx(bounds, 1.0f, border);
+            if (active) {
+                for (int x = (int)bounds.x + 6;
+                     x < (int)(bounds.x + bounds.width); x += 12) {
+                    DrawLineEx((Vector2){(float)x, bounds.y + 3.0f},
+                               (Vector2){(float)(x - 3), bounds.y - 5.0f},
+                               2.0f, (Color){255, 184, 108, 230});
+                }
+            } else if (warning) {
+                DrawLineEx((Vector2){bounds.x + 5.0f,
+                                     bounds.y + bounds.height * 0.5f},
+                           (Vector2){bounds.x + bounds.width - 5.0f,
+                                     bounds.y + bounds.height * 0.5f},
+                           1.0f, (Color){255, 214, 127, 255});
+            }
+        }
+    }
     if (r->area == ROOM_AREA_ROOT_PATH && thornGateOpen) {
         DrawLineEx((Vector2){272.0f, 112.0f}, (Vector2){296.0f, 112.0f},
                    2.0f, (Color){100, 219, 143, 220});
         DrawLineEx((Vector2){344.0f, 112.0f}, (Vector2){368.0f, 112.0f},
                    2.0f, (Color){100, 219, 143, 220});
     }
+}
+
+bool Room_VentHazardAt(RoomArea area, Vector2 feet, float time,
+                       RoomElevation elevation, Vector2 *source)
+{
+    if (area != ROOM_AREA_ASHFALL_DESCENT ||
+        elevation != ROOM_ELEVATION_GROUND) return false;
+    const RoomDefinition *definition = DefinitionForArea(area);
+    for (size_t i = 0; i < definition->ventCount; i++) {
+        const RoomVent *vent = &definition->vents[i];
+        if (VentPhase(vent, time) == ROOM_VENT_ACTIVE &&
+            feet.x >= vent->bounds.x &&
+            feet.x <= vent->bounds.x + vent->bounds.width &&
+            feet.y >= vent->bounds.y &&
+            feet.y <= vent->bounds.y + vent->bounds.height) {
+            if (source != NULL) {
+                *source = (Vector2){
+                    vent->bounds.x + vent->bounds.width * 0.5f,
+                    vent->bounds.y + vent->bounds.height * 0.5f
+                };
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 Rectangle Room_Bounds(void)
@@ -769,6 +899,53 @@ bool Room_TryCutThornGate(RoomArea area, Vector2 feet,
     }
     *gateOpen = true;
     return true;
+}
+
+void Room_DrawMiniMap(const Room *r, Vector2 playerPosition,
+                      bool thornGateOpen, bool showTrialMarker)
+{
+    const float mapX = 234.0f;
+    const float mapY = 20.0f;
+    const float tilePixels = 2.0f;
+    const Color panelColor = {11, 26, 34, 235};
+    const Color borderColor = {127, 196, 192, 255};
+    const Color playerColor = {105, 225, 238, 255};
+
+    DrawRectangle(230, 6, 88, 62, panelColor);
+    DrawRectangleLines(230, 6, 88, 62, borderColor);
+    DrawText(Room_AreaLabel(r->area), 234, 9, 6, RAYWHITE);
+    DrawCircleV((Vector2){288.0f, 12.0f}, 2.0f, playerColor);
+    DrawText("YOU", 293, 9, 6, playerColor);
+
+    for (int y = 0; y < ROOM_ROWS; y++) {
+        for (int x = 0; x < ROOM_COLS; x++) {
+            char tile = RoomTileAt(r->area, x, y, thornGateOpen);
+            Color tileColor;
+            switch (tile) {
+                case 'D': tileColor = (Color){117, 133, 91, 255}; break;
+                case 'R': tileColor = (Color){96, 173, 190, 255}; break;
+                case 'T': tileColor = (Color){171, 119, 70, 255}; break;
+                case 'S':
+                case 'N':
+                case 'W': tileColor = (Color){62, 79, 76, 255}; break;
+                case 'G': tileColor = (Color){77, 111, 69, 255}; break;
+                default: tileColor = (Color){43, 77, 57, 255}; break;
+            }
+            DrawRectangle((int)(mapX + x * tilePixels),
+                          (int)(mapY + y * tilePixels),
+                          (int)tilePixels, (int)tilePixels, tileColor);
+        }
+    }
+
+    if (showTrialMarker) {
+        DrawRectangle((int)(mapX + 11.0f * tilePixels - 1.0f),
+                      (int)(mapY + 11.0f * tilePixels - 1.0f),
+                      4, 4, (Color){255, 214, 112, 255});
+    }
+
+    Vector2 playerMapPosition = Room_MiniMapPlayerPosition(playerPosition);
+    DrawCircleV(playerMapPosition, 2.0f, BLACK);
+    DrawCircleV(playerMapPosition, 1.0f, playerColor);
 }
 
 static bool IsSolid(char tile)

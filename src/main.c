@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "render.h"
 #include "thornback.h"
+#include "ash_skitter.h"
 #include "jungle_task.h"
 #include "save.h"
 #include <math.h>
@@ -379,6 +380,19 @@ static void DrawRootMarkerRoute(void)
                2.0f, routeColor);
 }
 
+static void DrawArenaTrialLocator(float worldTime)
+{
+    float pulse = 0.65f + 0.35f * sinf(worldTime * 4.0f);
+    Color locatorColor = Fade((Color){255, 214, 112, 255}, pulse);
+    DrawCircleLines(176, 198, 13.0f, locatorColor);
+    DrawCircleLines(176, 198, 18.0f, Fade(locatorColor, 0.65f));
+    DrawLineEx((Vector2){176.0f, 153.0f}, (Vector2){176.0f, 164.0f},
+               2.0f, locatorColor);
+    DrawTriangle((Vector2){171.0f, 162.0f}, (Vector2){181.0f, 162.0f},
+                 (Vector2){176.0f, 168.0f}, locatorColor);
+    DrawText("TRIAL", 158, 143, 8, locatorColor);
+}
+
 int main(void)
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
@@ -532,9 +546,12 @@ int main(void)
     float attackFeedbackTime = 0.0f;
     float thornGateFeedbackTime = 0.0f;
     float retryFeedbackTime = 0.0f;
+    float ashfallRetryFeedbackTime = 0.0f;
     float promptFade = 0.0f;
     Thornback thornback;
     Thornback_Init(&thornback);
+    AshSkitter ashSkitter;
+    AshSkitter_Init(&ashSkitter);
     const RoomInteractable *activeInteractable = NULL;
     const RoomInteractable *promptInteractable = NULL;
 
@@ -593,6 +610,35 @@ int main(void)
                     player.thornGateOpen = thornGateOpen;
                     Player_Update(&player, &input, SIM_DT, room.area);
                     Camera_Update(&camera, player.pos, player.vel, SIM_DT);
+                    Vector2 ventSource;
+                    if (Room_VentHazardAt(room.area, player.pos, worldTime,
+                                          player.elevation, &ventSource)) {
+                        (void)Player_TakeDamage(&player, ventSource,
+                                               room.area);
+                        if (player.health <= 0) {
+                            Player_Init(&player, Room_SpawnPoint(room.area));
+                            player.thornfangOwned =
+                                HasThornfang(&inventory);
+                            player.thornGateOpen = thornGateOpen;
+                            AshSkitter_Init(&ashSkitter);
+                            Camera_Init(&camera, player.pos, Room_Bounds(),
+                                        (Vector2){(float)VIRTUAL_W,
+                                                  (float)VIRTUAL_H});
+                            interactBuffer = 0.0f;
+                            attackBuffer = 0.0f;
+                            foodUseBuffer = 0.0f;
+                            ashfallRetryFeedbackTime = 1.5f;
+                            if (saveAvailable &&
+                                !PersistProgress(
+                                    savePath, checkpointArea, player.health,
+                                    &inventory, thornGateOpen,
+                                    collectedFoodNodes, saveNotice,
+                                    sizeof(saveNotice), &saveNoticeTime)) {
+                                saveAvailable = false;
+                                saveError = true;
+                            }
+                        }
+                    }
                     if (foodUseBuffer > 0.0f) {
                         if (Inventory_ConsumeFood(
                                 &inventory, &player.health,
@@ -718,6 +764,7 @@ int main(void)
                             Room_SetArea(&room, destinationArea);
                             checkpointArea = destinationArea;
                             Thornback_Init(&thornback);
+                            AshSkitter_Init(&ashSkitter);
                             Player_Init(&player, destinationSpawn);
                             player.health = health;
                             player.damageInvulnerability =
@@ -827,6 +874,49 @@ int main(void)
                         if (attackBuffer < 0.0f) attackBuffer = 0.0f;
                     }
                 }
+            } else if (room.area == ROOM_AREA_ASHFALL_DESCENT &&
+                       transitionPhase == TRANSITION_NONE) {
+                AshSkitter_Update(&ashSkitter, player.pos, SIM_DT);
+                if (AshSkitter_TryPlayerContact(
+                        &ashSkitter, player.pos, player.elevation)) {
+                    (void)Player_TakeDamage(&player, ashSkitter.position,
+                                            room.area);
+                    if (player.health <= 0) {
+                        Player_Init(&player, Room_SpawnPoint(room.area));
+                        player.thornfangOwned = HasThornfang(&inventory);
+                        player.thornGateOpen = thornGateOpen;
+                        AshSkitter_Init(&ashSkitter);
+                        Camera_Init(&camera, player.pos, Room_Bounds(),
+                                    (Vector2){(float)VIRTUAL_W,
+                                              (float)VIRTUAL_H});
+                        interactBuffer = 0.0f;
+                        attackBuffer = 0.0f;
+                        foodUseBuffer = 0.0f;
+                        ashfallRetryFeedbackTime = 1.5f;
+                        if (saveAvailable &&
+                            !PersistProgress(
+                                savePath, checkpointArea, player.health,
+                                &inventory, thornGateOpen,
+                                collectedFoodNodes, saveNotice,
+                                sizeof(saveNotice), &saveNoticeTime)) {
+                            saveAvailable = false;
+                            saveError = true;
+                        }
+                    }
+                }
+                if (attackBuffer > 0.0f) {
+                    if (AshSkitter_TryHit(
+                            &ashSkitter, player.pos,
+                            FacingDirection(player.facing),
+                            player.elevation,
+                            HasThornfang(&inventory))) {
+                        attackFeedbackTime = 0.25f;
+                        attackBuffer = 0.0f;
+                    } else {
+                        attackBuffer -= SIM_DT;
+                        if (attackBuffer < 0.0f) attackBuffer = 0.0f;
+                    }
+                }
             } else {
                 attackBuffer = 0.0f;
             }
@@ -843,6 +933,12 @@ int main(void)
             if (retryFeedbackTime > 0.0f) {
                 retryFeedbackTime -= SIM_DT;
                 if (retryFeedbackTime < 0.0f) retryFeedbackTime = 0.0f;
+            }
+            if (ashfallRetryFeedbackTime > 0.0f) {
+                ashfallRetryFeedbackTime -= SIM_DT;
+                if (ashfallRetryFeedbackTime < 0.0f) {
+                    ashfallRetryFeedbackTime = 0.0f;
+                }
             }
             if (pickupNoticeTime > 0.0f) {
                 pickupNoticeTime -= SIM_DT;
@@ -871,6 +967,9 @@ int main(void)
             if (room.area == ROOM_AREA_THORNBACK_ARENA) {
                 Thornback_DrawWarning(&thornback);
             }
+            if (room.area == ROOM_AREA_ASHFALL_DESCENT) {
+                AshSkitter_DrawWarning(&ashSkitter);
+            }
             RenderItem foodPickup;
             const RenderItem *foodPickupPtr = NULL;
             uint32_t roomFoodNode = Room_FoodNodeForArea(room.area);
@@ -882,7 +981,13 @@ int main(void)
             Render_DrawDepthScene(
                 &player, sheet, props,
                 room.area == ROOM_AREA_THORNBACK_ARENA ? &thornback : NULL,
+                room.area == ROOM_AREA_ASHFALL_DESCENT ? &ashSkitter : NULL,
                 foodPickupPtr, debug);
+            if (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                !HasThornfang(&inventory) &&
+                thornback.state == THORNBACK_STATE_DORMANT) {
+                DrawArenaTrialLocator(worldTime);
+            }
             EndMode2D();
             if (transitionPhase != TRANSITION_NONE) {
                 float alpha = transitionTime / 0.2f;
@@ -895,13 +1000,56 @@ int main(void)
             DrawInteractionUI(promptInteractable, promptFade,
                               &interaction);
             bool objectiveCueVisible =
+                room.area == ROOM_AREA_ASHFALL_DESCENT ||
+                (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                 !HasThornfang(&inventory) &&
+                 thornback.state == THORNBACK_STATE_DORMANT &&
+                 retryFeedbackTime <= 0.0f) ||
                 (room.area == ROOM_AREA_ROOT_PATH &&
                  thornGateOpen && thornGateFeedbackTime > 0.0f) ||
                 (room.area == ROOM_AREA_THORNBACK_ARENA &&
                  (retryFeedbackTime > 0.0f ||
                   HasThornfang(&inventory) ||
                   thornback.state != THORNBACK_STATE_DORMANT));
-            if (!objectiveCueVisible) {
+            if (room.area == ROOM_AREA_ASHFALL_DESCENT) {
+                const char *ashfallCue;
+                if (!HasThornfang(&inventory)) {
+                    ashfallCue =
+                        "SKITTER NEEDS THORNFANG - ARENA TRIAL";
+                } else if (ashSkitter.state == ASH_SKITTER_STATE_DORMANT) {
+                    ashfallCue =
+                        "ASHFALL: AMBER TELLS - ORANGE VENTS HARM";
+                } else if (ashSkitter.state == ASH_SKITTER_STATE_TELL) {
+                    ashfallCue = "SKITTER TELL - CLEAR THE GLOWING LINE";
+                } else if (ashSkitter.state == ASH_SKITTER_STATE_DASH) {
+                    ashfallCue = "SKITTER DASH - MOVE CLEAR";
+                } else if (ashSkitter.state ==
+                           ASH_SKITTER_STATE_RECOVERY) {
+                    ashfallCue = attackFeedbackTime > 0.0f
+                                     ? "SKITTER HIT!"
+                                     : HasThornfang(&inventory)
+                                           ? "RECOVERY - FACE + SPACE / X"
+                                           : "RECOVERY - THORNFANG NEEDED";
+                } else if (ashSkitter.state ==
+                           ASH_SKITTER_STATE_DEFEATED) {
+                    ashfallCue = "ASH SKITTER DOWN - ROUTE CLEAR";
+                }
+                DrawRectangle(6, 22, 250, 15, (Color){11, 26, 34, 220});
+                DrawText(ashfallCue, 10, 26, 8,
+                         (Color){245, 214, 124, 255});
+                if (ashSkitter.state != ASH_SKITTER_STATE_DORMANT) {
+                    DrawText(TextFormat("SKITTER %d/%d", ashSkitter.health,
+                                        ASH_SKITTER_HEALTH),
+                             234, 71, 8, RAYWHITE);
+                }
+            } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                       !HasThornfang(&inventory) &&
+                       thornback.state == THORNBACK_STATE_DORMANT &&
+                       retryFeedbackTime <= 0.0f) {
+                DrawRectangle(6, 22, 250, 15, (Color){11, 26, 34, 220});
+                DrawText("ARENA TRIAL: WEST-CENTER GLOWING MARKER",
+                         10, 26, 8, (Color){245, 214, 124, 255});
+            } else if (!objectiveCueVisible) {
                 JungleTaskProgress taskProgress = {
                     .rootWeaveSeen = interaction.rootWeaveSeen,
                     .rootMarkerActivated =
@@ -917,6 +1065,13 @@ int main(void)
                 DrawText(TextFormat("OBJECTIVE: %s",
                                     JungleTask_CurrentObjective(taskProgress)),
                          10, 26, 8, (Color){245, 214, 124, 255});
+            }
+            if (room.area == ROOM_AREA_THORNBACK_ARENA &&
+                !HasThornfang(&inventory) &&
+                thornback.state == THORNBACK_STATE_DORMANT) {
+                Room_DrawMiniMap(&room, player.pos, thornGateOpen, true);
+            } else {
+                Room_DrawMiniMap(&room, player.pos, thornGateOpen, false);
             }
             bool thornGatePrompt = Room_IsFacingThornGate(
                 room.area, player.pos, FacingDirection(player.facing),
@@ -954,6 +1109,11 @@ int main(void)
                 DrawRectangle(6, 22, 210, 15, (Color){11, 26, 34, 220});
                 DrawText("TRIAL RESET - RETURN TO MARKER", 10, 26, 8,
                          (Color){245, 214, 124, 255});
+            } else if (room.area == ROOM_AREA_ASHFALL_DESCENT &&
+                       ashfallRetryFeedbackTime > 0.0f) {
+                DrawRectangle(6, 22, 218, 15, (Color){11, 26, 34, 220});
+                DrawText("STEAM RESET - ROOM ENTRY", 10, 26, 8,
+                         (Color){255, 139, 115, 255});
             } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                 HasThornfang(&inventory)) {
                 DrawRectangle(6, 22, 146, 15, (Color){11, 26, 34, 220});
@@ -978,7 +1138,7 @@ int main(void)
                 DrawText(cue, 10, 26, 8, (Color){245, 214, 124, 255});
                 DrawText(TextFormat("THORNBACK %d/%d", thornback.health,
                                     THORNBACK_HEALTH),
-                         224, 26, 8, (Color){245, 214, 124, 255});
+                         234, 71, 8, (Color){245, 214, 124, 255});
             }
             if (inventoryOpen) DrawInventoryUI(&inventory);
             if (helpOpen) DrawHelpUI();

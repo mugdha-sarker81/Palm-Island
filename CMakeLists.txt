@@ -61,6 +61,7 @@ add_executable(PalmIsland
     src/camera.c
     src/render.c
     src/thornback.c
+    src/ash_skitter.c
 )
 if(NOT MSVC)
     target_compile_options(PalmIsland PRIVATE -Wall -Wextra)
@@ -95,12 +96,24 @@ if(PALM_BUILD_TESTS)
     endif()
     add_test(NAME camera_follow COMMAND PalmIslandCameraTests)
 
+    add_executable(PalmIslandMinimapTests
+        tests/minimap_test.c
+        src/room.c
+    )
+    target_include_directories(PalmIslandMinimapTests PRIVATE src)
+    target_link_libraries(PalmIslandMinimapTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandMinimapTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME minimap_position COMMAND PalmIslandMinimapTests)
+
     add_executable(PalmIslandRenderTests
         tests/render_depth_test.c
         src/render.c
         src/player.c
         src/room.c
         src/thornback.c
+        src/ash_skitter.c
     )
     target_include_directories(PalmIslandRenderTests PRIVATE src)
     target_link_libraries(PalmIslandRenderTests PRIVATE raylib)
@@ -119,6 +132,17 @@ if(PALM_BUILD_TESTS)
         target_compile_options(PalmIslandThornbackTests PRIVATE -Wall -Wextra)
     endif()
     add_test(NAME thornback_trial COMMAND PalmIslandThornbackTests)
+
+    add_executable(PalmIslandAshSkitterTests
+        tests/ash_skitter_test.c
+        src/ash_skitter.c
+    )
+    target_include_directories(PalmIslandAshSkitterTests PRIVATE src)
+    target_link_libraries(PalmIslandAshSkitterTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandAshSkitterTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME ash_skitter COMMAND PalmIslandAshSkitterTests)
 
     add_executable(PalmIslandSaveTests
         tests/save_test.c

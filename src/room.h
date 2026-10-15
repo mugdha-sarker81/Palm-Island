@@ -14,7 +14,7 @@ typedef enum RoomArea {
     ROOM_AREA_OVERGROWN_CLEARING,
     ROOM_AREA_SHRINE_APPROACH,
     ROOM_AREA_THORNBACK_ARENA,
-    ROOM_AREA_TEMPLATE_TEST,
+    ROOM_AREA_ASHFALL_DESCENT,
     ROOM_AREA_COUNT
 } RoomArea;
 
@@ -87,6 +87,10 @@ bool      Room_Load(Room *r, const char *tilesetPath);
 void      Room_SetArea(Room *r, RoomArea area);
 void      Room_Unload(Room *r);
 void      Room_Draw(const Room *r, float time, bool thornGateOpen);
+void      Room_DrawMiniMap(const Room *r, Vector2 playerPosition,
+                           bool thornGateOpen, bool showTrialMarker);
+const char *Room_AreaLabel(RoomArea area);
+Vector2   Room_MiniMapPlayerPosition(Vector2 playerPosition);
 Rectangle Room_Bounds(void);
 Vector2   Room_SpawnPoint(RoomArea area);
 const RoomProp *Room_Props(RoomArea area);
@@ -122,5 +126,8 @@ bool      Room_CollidesAtElevationWithGate(RoomArea area, Rectangle collider,
 /* Changes elevation only when a move crosses the midpoint of the stair connector. */
 void      Room_TryRampTransition(RoomArea area, Vector2 from, Vector2 to,
                                  RoomElevation *elevation);
+/* Returns the active Ashfall vent containing the player's feet. */
+bool      Room_VentHazardAt(RoomArea area, Vector2 feet, float time,
+                            RoomElevation elevation, Vector2 *source);
 
 #endif

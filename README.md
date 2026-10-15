@@ -10,11 +10,16 @@ and understanding the island—not grinding or constant combat.
 > The current executable is a top-down prototype with five linked Forgotten
 > Jungle slice areas: the Entrance, Root Path, Overgrown Clearing, Shrine
 > Approach, and a Thornback Arena shell with a two-pattern encounter
-> prototype. A sixth, non-campaign room-template test area connects to the
-> Arena to exercise room data and shared movement, collision, transitions, and
-> save behavior. It has placeholder terrain and props, player collision, a
-> scrolling camera, ramps, a Thornfang-cuttable gate, and fade transitions
-> between the areas. A few landmarks have small inspect interactions. A
+> prototype. A sixth area, Ashfall Descent, begins the Ember Caverns expansion
+> with a connected vent-route greybox, one elevation ramp, and a return
+> checkpoint. Amber vent warnings precede damaging orange steam bursts; a safe
+> upper route avoids them. The user reports the route, hazard fairness, and
+> checkpoint passed hands-on playtesting. Ashfall now also has one two-hit
+> Ash Skitter, with a bright route tell, dash contact, and a Thornfang recovery
+> window; this encounter awaits its own playtest. The areas use shared
+> movement, collision, room transitions, and save behavior. They have
+> placeholder terrain and props, a scrolling camera, a Thornfang-cuttable gate,
+> and fade transitions. A few landmarks have small inspect interactions. A
 > versioned autosave preserves Jungle checkpoints, health, the Thornfang
 > weapon, discovered evidence, both Palm Fruit nodes, and the opened gate. A
 > compact inventory overlay and two prototype food pickups are implemented;
@@ -67,21 +72,34 @@ rejoins an exposed central route and reaches a hinted side nook with an
 inspectable explorer's note. The Clearing connects to a non-combat Shrine
 Approach with a courtyard and a Map of Roots mural; the open north doorway
 leads into a traversable Thornback Arena shell with a clear perimeter route
-and a safe return path. The Arena's north exit leads into the non-campaign
-room-template test area, which returns to the Arena and has no story or
-progression content. The west marker starts a Thornback encounter prototype
+and a safe return path. The Arena's north exit leads into Ashfall Descent, the first Ember
+Caverns greybox. Its branching upper/lower route leads around periodic, clearly marked
+steam vents; the west ramp links ground and upper elevation. Touching active
+steam costs a heart, with the existing invulnerability and knockback, and
+depleting health resets to Ashfall's entry checkpoint. The southern exit
+returns to the Arena. One Ash Skitter patrols between marked safe patches,
+telegraphs its route, dashes across it, and can be hit with Thornfang during
+recovery; the encounter resets when the room is re-entered. No Ashfall boss or
+completed cavern progression has been implemented. The west marker starts a
+Thornback encounter prototype
 that alternates a straight charge with a slower, broad sweep. Each attack has
 a distinct ground tell and recovery window; the sweep's marked danger band
 leaves a safe repositioning strip above and below it. The player can strike
 once during each recovery, and must face Thornback and be in range. The
 prototype includes five hearts, visible invulnerability/knockback, a full-
 health retry cue at the Arena entrance, and a Thornfang reward.
+Before Thornfang is earned, a pulsing beacon marks the trial on the Arena's
+west-center side; approach from the south and move north, then west. Stand
+just south of the marker, face north, and press E/controller A to begin.
+The upper-right current-room minimap names the area, shows the player dot, and
+marks the trial when it is available. It updates as you move and change rooms.
 After earning it, face the marked Root Path vines and press Space/controller X
 to cut them and open a direct corridor through the wall. General combat,
 quick weapon switching, and save/load for map, tools, and settings are not
 implemented. The versioned
-autosave at `%APPDATA%/PalmIsland.sav` records each room-entry checkpoint and
-major clue/reward/gate progress, retaining the previous file as a `.bak`.
+autosave at `%APPDATA%/PalmIsland.sav` records room-entry checkpoints across
+the Jungle and Ashfall, plus major clue/reward/gate progress, retaining the
+previous file as a `.bak`.
 The opened gate is the return shortcut toward the Jungle Entrance and the user
 reports it works.
 Press I/Tab or controller Y to open the compact inventory overlay; it lists

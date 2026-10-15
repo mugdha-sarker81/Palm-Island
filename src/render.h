@@ -4,11 +4,13 @@
 #include "player.h"
 #include "room.h"
 #include "thornback.h"
+#include "ash_skitter.h"
 #include <stddef.h>
 
 typedef enum RenderItemType {
     RENDER_ITEM_PLAYER,
     RENDER_ITEM_THORNBACK,
+    RENDER_ITEM_ASH_SKITTER,
     RENDER_ITEM_PROP,
     RENDER_ITEM_FOOD
 } RenderItemType;
@@ -30,6 +32,7 @@ void Render_SortItems(RenderItem *items, size_t count);
 void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
                            const RenderItem props[RENDER_PROP_COUNT],
                            const Thornback *thornback,
+                           const AshSkitter *ashSkitter,
                            const RenderItem *foodPickup, bool debug);
 
 #endif

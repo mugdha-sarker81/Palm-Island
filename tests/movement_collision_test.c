@@ -92,7 +92,7 @@ static void TestAreaDefinitionsHaveFruitMetadata(void)
     CHECK(Room_FoodNodeForArea((RoomArea)-1) == ROOM_FOOD_NODE_NONE);
 }
 
-static void TestTemplateRoomUsesSharedMovementAndTransitions(void)
+static void TestAshfallRouteUsesSharedMovementAndTransitions(void)
 {
     Room room = {0};
     RoomArea destination;
@@ -101,24 +101,74 @@ static void TestTemplateRoomUsesSharedMovementAndTransitions(void)
     Room_SetArea(&room, ROOM_AREA_THORNBACK_ARENA);
     CHECK(Room_GetTransition(&room, (Vector2){320.0f, 16.0f},
                              &destination, &spawn));
-    CHECK(destination == ROOM_AREA_TEMPLATE_TEST);
+    CHECK(destination == ROOM_AREA_ASHFALL_DESCENT);
     CHECK(spawn.x == 320.0f && spawn.y == 336.0f);
     CHECK(!Room_CollidesInArea(destination, FeetAt(spawn.x, spawn.y)));
 
     Player player;
     Player_Init(&player, spawn);
+    AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 3 / 5,
+                  ROOM_AREA_ASHFALL_DESCENT);
+    AdvanceInArea(&player, (Vector2){-1.0f, 0.0f}, SIM_HZ * 9 / 4,
+                  ROOM_AREA_ASHFALL_DESCENT);
+    CHECK(player.pos.x >= 133.0f && player.pos.x <= 155.0f);
+    AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 2,
+                  ROOM_AREA_ASHFALL_DESCENT);
+    CHECK(player.elevation == ROOM_ELEVATION_UPPER);
+    CHECK(!Room_CollidesAtElevation(ROOM_AREA_ASHFALL_DESCENT,
+                                    Player_FeetCollider(&player),
+                                    player.elevation));
+    AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 1,
+                  ROOM_AREA_ASHFALL_DESCENT);
+    AdvanceInArea(&player, (Vector2){1.0f, 0.0f}, SIM_HZ * 2,
+                  ROOM_AREA_ASHFALL_DESCENT);
+    CHECK(player.pos.x > 280.0f && player.pos.x < 360.0f);
     AdvanceInArea(&player, (Vector2){0.0f, -1.0f}, SIM_HZ * 5,
-                  ROOM_AREA_TEMPLATE_TEST);
+                  ROOM_AREA_ASHFALL_DESCENT);
     CHECK(player.pos.y <= 16.0f);
-    CHECK(!Room_CollidesInArea(ROOM_AREA_TEMPLATE_TEST,
-                               Player_FeetCollider(&player)));
+    CHECK(!Room_CollidesAtElevation(ROOM_AREA_ASHFALL_DESCENT,
+                                    Player_FeetCollider(&player),
+                                    player.elevation));
     AdvanceInArea(&player, (Vector2){0.0f, 1.0f}, SIM_HZ * 5,
-                  ROOM_AREA_TEMPLATE_TEST);
-    Room_SetArea(&room, ROOM_AREA_TEMPLATE_TEST);
+                  ROOM_AREA_ASHFALL_DESCENT);
+    Room_SetArea(&room, ROOM_AREA_ASHFALL_DESCENT);
     CHECK(Room_GetTransition(&room, player.pos, &destination, &spawn));
     CHECK(destination == ROOM_AREA_THORNBACK_ARENA);
     CHECK(spawn.x == 320.0f && spawn.y == 32.0f);
     CHECK(!Room_CollidesInArea(destination, FeetAt(spawn.x, spawn.y)));
+}
+
+static void TestAshfallVentTelegraphAndHazardPhases(void)
+{
+    Vector2 source = {0.0f, 0.0f};
+    Vector2 firstVent = {320.0f, 240.0f};
+    CHECK(!Room_VentHazardAt(ROOM_AREA_ASHFALL_DESCENT, firstVent, 0.5f,
+                             ROOM_ELEVATION_GROUND, &source));
+    CHECK(Room_VentHazardAt(ROOM_AREA_ASHFALL_DESCENT, firstVent, 0.8f,
+                            ROOM_ELEVATION_GROUND, &source));
+    CHECK(source.x == firstVent.x && source.y == firstVent.y);
+    CHECK(!Room_VentHazardAt(ROOM_AREA_ASHFALL_DESCENT, firstVent, 1.4f,
+                             ROOM_ELEVATION_GROUND, &source));
+    CHECK(Room_VentHazardAt(ROOM_AREA_ASHFALL_DESCENT, firstVent, 1.19f,
+                            ROOM_ELEVATION_GROUND, &source));
+    CHECK(!Room_VentHazardAt(ROOM_AREA_ASHFALL_DESCENT, firstVent, 1.2f,
+                             ROOM_ELEVATION_GROUND, &source));
+    CHECK(!Room_VentHazardAt(ROOM_AREA_ASHFALL_DESCENT, firstVent, 0.8f,
+                             ROOM_ELEVATION_UPPER, &source));
+    CHECK(Room_VentHazardAt(ROOM_AREA_ASHFALL_DESCENT,
+                            (Vector2){320.0f, 160.0f}, 2.8f,
+                            ROOM_ELEVATION_GROUND, &source));
+    CHECK(!Room_VentHazardAt(ROOM_AREA_THORNBACK_ARENA, firstVent, 0.8f,
+                             ROOM_ELEVATION_GROUND, &source));
+
+    Player player;
+    Player_Init(&player, firstVent);
+    CHECK(Room_VentHazardAt(ROOM_AREA_ASHFALL_DESCENT, player.pos, 0.8f,
+                            player.elevation, &source));
+    CHECK(Player_TakeDamage(&player, source, ROOM_AREA_ASHFALL_DESCENT));
+    CHECK(player.health == PLAYER_START_HEALTH - 1);
+    CHECK(!Player_TakeDamage(&player, source, ROOM_AREA_ASHFALL_DESCENT));
+    CHECK(player.health == PLAYER_START_HEALTH - 1);
 }
 
 static void TestPlayerCanLoopAroundRootCluster(void)
@@ -819,7 +869,8 @@ int main(void)
     TestEntranceBoundsAndRouteLayout();
     TestAreaDefinitionsHaveSafeSpawnsAndProps();
     TestAreaDefinitionsHaveFruitMetadata();
-    TestTemplateRoomUsesSharedMovementAndTransitions();
+    TestAshfallRouteUsesSharedMovementAndTransitions();
+    TestAshfallVentTelegraphAndHazardPhases();
     TestPlayerCanLoopAroundRootCluster();
     TestTreeBasesBlockAndCanopiesStayWalkable();
     TestWallSlideAndDiagonalSpeed();

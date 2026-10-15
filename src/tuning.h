@@ -75,4 +75,22 @@
 #define FOOD_SERVING_CAPACITY 3
 #define FOOD_HEAL_AMOUNT 2
 
+/* --- Ashfall Descent greybox; verify timing in the first playtest --- */
+#define ASHFALL_VENT_CYCLE       3.0f
+#define ASHFALL_VENT_TELL_TIME   0.75f
+#define ASHFALL_VENT_ACTIVE_TIME 0.45f
+
+/* --- Ashfall Descent: first enemy prototype --- */
+#define ASH_SKITTER_PATCH_LEFT_X       272.0f
+#define ASH_SKITTER_PATCH_RIGHT_X      368.0f
+#define ASH_SKITTER_LANE_Y             200.0f
+#define ASH_SKITTER_ALERT_RANGE        112.0f
+#define ASH_SKITTER_TELL_TIME          0.75f
+#define ASH_SKITTER_DASH_SPEED         140.0f
+#define ASH_SKITTER_RECOVERY_TIME      0.85f
+#define ASH_SKITTER_HEALTH             2
+#define ASH_SKITTER_CONTACT_HALF_WIDTH 8.0f
+#define ASH_SKITTER_CONTACT_HALF_HEIGHT 7.0f
+#define ASH_SKITTER_PLAYER_HIT_RANGE   24.0f
+
 #endif
