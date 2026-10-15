@@ -74,7 +74,10 @@ status, locked decisions, and the next bounded task.
   user-reported; do not infer or invent measurements.
 - The user confirmed that the Shrine Approach mural, routes, sealed threshold,
   and return worked. This was a hands-on pass before the threshold was opened
-  into the arena; the changed doorway and arena shell still need a playtest.
+  into the arena.
+- The user manually playtested the Thornback Arena shell and reports that
+  everything works well, including the route through the arena and return to
+  Shrine Approach. Visual details are user-reported, not independently verified.
 - Treat visual and hands-on passes as user-reported; automated tests do not
   verify the game’s appearance or feel.
 
@@ -116,13 +119,12 @@ Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
 
 ## Next Work Item
 
-Playtest the Thornback Arena shell in `.\run.bat`. Enter north from Shrine
-Approach, traverse the perimeter and open center, check the rock props and
-visible doorway, then return south and confirm the fade lands safely in Shrine
-Approach. Automated tests cover traversal points, room bounds, and paired
-transitions; visual readability remains unverified. Do not add Thornback,
-combat, trial activation, Thornfang, persistent progression, or signature
-mechanics during this check.
+Implement the first bounded Thornback trial prototype in the Arena: a clear
+trial start, one readable Phase 1 tell, a straight charge, and a recovery
+window. Keep Phase 2, the proposed perfect-dodge "The Read" mechanic, Thornfang,
+reward/progression, and save/load out of scope. Add focused tests for the
+encounter state transitions and safe Arena traversal, then build and manually
+playtest this first loop before expanding it.
 
 ## Feel Gate Record
 
@@ -155,5 +157,7 @@ user-reported; exact results for manual checks were not supplied.
 - [README.md](../README.md): overview and Windows build/run commands.
 - [ASSET_INDEX.md](ASSET_INDEX.md): art, preview, generator, and source-pack
   inventory.
+- [REFERENCE_LEGEND_OF_LUA.md](REFERENCE_LEGEND_OF_LUA.md): high-level external
+  reference notes; no third-party code or assets are included.
 - [source/README.md](source/README.md): historical documents and backups.
 - [AGENTS.md](../AGENTS.md): assistant workflow.
