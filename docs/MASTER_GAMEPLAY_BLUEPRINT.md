@@ -1334,6 +1334,58 @@ encounter prototype and playtests.
 
 ## 11. UI, audio, accessibility, and release needs
 
+### Player UX and in-game teaching
+
+The player's attention is limited. Help them understand the world; do not
+replace exploration with a stream of instructions. For each important moment,
+the player should be able to answer:
+
+1. **Where am I, and what is the immediate goal?**
+2. **What can I try here, and which input performs it?**
+3. **Did it work? If not, why not, and what can I do next?**
+
+Use these rules throughout development, not as a last-minute UI pass:
+
+- Teach a new control or mechanic in a safe, low-pressure space. Show one
+  concise contextual hint, let the player perform the action, then show a
+  visible result. Avoid multi-screen tutorials and forced text walls.
+- Use consistent verbs, icons, button labels, and prompt placement. Show the
+  active keyboard/controller binding. Prompts should name the action and
+  target; don't show a generic "interact" prompt when the needed action is
+  different.
+- A blocked or invalid action must explain its reason and a useful next step:
+  for example, which ability is missing, which direction to face, or whether
+  the target is out of reach. Never make an input appear broken.
+- Distinguish required progress from optional discoveries in wording and UI.
+  Keep the immediate objective brief and dismissible or reviewable; do not
+  add a permanent quest arrow by default. Let landmarks, path shape, light,
+  sound, and NPC context carry guidance.
+- Make puzzles observable: show state changes, confirm correct inputs, and
+  give specific wrong-input feedback plus a safe retry/reset path. Never rely
+  on guessing an invisible sequence.
+- Make hazards and enemy attacks fair: provide a readable tell, safe response,
+  and enough time to react before damage. Convey critical danger with more
+  than color or sound alone. A player should be able to explain a defeat.
+- Confirm important outcomes such as collecting an item, opening a route,
+  saving progress, taking damage, or restoring health. Keep transient feedback
+  near the affected object or in a consistent HUD location.
+- Prioritize health/threat and the current interaction; show secondary
+  information only when useful or requested. Avoid overlapping prompts,
+  objectives, map markers, and combat cues at the 320×180 canvas size.
+- Keep text short, high-contrast, and readable at native resolution. Avoid
+  rapid flashing, unnecessary screen shake, long button holds, and
+  audio-only instructions. Offer pause, replayable hints, and remappable or
+  documented controls as the project scope allows.
+- Make polish serve comprehension: animation, sound, color, and effects should
+  reinforce what changed or where to look, not compete with the scene. "Cool"
+  is a memorable, legible response—not more particles or louder UI.
+
+For each new-player test, give a player a task without coaching and observe:
+where they stop, which prompts they notice, whether they can explain the goal,
+what an action did, why a gate or puzzle rejected them, and how they recover
+from a mistake. Record observations separately from interpretation; fix the
+earliest point of confusion and retest before adding more tutorial copy.
+
 ### Required player-facing UI
 
 - Title/new game/continue/quit; pause/resume/settings/return to title.

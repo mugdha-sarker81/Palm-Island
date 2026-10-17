@@ -12,6 +12,23 @@
   targets to verify in playtests, keep tunables in `src/tuning.h`, and change
   one tuning value per pass. Signature mechanics are proposals; get approval
   before implementing them and do not start them before the Feel Gate passes.
+- For UI, tutorials, onboarding, objectives, accessibility, or
+  general player-experience work, read the **Player UX and in-game teaching**
+  section in `docs/MASTER_GAMEPLAY_BLUEPRINT.md` and the relevant
+  `docs/PROJECT_ROADMAP.md` gate. Design each feature to make the player's
+  goal, available action, result, and recovery understandable without
+  unsolicited text walls or permanent waypoint arrows.
+- Apply the UX rules in every playable increment, not only the final polish
+  phase: teach one idea at a time in a safe context, let players try it, give
+  immediate and specific feedback, show the current keyboard/controller
+  binding, explain blocked actions, and preserve a clear way to retry or leave.
+  Avoid relying on color, audio, animation, or reading alone to communicate
+  critical information.
+- Validate usability with a fresh-player task, not only a build or unit test.
+  Record where the player hesitates, misunderstands, repeats an ignored
+  action, or cannot explain a failure; fix the cause before adding more
+  instructions. Do not claim a UX/playtest gate passed without observed or
+  explicitly user-reported evidence.
 - Treat proposed HP, damage, food, material counts, and shop prices there as
   untested starting points, not final balance. Keep crafting limited to the
   approved small fixed tool set; do not add generic recipes or material

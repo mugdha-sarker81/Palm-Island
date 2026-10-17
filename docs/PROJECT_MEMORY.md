@@ -301,6 +301,9 @@ decisions, playtest evidence, and the immediate next task.
   filtering, fixed 120 Hz simulation with bounded catch-up.
 - **Controls:** keyboard and controller; maintain parity and tune with the
   keyboard first.
+- **Player experience:** teach through concise, contextual, safe practice;
+  give clear feedback for successful and blocked actions; preserve a safe
+  retry/exit path. Validate with observed new-player tasks, not assumptions.
 - **First deliverable:** one 10–15 minute Forgotten Jungle slice. Validate
   handcrafted spaces before expanding the island.
 - **Approved campaign target:** implement the full blueprint campaign of eight

@@ -85,6 +85,12 @@ Every subphase below is designed to fit one focused coding prompt:
 5. Update Project Memory with what is verified, what remains unverified, and
    the next subphase. Keep user-reported playtest results labeled as such.
 
+For every playable subphase, include a small usability check: can a player
+identify the goal, the available action/control, the result, and a safe next
+step if they fail? Observe rather than coach; record confusion points and fix
+the earliest cause before adding more on-screen instructions. The Blueprint's
+**Player UX and in-game teaching** section contains the detailed rules.
+
 Suggested prompt ending:
 
 > Implement only subphase **[ID]** from `docs/PROJECT_ROADMAP.md`. Preserve
