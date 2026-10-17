@@ -1,9 +1,11 @@
 # Palm Island — Project Memory
 
-**Purpose:** A short, current handoff for developers and coding assistants.
-Detailed game design belongs in the gameplay blueprint; movement targets and
-feel proposals belong in the feel plan. This file records verified project
-status, locked decisions, and the next bounded task.
+**Purpose:** The canonical current-status handoff for developers and coding
+assistants. The [Project Roadmap](PROJECT_ROADMAP.md) owns the ordered,
+prompt-sized execution plan; the [Master Gameplay Blueprint](MASTER_GAMEPLAY_BLUEPRINT.md)
+owns campaign design; the [Game Feel Plan](GAME_FEEL_AND_SIGNATURE_PLAN.md)
+owns feel targets and proposals. This file records verified status, locked
+decisions, playtest evidence, and the immediate next task.
 
 **Last reconciled:** 2026-10-17
 
@@ -23,6 +25,10 @@ status, locked decisions, and the next bounded task.
 
 - Fixed-step movement, keyboard/gamepad input, F3 telemetry, bounded camera,
   prop depth sorting, feet collision, and elevation-aware ramps.
+- The game loop stays in `src/main.c`; reusable HUD/overlay drawing lives in
+  `src/game_ui.c`, while per-area procedural terrain lives in
+  `src/room_layout.c`. Room transitions, props, interactions, and collision
+  remain in `src/room.c`.
 - Jungle Entrance loop, root landmark, and shrine-door vista.
 - Root Path thorn wall/gate with a tested upper bypass, root-bridge prop,
   marker, palms, foreground grass, and ramp.
@@ -312,12 +318,13 @@ status, locked decisions, and the next bounded task.
 - **Feel:** movement values in `src/tuning.h` are tunable starting points.
   Change one value per tuning pass and verify it in play.
 
-The detailed campaign, weapon concepts, region designs, player tasks, and
-implementation-stage proposal live in
-[`MASTER_GAMEPLAY_BLUEPRINT.md`](MASTER_GAMEPLAY_BLUEPRINT.md). The movement
-feel targets and signature-mechanic proposals live in
+The complete vision, phase sequence, subphase checklist, and acceptance gates
+are in [`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md). The detailed campaign,
+weapon concepts, region designs, player tasks, and zone requirements live in
+[`MASTER_GAMEPLAY_BLUEPRINT.md`](MASTER_GAMEPLAY_BLUEPRINT.md). Movement
+targets and unapproved signature-mechanic proposals live in
 [`GAME_FEEL_AND_SIGNATURE_PLAN.md`](GAME_FEEL_AND_SIGNATURE_PLAN.md).
-Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
+Historical source documents are preserved under [`source/`](source/README.md).
 
 ## Next Work Item
 
@@ -354,19 +361,13 @@ playtests above.
 
 ## Upcoming Roadmap
 
-1. Stage E usability gate passed; the tester found the clues complex but
-   understandable. Defer licensed art/audio until the plan is clear.
-2. With both food nodes, health HUD, and objective tracker user-tested, keep
-   food to this single healing item type until measured playtests call for a
-   tactical alternative.
-3. Stage F room-template gate passed with a non-campaign pilot area using
-   shared movement, collision, transitions, and save validation.
-4. Expand one weapon region at a time through its own playtest gate, then
-   implement the Sanctuary/finale and clean Windows packaging.
-
-Keep Thornback signature mechanics such as "The Read" out of scope unless
-separately approved. Do not begin a later stage before the preceding
-playtest gate passes.
+The numbered, prompt-sized implementation plan is maintained in
+[`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md). The immediate next work remains
+Phase 0 there: hands-on checks for the campaign map/trial locator, Ash Skitter,
+and Root Mite. Resolve that gate before starting Forge Veins. Keep
+Thornback-signature mechanics such as "The Read" out of scope unless
+separately approved; do not start a later phase before its predecessor gate
+passes.
 
 ## Feel Gate Record
 
@@ -397,6 +398,13 @@ user-reported; exact results for manual checks were not supplied.
   changes. Do not treat proposals or user-reported results as independently
   verified.
 - [README.md](../README.md): overview and Windows build/run commands.
+- [README.md](README.md): documentation index and source-of-truth rules.
+- [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md): full vision, ordered phases,
+  prompt-sized subphases, and completion gates.
+- [MASTER_GAMEPLAY_BLUEPRINT.md](MASTER_GAMEPLAY_BLUEPRINT.md): detailed
+  campaign, region, zone, task, and encounter design.
+- [GAME_FEEL_AND_SIGNATURE_PLAN.md](GAME_FEEL_AND_SIGNATURE_PLAN.md): feel
+  targets, Feel Gate, and proposals requiring approval.
 - [ASSET_INDEX.md](ASSET_INDEX.md): art, preview, generator, and source-pack
   inventory.
 - [REFERENCE_LEGEND_OF_LUA.md](REFERENCE_LEGEND_OF_LUA.md): high-level external

@@ -38,17 +38,20 @@ and understanding the island—not grinding or constant combat.
 
 ## Start here
 
-- **Current status, locked decisions, and next task:** [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md)
-- **Detailed campaign and gameplay blueprint:** [`docs/MASTER_GAMEPLAY_BLUEPRINT.md`](docs/MASTER_GAMEPLAY_BLUEPRINT.md)
-- **Movement feel, measurable tests, and signature-mechanic proposals:** [`docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`](docs/GAME_FEEL_AND_SIGNATURE_PLAN.md)
+- **Documentation index and authority:** [`docs/README.md`](docs/README.md)
+- **Project vision and complete phased roadmap:** [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md)
+- **Current status, locked decisions, and immediate next task:** [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md)
+- **Detailed campaign, zone, task, and encounter design:** [`docs/MASTER_GAMEPLAY_BLUEPRINT.md`](docs/MASTER_GAMEPLAY_BLUEPRINT.md)
+- **Movement feel, measurable tests, and unapproved signature proposals:** [`docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`](docs/GAME_FEEL_AND_SIGNATURE_PLAN.md)
 - **Rules for coding assistants:** [`AGENTS.md`](AGENTS.md)
 - **Concept-art/source asset notes:** [`docs/ASSET_INDEX.md`](docs/ASSET_INDEX.md)
 - **Archived original design:** [`docs/source/ORIGINAL_GAME_DESIGN.txt`](docs/source/ORIGINAL_GAME_DESIGN.txt)
 
-The project memory is canonical for current status, locked decisions, and next
-steps. The gameplay blueprint and game-feel plan hold detailed specifications;
-proposals in those documents do not become implementation requirements until
-approved. Historical documents and snapshots are organized under
+The project memory is canonical for current status and locked decisions. The
+roadmap is canonical for implementation order and subphase gates. The gameplay
+blueprint and game-feel plan hold detailed specifications; proposals in those
+documents do not become implementation requirements until approved.
+Historical documents and snapshots are organized under
 [`docs/source/`](docs/source/README.md).
 
 ## Build and run on Windows
@@ -184,7 +187,9 @@ build.bat                 Configure and build for Windows
 run.bat                   Build, then launch the game
 src/tuning.h              Centralized movement, interaction, camera, and canvas tuning
 src/player.[ch]            Eight-way movement, feet collider, health, collision, animation
-src/room.[ch]              Jungle blockout layouts, transitions, props, collision, ramps, clue target
+src/room.[ch]              Room runtime, transitions, props, collision, ramps, clue targets
+src/room_layout.[ch]       Per-area procedural tile layouts and entrance ramp tile coordinates
+src/game_ui.[ch]           Interaction, inventory, help, health, and landmark UI drawing
 src/input.[ch]             Keyboard/gamepad movement, interaction, help, and action input
 src/interaction.[ch]       Small inspect-panel open/close state
 src/camera.[ch]            Bounded smoothed camera follow, look-ahead, pixel snap

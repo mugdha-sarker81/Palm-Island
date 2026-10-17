@@ -51,6 +51,7 @@ add_subdirectory("${RAYLIB_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/raylib-build")
 
 add_executable(PalmIsland
     src/main.c
+    src/game_ui.c
     src/input.c
     src/interaction.c
     src/inventory.c
@@ -58,6 +59,7 @@ add_executable(PalmIsland
     src/save.c
     src/player.c
     src/room.c
+    src/room_layout.c
     src/camera.c
     src/render.c
     src/thornback.c
@@ -78,6 +80,7 @@ if(PALM_BUILD_TESTS)
         src/interaction.c
         src/player.c
         src/room.c
+        src/room_layout.c
     )
     target_include_directories(PalmIslandMovementTests PRIVATE src)
     target_link_libraries(PalmIslandMovementTests PRIVATE raylib)
@@ -90,6 +93,7 @@ if(PALM_BUILD_TESTS)
         tests/camera_follow_test.c
         src/camera.c
         src/room.c
+        src/room_layout.c
     )
     target_include_directories(PalmIslandCameraTests PRIVATE src)
     target_link_libraries(PalmIslandCameraTests PRIVATE raylib)
@@ -101,6 +105,7 @@ if(PALM_BUILD_TESTS)
     add_executable(PalmIslandMinimapTests
         tests/minimap_test.c
         src/room.c
+        src/room_layout.c
     )
     target_include_directories(PalmIslandMinimapTests PRIVATE src)
     target_link_libraries(PalmIslandMinimapTests PRIVATE raylib)
@@ -114,6 +119,7 @@ if(PALM_BUILD_TESTS)
         src/render.c
         src/player.c
         src/room.c
+        src/room_layout.c
         src/thornback.c
         src/ash_skitter.c
         src/root_mite.c

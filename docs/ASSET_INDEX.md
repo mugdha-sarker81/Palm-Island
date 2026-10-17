@@ -16,6 +16,21 @@ closed-shrine, palm, rock, marker, tall-grass, and root-bridge props.
 
 The two copies previously named `Fantasy Action-Platformer Design Sheet.png` and `a_polished_game_concept_art_sprite_sheet_style_p.png` were byte-identical; one canonical copy is retained. The same was true for `Jungle Platformer Pixel Asset Sheet.png` and `forgotten_jungle_asset_concept_sheet.png`.
 
+## Superseded map prototype
+
+An older supplied world-map ZIP and its temporary extraction proposed a
+different set of region names, gate flags, save fields, and fast-travel
+behavior. Its reusable architectural points—data-defined campaign topology,
+paired exits, and graph validation—are already represented by the current
+runtime map and tests. Its region list and suggested save/fast-travel changes
+are superseded or unapproved; use the
+[Project Roadmap](PROJECT_ROADMAP.md) and
+[Master Gameplay Blueprint](MASTER_GAMEPLAY_BLUEPRINT.md) as the campaign
+authority. The redundant ZIP and extracted staging copy were removed.
+
+The campaign map PNGs below are retained as visual concepts only. They do not
+define current runtime topology or override the approved region/zone names.
+
 ## Starter pixel art
 
 | Location | Contents | Intended use |
@@ -26,8 +41,8 @@ The two copies previously named `Fantasy Action-Platformer Design Sheet.png` and
 | `assets/sprites/props/` | Palm, bush, marker, pillar, rock, root bridge, shrine door states, tall grass, thorn gate states, and village hut sprites | Test-room and upcoming blockout props |
 | `assets/previews/preview_scene.png` | 1280×768 lit scene preview (320×192 source) | Visual reference; taller than the selected 320×180 runtime canvas |
 | `assets/previews/phase3_preview_4x.png` | 4× pixel-art preview showing proposed blockout props | Phase 3 visual reference; not a runtime scene |
-| `assets/previews/palm_island_map_1280x720.png` | 4× labeled overview map of Palm Island | World-layout reference; not a runtime scene |
-| `assets/previews/palm_island_mission_map_1780x720.png` | Island map with a numbered narrative route, weapons, and route legend | Mission-flow concept/reference; not implemented gameplay |
+| `assets/previews/palm_island_map_1280x720.png` | 4× labeled overview map of Palm Island | Older world-layout concept; not a runtime scene or authoritative topology |
+| `assets/previews/palm_island_mission_map_1780x720.png` | Island map with a numbered narrative route, weapons, and route legend | Older mission-flow concept; not implemented gameplay or authoritative region order |
 
 The open gate/shrine variants, village hut, bush, and pillar are currently
 reference assets, not props used by the three-area prototype. Runtime palms and
@@ -58,8 +73,10 @@ These ZIP files are reference/source packages, not files loaded by the prototype
 
 ## Design source documents
 
-Movement tuning targets, feel tests, and proposed signature mechanics are
-documented in `docs/GAME_FEEL_AND_SIGNATURE_PLAN.md`. Original and
-supplementary design documents are retained in `docs/source/`. The project
-memory, gameplay blueprint, and feel plan in `docs/` are the current working
-references.
+The [Project Roadmap](PROJECT_ROADMAP.md) describes when to plan and replace
+prototype assets. Movement tuning targets, feel tests, and proposed signature
+mechanics are documented in [Game Feel and Signature Plan](GAME_FEEL_AND_SIGNATURE_PLAN.md).
+Original and supplementary design documents are retained in
+[source/](source/README.md). Use [Project Memory](PROJECT_MEMORY.md) for
+current implementation status and the [Master Gameplay Blueprint](MASTER_GAMEPLAY_BLUEPRINT.md)
+for the intended regions and content.

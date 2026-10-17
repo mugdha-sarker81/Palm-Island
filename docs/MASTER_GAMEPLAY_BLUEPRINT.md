@@ -7,6 +7,11 @@ playable campaign content not implemented
 **First build target:** a short, vertical slice of the Forgotten Jungle
 **Technology target:** C11 + Raylib 5.5, Windows PC, offline single-player
 
+**Execution order:** use [`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md) for the
+current phase sequence, prompt-sized subphases, and acceptance gates. This
+blueprint is the detailed design reference, not a command to implement every
+listed system or region at once.
+
 This document turns the existing story, redesign, weapon, and jungle-slice
 plans into a concrete map-by-map and system-by-system blueprint. Treat counts,
 encounter details, and zone names below as the production proposal. Build only
@@ -1391,143 +1396,14 @@ maps. Keep map rendering separate from collision. Prototype with code-built
 test rooms first; choose a map editor/format only after room needs are known.
 Never store absolute developer paths in committed level/save data.
 
-## 13. Implementation plan — one verified task at a time
+## 13. Implementation order
 
-### Stage A — Confirm the new direction
-
-1. Replace the minimal Raylib scaffold with a bounded top-down test room.
-2. Define virtual resolution, tile size, and 8-direction movement on a plain
-   test floor.
-3. Implement normalized keyboard/gamepad movement, foot-point collision,
-   facing, wall sliding, and room camera.
-4. Add one ramp/elevation connector and Y-sort/foreground occlusion test.
-
-**Gate:** run around a block, approach from all eight directions, transition
-between elevations, and verify no diagonal speed boost, jitter, or wall
-penetration. Review art scale only after movement feels right.
-
-### Stage B — One-room interaction and world shell
-
-1. Add one map/room, spawn, exit, solid collision, and stable object ID.
-2. Add inspect/talk prompt, one clue, and journal record.
-3. Add one checkpoint and safe respawn.
-4. Add local map visited state; test room transition in both directions.
-
-**Gate:** reliable start → inspect → transition → return → checkpoint flow.
-
-### Stage C — Jungle greybox vertical slice
-
-1. Implement the 4 Jungle zones in placeholder art.
-2. Add the thorn gate and explicit state flags.
-3. Implemented: the Roots Remember objective tracker advances through root
-   markings, marker, Map of Roots, Thornback, thorn gate, and return to the
-   Jungle Entrance using existing saved progress flags; no generic quest
-   framework. The user confirmed its steps advance and its HUD does not
-   obscure health, food, interactions, or combat cues.
-4. Add Thornback with two fair patterns.
-5. Add Thornfang, cut gate, activate shortcut, return to entrance.
-6. Playtest timing, route readability, health/failure, controller.
-
-**Gate:** 10–15 minute slice test, no softlocks, progression persists per
-session, and every mandatory step can be understood without a waypoint arrow.
-The user reports a 10–15 minute pass with no unclear mandatory steps or
-softlocks; exact elapsed time was not reported.
-
-### Stage D — Save/inventory foundation
-
-1. Implemented: version-2 save data tracks weapon ownership/selection and
-   discovered Jungle evidence, migrating existing version-1 saves. A compact
-   pause overlay shows the currently implemented weapon and discovered
-   evidence. Defer quick-switch controls until another weapon exists.
-2. Prototype implemented: finite Palm Fruit pickups in the Clearing nook and
-   Shrine Approach courtyard; E/A collects them, H/controller B eats a serving,
-   servings cap at three, and each serving restores up to two hearts. Both
-   numbers are provisional tuning values. Version-4 saves persist both node
-   states and food count, migrating versions 1-3. The user reports the first
-   pickups' collection, capacity, and relaunch checks pass. The first pickup's
-   healing/full-health/defeat checks also pass.
-3. Add the first fixed tool only when its region/task is implemented; include
-   its material flags and a clear workbench interaction, not a generic recipe
-   engine.
-4. Add versioned save for area/checkpoint, health, quest/objective flags,
-   discovered map, weapons, tools/materials, opened gates, and settings.
-5. Test new game, manual/checkpoint save, relaunch, invalid/missing save,
-   backup recovery, and old save version.
-
-**Gate:** save/load never loses major progression silently or crashes.
-
-### Stage E — Production slice polish
-
-1. Replace only the slice's core path assets with a coherent licensed style.
-2. Add region ambience, interaction/telegraph/reward sounds, and settings.
-3. Implemented: a modal keyboard/controller controls-help panel opens with
-   F1/controller Start and pauses play. The user confirmed its controls,
-   pause behavior, readability, and exclusive switching with inventory.
-4. The existing user reports a 10–15 minute pass. A new tester completed the
-   slice and explained the clue, Thornfang, and shortcut without coaching or a
-   waypoint, with no blockers; the clues felt complex but understandable.
-
-**Gate:** a new tester can finish the slice and explain clue, Thornfang use,
-and shortcut.
-The Stage E new-tester gate passed; exact new-tester elapsed time was not
-reported.
-
-### Stage F — Reusable region template
-
-1. **Completed first increment:** the existing eight directed exits and paired
-   destination spawns are in a static table; movement tests cover each link,
-   inclusive exit thresholds, and spawn safety.
-2. **Completed second increment:** a compact room-definition table associates
-   each existing Jungle area's entry spawn and authored prop array; movement
-   tests verify every area has props and a collision-free spawn.
-3. **Completed third increment:** the same per-area definitions list existing
-   inspectable targets and their optional food-node flags. Existing target,
-   facing/range, food-persistence, and progression tests pass unchanged.
-4. **Completed fourth increment:** per-area definitions now own ramp metadata
-   and identify the optional gate prop removed from collision when opened;
-   existing ramp/elevation and gate collision tests pass.
-5. **Completed fifth increment:** `RoomTileAt` selects the five authored
-   layout generators from an indexed table; only Root Path uses the gate-open
-   tile-state parameter. Existing movement/collision, render, and gate tests
-   pass.
-6. **Completed sixth increment:** outgoing transitions are associated directly
-   with each room definition; movement tests continue to cover all eight links,
-   inclusive thresholds, invalid-area rejection, and safe paired spawns.
-7. **Completed seventh increment:** area-specific food-node identity and Palm
-   Fruit positions are stored with each room definition. Movement tests verify
-   both current pickup locations and that unrelated areas have no food node.
-8. **Completed eighth increment:** tile generation is stored in each room
-   definition, and save validation uses `ROOM_AREA_COUNT` as its exclusive
-   bound. Existing areas use shared movement and collision without
-   area-specific player-physics changes.
-9. **Template gate passed:** a minimal non-campaign test area is backed by a
-   room definition, connects to and returns from the Arena, and uses existing
-   movement, collision, transition, and save-validation code. Automated tests
-   cover its safe path, paired spawns, and save round-trip without
-   area-specific physics or progression logic.
-10. Continue extracting terrain, object IDs, task definitions, and stable world
-   state in later bounded increments.
-11. Verify map transitions, persistence, debug tools, and load/unload cleanup.
-
-**Gate:** adding a room does not require modifying player physics or duplicating
-progression logic.
-
-### Stage G — Expand one weapon region at a time
-
-For each region: greybox its 3–4 zones → teach its obstacle → add clue/task →
-add optional find → add one common enemy only if needed → build guardian →
-award weapon → open return path → save/load test → playtest → polish. Do not
-start the next region until the current one has passed its gate.
-
-### Stage H — Finale and release
-
-1. Implement weapon convergence and Sanctuary.
-2. Playtest all order permutations for regions 4–7.
-3. Test missed clues, optional tasks, saves at every checkpoint, and return
-   routes.
-4. Test clean packaging on a Windows machine/folder without development
-   dependencies.
-5. Fix critical progression bugs before adding optional features.
+The earlier A–H milestone breakdown has been replaced by the more detailed,
+current subphase sequence in [`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md). Use
+that roadmap as the sole execution checklist: it reflects the current
+prototype gates, separates work into single-prompt increments, and states
+what must pass before later content begins. This blueprint remains the source
+for what each campaign feature should do, not when to implement every feature.
 
 ## 14. What is deliberately not specified/locked yet
 
@@ -1542,29 +1418,14 @@ Do not invent precision where playtesting should decide:
 - Optional quest count and shop economy.
 - Whether every region's final opening includes standard enemies.
 
-Use prototypes and playtests to resolve these. Update this blueprint and the
-decision log once chosen.
+Use prototypes and playtests to resolve these. Update Project Memory when a
+decision is approved, the Blueprint when detailed design changes, and the
+Roadmap only when the agreed work order or gates change.
 
-## 15. Progress tracker
+## 15. Current project status
 
-| Item | Status |
-|---|---|
-| Existing Windows build and launch | Verified |
-| Existing side-scroll coast prototype | Removed on 2026-10-14 at user direction |
-| Current executable | Five linked Jungle slice areas plus the Ashfall Descent greybox with its Cracked Mineral Seal discovery and first Ash Skitter; Thornback Arena trial prototype |
-| Top-down camera/game direction | Implemented for current blockout |
-| 8-region / 24-zone campaign outline | Planned in this document |
-| Top-down eight-direction controller | Implemented; Feel Gate reported passed |
-| Jungle slice in top-down world | In progress; current areas are blockouts |
-| Inventory/map/quest/save systems | Version-4 autosave includes Thornfang, discovered evidence, Palm Fruit food count, and both collected-node flags; overlay implemented, map/settings remain planned |
-| Health/food/shop/tool-building system | Two finite Palm Fruit pickups and healing prototype implemented and user-tested; pixel-heart HUD user-tested, shop/tools remain planned |
-| Ichigo costume/animation set | Appearance direction proposed; no production sprites |
-| Enemy and guardian systems | Thornback two-pattern combat/reward prototype; Ash Skitter two-hit prototype awaits hands-on playtest |
-
-**Current bounded task:** hands-on playtest Ashfall's Ash Skitter: bright
-route-tell readability, dash evasion/contact, upper-elevation safety,
-Thornfang range/facing and recovery, and defeat/reset. Also verify the
-current-room map in play. Ashfall's prior navigation gate passed in a
-user-reported test on 2026-10-15. Expand into Forge Veins one zone at a time
-after this gate; keep the Forge Warden and guardian out of scope until the
-encounter is validated. Manual save is deferred.
+This progress table and its task handoff were removed because they duplicated
+and drifted from current implementation notes. See
+[`PROJECT_MEMORY.md`](PROJECT_MEMORY.md) for verified status and
+[`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md) for the current phase, subphases,
+and gates.
