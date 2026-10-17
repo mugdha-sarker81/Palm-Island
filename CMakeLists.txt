@@ -62,6 +62,8 @@ add_executable(PalmIsland
     src/render.c
     src/thornback.c
     src/ash_skitter.c
+    src/root_mite.c
+    src/world_map.c
 )
 if(NOT MSVC)
     target_compile_options(PalmIsland PRIVATE -Wall -Wextra)
@@ -114,6 +116,7 @@ if(PALM_BUILD_TESTS)
         src/room.c
         src/thornback.c
         src/ash_skitter.c
+        src/root_mite.c
     )
     target_include_directories(PalmIslandRenderTests PRIVATE src)
     target_link_libraries(PalmIslandRenderTests PRIVATE raylib)
@@ -143,6 +146,17 @@ if(PALM_BUILD_TESTS)
         target_compile_options(PalmIslandAshSkitterTests PRIVATE -Wall -Wextra)
     endif()
     add_test(NAME ash_skitter COMMAND PalmIslandAshSkitterTests)
+
+    add_executable(PalmIslandRootMiteTests
+        tests/root_mite_test.c
+        src/root_mite.c
+    )
+    target_include_directories(PalmIslandRootMiteTests PRIVATE src)
+    target_link_libraries(PalmIslandRootMiteTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandRootMiteTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME root_mite COMMAND PalmIslandRootMiteTests)
 
     add_executable(PalmIslandSaveTests
         tests/save_test.c
@@ -175,4 +189,15 @@ if(PALM_BUILD_TESTS)
         target_compile_options(PalmIslandJungleTaskTests PRIVATE -Wall -Wextra)
     endif()
     add_test(NAME jungle_task COMMAND PalmIslandJungleTaskTests)
+
+    add_executable(PalmIslandWorldMapTests
+        tests/world_map_test.c
+        src/world_map.c
+    )
+    target_include_directories(PalmIslandWorldMapTests PRIVATE src)
+    target_link_libraries(PalmIslandWorldMapTests PRIVATE raylib)
+    if(NOT MSVC)
+        target_compile_options(PalmIslandWorldMapTests PRIVATE -Wall -Wextra)
+    endif()
+    add_test(NAME campaign_world_map COMMAND PalmIslandWorldMapTests)
 endif()

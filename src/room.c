@@ -316,6 +316,15 @@ static const RoomInteractable SHRINE_PALM_FRUIT = {
     .kind = ROOM_INTERACTABLE_PALM_FRUIT
 };
 
+/* Root Path reward drop: masked out while the Root Mite still lives. */
+static const RoomInteractable ROOT_PATH_PALM_FRUIT = {
+    .id = "jungle.root_path_palm_fruit_collected",
+    .title = "Palm Fruit",
+    .text = "A ripe palm fruit. It should restore a little strength.",
+    .interactBox = {312.0f, 232.0f, 16.0f, 16.0f},
+    .kind = ROOM_INTERACTABLE_PALM_FRUIT
+};
+
 static const RoomInteractable ROOTS_MURAL = {
     .id = "jungle.map_of_roots_seen",
     .title = "Map of Roots",
@@ -352,7 +361,8 @@ static const RoomInteractable COOLED_MINERAL_SEAM = {
 
 static const RoomInteractableEntry ROOT_PATH_INTERACTABLES[] = {
     {&ROOT_MARKINGS},
-    {&ROOT_MARKER}
+    {&ROOT_MARKER},
+    {&ROOT_PATH_PALM_FRUIT}
 };
 
 static const RoomInteractableEntry CLEARING_INTERACTABLES[] = {
@@ -391,8 +401,8 @@ static const RoomDefinition ROOM_DEFINITIONS[ROOM_AREA_COUNT] = {
         .spawnPoint = {320.0f, 336.0f},
         .props = ROOT_PATH_PROPS,
         .tileGenerator = RootPathTileAt,
-        .foodNode = ROOM_FOOD_NODE_NONE,
-        .palmFruitPosition = {104.0f, 184.0f},
+        .foodNode = ROOM_FOOD_NODE_ROOT_PATH,
+        .palmFruitPosition = {320.0f, 240.0f},
         .transitions = ROOT_PATH_TRANSITIONS,
         .transitionCount = sizeof(ROOT_PATH_TRANSITIONS) /
                            sizeof(ROOT_PATH_TRANSITIONS[0]),
@@ -952,7 +962,7 @@ void Room_DrawWorldMap(RoomArea currentArea, Vector2 playerPosition,
 
     DrawRectangle(203, 6, 115, 72, panelColor);
     DrawRectangleLines(203, 6, 115, 72, borderColor);
-    DrawText("ISLAND MAP", 207, 9, 7, RAYWHITE);
+    DrawText("MAP: M / 8 REGIONS", 207, 9, 6, RAYWHITE);
 
     static const RoomArea connectedAreas[] = {
         ROOM_AREA_JUNGLE_ENTRANCE,

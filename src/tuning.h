@@ -93,4 +93,25 @@
 #define ASH_SKITTER_CONTACT_HALF_HEIGHT 7.0f
 #define ASH_SKITTER_PLAYER_HIT_RANGE   24.0f
 
+/* --- Root Path: first Jungle enemy prototype (provisional values;
+ * verify spacing, pause readability, and lunge timing in playtests) --- */
+#define ROOT_MITE_HOME_X            320.0f
+#define ROOT_MITE_HOME_Y            240.0f
+#define ROOT_MITE_TERRITORY_MIN_X   304.0f
+#define ROOT_MITE_TERRITORY_MAX_X   336.0f
+#define ROOT_MITE_TERRITORY_MIN_Y   200.0f
+#define ROOT_MITE_TERRITORY_MAX_Y   304.0f
+#define ROOT_MITE_ALERT_RANGE       88.0f
+#define ROOT_MITE_LEASH_RANGE       176.0f
+#define ROOT_MITE_PAUSE_TRIGGER     56.0f
+#define ROOT_MITE_APPROACH_SPEED    36.0f  /* slower than walking: spacing lesson */
+#define ROOT_MITE_PAUSE_TIME        0.6f   /* fairness cue: pause before lunge */
+#define ROOT_MITE_LUNGE_SPEED       150.0f
+#define ROOT_MITE_LUNGE_TIME        0.35f
+#define ROOT_MITE_RECOVERY_TIME     0.9f
+#define ROOT_MITE_HEALTH            2
+#define ROOT_MITE_CONTACT_HALF_WIDTH 8.0f
+#define ROOT_MITE_CONTACT_HALF_HEIGHT 7.0f
+#define ROOT_MITE_PLAYER_HIT_RANGE  24.0f
+
 #endif

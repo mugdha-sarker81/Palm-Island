@@ -26,7 +26,8 @@ void Render_SortItems(RenderItem *items, size_t count)
 
 static void DrawItem(const RenderItem *item, const Player *player,
                      Texture2D playerSheet, const Thornback *thornback,
-                     const AshSkitter *ashSkitter, bool debug)
+                     const AshSkitter *ashSkitter, const RootMite *rootMite,
+                     bool debug)
 {
     if (item->type == RENDER_ITEM_PLAYER) {
         Player_Draw(player, playerSheet, debug);
@@ -34,6 +35,8 @@ static void DrawItem(const RenderItem *item, const Player *player,
         Thornback_Draw(thornback);
     } else if (item->type == RENDER_ITEM_ASH_SKITTER) {
         AshSkitter_Draw(ashSkitter);
+    } else if (item->type == RENDER_ITEM_ROOT_MITE) {
+        RootMite_Draw(rootMite);
     } else if (item->type == RENDER_ITEM_FOOD) {
         int x = (int)floorf(item->position.x);
         int y = (int)floorf(item->position.y);
@@ -51,9 +54,10 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
                            const RenderItem props[RENDER_PROP_COUNT],
                            const Thornback *thornback,
                            const AshSkitter *ashSkitter,
+                           const RootMite *rootMite,
                            const RenderItem *foodPickup, bool debug)
 {
-    RenderItem items[RENDER_PROP_COUNT + 4];
+    RenderItem items[RENDER_PROP_COUNT + 5];
                            size_t itemCount = 1;
     items[0] = (RenderItem){
         .type = RENDER_ITEM_PLAYER,
@@ -85,6 +89,19 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
             .foreground = false
         };
     }
+    /* The sleeping mite stays visible on its nest so the spacing lesson can
+     * be learned; once defeated it is replaced by the palm-fruit drop. */
+    if (rootMite != NULL &&
+        rootMite->state != ROOT_MITE_STATE_DEFEATED) {
+        items[itemCount++] = (RenderItem){
+            .type = RENDER_ITEM_ROOT_MITE,
+            .position = rootMite->position,
+            .feetY = rootMite->position.y,
+            .elevation = ROOM_ELEVATION_GROUND,
+            .stableOrder = RENDER_PROP_COUNT + 3,
+            .foreground = false
+        };
+    }
     if (foodPickup != NULL) items[itemCount++] = *foodPickup;
     for (size_t i = 0; i < RENDER_PROP_COUNT; i++) {
         items[itemCount++] = props[i];
@@ -92,6 +109,7 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
 
     Render_SortItems(items, itemCount);
     for (size_t i = 0; i < itemCount; i++) {
-        DrawItem(&items[i], player, playerSheet, thornback, ashSkitter, debug);
+        DrawItem(&items[i], player, playerSheet, thornback, ashSkitter,
+                 rootMite, debug);
     }
 }

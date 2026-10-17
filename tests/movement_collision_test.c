@@ -74,7 +74,7 @@ static void TestAreaDefinitionsHaveFruitMetadata(void)
     CHECK(Room_FoodNodeForArea(ROOM_AREA_JUNGLE_ENTRANCE) ==
           ROOM_FOOD_NODE_NONE);
     CHECK(Room_FoodNodeForArea(ROOM_AREA_ROOT_PATH) ==
-          ROOM_FOOD_NODE_NONE);
+          ROOM_FOOD_NODE_ROOT_PATH);
     CHECK(Room_FoodNodeForArea(ROOM_AREA_OVERGROWN_CLEARING) ==
           ROOM_FOOD_NODE_CLEARING);
     CHECK(Room_FoodNodeForArea(ROOM_AREA_SHRINE_APPROACH) ==
@@ -87,6 +87,8 @@ static void TestAreaDefinitionsHaveFruitMetadata(void)
     CHECK(clearingFruit.x == 104.0f && clearingFruit.y == 184.0f);
     Vector2 shrineFruit = Room_PalmFruitPosition(ROOM_AREA_SHRINE_APPROACH);
     CHECK(shrineFruit.x == 152.0f && shrineFruit.y == 184.0f);
+    Vector2 rootFruit = Room_PalmFruitPosition(ROOM_AREA_ROOT_PATH);
+    CHECK(rootFruit.x == 320.0f && rootFruit.y == 240.0f);
     Vector2 fallbackFruit = Room_PalmFruitPosition((RoomArea)-1);
     CHECK(fallbackFruit.x == 104.0f && fallbackFruit.y == 184.0f);
     CHECK(Room_FoodNodeForArea((RoomArea)-1) == ROOM_FOOD_NODE_NONE);
@@ -761,6 +763,23 @@ static void TestRootMarkingsTargetRangeAndFacing(void)
               ROOM_AREA_SHRINE_APPROACH, (Vector2){124.0f, 184.0f},
               (Vector2){1.0f, 0.0f}, INTERACT_RANGE,
               ROOM_FOOD_NODE_SHRINE_APPROACH) == NULL);
+
+    fruit = Room_FindInteractableWithFruitState(
+        ROOM_AREA_ROOT_PATH, (Vector2){320.0f, 220.0f},
+        (Vector2){0.0f, 1.0f}, INTERACT_RANGE, ROOM_FOOD_NODE_NONE);
+    CHECK(!Room_CollidesInArea(ROOM_AREA_ROOT_PATH, FeetAt(320.0f, 220.0f)));
+    CHECK(fruit != NULL);
+    if (fruit != NULL) {
+        CHECK(strcmp(fruit->id, "jungle.root_path_palm_fruit_collected") == 0);
+        CHECK(fruit->kind == ROOM_INTERACTABLE_PALM_FRUIT);
+    }
+    CHECK(Room_FindInteractableWithFruitState(
+              ROOM_AREA_ROOT_PATH, (Vector2){320.0f, 220.0f},
+              (Vector2){0.0f, 1.0f}, INTERACT_RANGE,
+              ROOM_FOOD_NODE_ROOT_PATH) == NULL);
+    /* The nest pocket itself stays solid: the drop is grabbed from the
+     * walkable row above, facing south into the vegetation. */
+    CHECK(Room_CollidesInArea(ROOM_AREA_ROOT_PATH, FeetAt(320.0f, 252.0f)));
 }
 
 static void TestRootMarkingsCanBeReviewedAndClosed(void)

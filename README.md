@@ -17,7 +17,10 @@ and understanding the island—not grinding or constant combat.
 > checkpoint passed hands-on playtesting. Ashfall now also has one two-hit
 > Ash Skitter, with a bright route tell, dash contact, and a Palmwood Club or
 > Thornfang recovery window and a brief color-coded strike cue; this encounter
-> awaits its own playtest. Ichigo
+> awaits its own playtest. Root Path now has an optional two-hit Root Mite
+> with a slow approach, a pause-before-lunge tell, and a Palm Fruit drop that
+> appears only after the mite is defeated; that encounter also awaits a
+> playtest. Ichigo
 > starts with the Palmwood Club, while Thornfang remains the Arena reward
 > required to cut marked vines. The areas use shared movement, collision, room
 > transitions, and save behavior. They have
@@ -61,6 +64,11 @@ ignored `build/` folder. If CMake reports that `build/` was configured with a
 different generator, rename that generated folder (for example, to
 `build-backup`) and run the script again.
 
+Always build through `build.bat` (or put `C:\msys64\mingw64\bin` on `PATH`
+first). A raw `cmake --build` in a plain shell fails silently with
+`Error 1` and no compiler message, because the MSYS2 compiler cannot load
+its own DLLs outside `build.bat`'s environment.
+
 ## Current executable
 
 The current executable loads the starter player and tiles into a 320×180 render
@@ -98,9 +106,10 @@ health retry cue at the Arena entrance, and a Thornfang reward.
 Before Thornfang is earned, a pulsing beacon marks the trial on the Arena's
 west-center side; approach from the south and move north, then west. Stand
 just south of the marker, face north, and press E/controller A to begin.
-The upper-right island map shows all six currently playable areas and their
-connections, with your dot moving inside the room you are in. It marks the
-Thornback trial while available; campaign regions not yet built are not shown.
+The upper-right campaign mini-map always shows all eight regions and their 24
+zones; playable blockout zones, planned zones, and your current zone use
+different markers. Press M or controller View to open the full readable
+campaign overview. Planned zones are map information, not playable rooms.
 After earning it, face the marked Root Path vines and press Space/controller X
 to cut them and open a direct corridor through the wall. General combat,
 quick weapon switching, and save/load for map, tools, and settings are not

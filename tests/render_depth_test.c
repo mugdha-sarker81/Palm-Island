@@ -107,6 +107,21 @@ static void TestAshSkitterSortsWithPlayerAndProps(void)
     CHECK(items[2].type == RENDER_ITEM_PROP);
 }
 
+static void TestRootMiteSortsWithPlayerAndProps(void)
+{
+    RenderItem items[] = {
+        {.type = RENDER_ITEM_PROP, .feetY = 204.0f, .stableOrder = 1},
+        {.type = RENDER_ITEM_ROOT_MITE, .feetY = 200.0f, .stableOrder = 14},
+        {.type = RENDER_ITEM_PLAYER, .feetY = 196.0f, .stableOrder = 0}
+    };
+
+    Render_SortItems(items, sizeof(items) / sizeof(items[0]));
+
+    CHECK(items[0].type == RENDER_ITEM_PLAYER);
+    CHECK(items[1].type == RENDER_ITEM_ROOT_MITE);
+    CHECK(items[2].type == RENDER_ITEM_PROP);
+}
+
 int main(void)
 {
     TestBackToFrontAndStableTies();
@@ -115,6 +130,7 @@ int main(void)
     TestUpperElevationDrawsAfterGroundElevation();
     TestThornbackSortsWithPlayerAndProps();
     TestAshSkitterSortsWithPlayerAndProps();
+    TestRootMiteSortsWithPlayerAndProps();
 
     if (failures != 0) {
         fprintf(stderr, "%d render-depth check(s) failed.\n", failures);

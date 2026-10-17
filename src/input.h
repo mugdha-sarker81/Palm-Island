@@ -12,6 +12,7 @@ typedef struct Input {
     bool attackPressed;
     bool inventoryPressed;
     bool helpPressed;
+    bool mapPressed;
     bool useFoodPressed;
 } Input;
 

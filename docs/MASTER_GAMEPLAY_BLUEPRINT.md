@@ -1,6 +1,7 @@
 # Palm Island — Master Gameplay Blueprint
 
-**Status:** Proposed full-game plan; not implemented
+**Status:** Proposed full-game plan; campaign topology metadata implemented,
+playable campaign content not implemented
 **Perspective:** Top-down 2D pixel-art world with a 3D-like sense of depth
 **Campaign shape:** 8 regions, 24 authored map zones
 **First build target:** a short, vertical slice of the Forgotten Jungle
@@ -10,6 +11,12 @@ This document turns the existing story, redesign, weapon, and jungle-slice
 plans into a concrete map-by-map and system-by-system blueprint. Treat counts,
 encounter details, and zone names below as the production proposal. Build only
 the next small milestone; do not attempt the 24-zone game in one pass.
+
+The eight-region, 24-zone campaign graph is represented in runtime metadata
+and validated at startup. This does not mean the planned zones are playable:
+room layouts, transitions, interactions, and save support remain limited to
+the current prototype. Press M/controller View in-game to open the complete
+campaign overview; planned zones are distinguished from the playable blockout.
 
 ## 1. The game the player is meant to play
 

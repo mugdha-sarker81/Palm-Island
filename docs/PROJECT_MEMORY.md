@@ -5,7 +5,7 @@ Detailed game design belongs in the gameplay blueprint; movement targets and
 feel proposals belong in the feel plan. This file records verified project
 status, locked decisions, and the next bounded task.
 
-**Last reconciled:** 2026-10-15
+**Last reconciled:** 2026-10-17
 
 ## Current Status
 
@@ -43,6 +43,24 @@ status, locked decisions, and the next bounded task.
   dashes with once-per-pass contact damage, and accepts one Palmwood Club or
   Thornfang hit per recovery window until defeated. Its state resets on room
   re-entry or death; it adds no save flags or drops.
+- The Root Path now has an optional Root Mite guarding a Palm Fruit drop: it
+  sleeps visibly in a marked nest, wakes within a slow-approach range, pauses
+  with a locked, drawn direction tell before each lunge, and takes one
+  Palmwood Club or Thornfang hit per recovery until its two hits are spent.
+  Contact damages only during the lunge and only at ground elevation; a death
+  returns Ichigo to the Root Path spawn with a "MITE RESET" banner. Its state
+  resets on room entry or death and it adds no save flags.
+- The fruit drop and its interact prompt are masked while the mite lives and
+  appear at the nest once it is defeated; the player collects it from the
+  walkable row north of the nest while facing south. Collecting it sets a new
+  saved food-node bit with no save-version change, and saves that already
+  hold the fruit seed the mite as permanently defeated.
+- A Root Path HUD cue shows the mite's current state and health, using the
+  blueprint's required "pause before lunge" fairness cue. The sleeping mite is
+  drawn (unlike the dormant Thornback/Ash Skitter) so the spacing lesson is
+  readable; the defeated husk is hidden where the fruit drop appears.
+  Automated checks cover the state machine, alert boundary, direction lock,
+  contact/hit gating, defeat, reward seeding, fruit masking, and depth order.
 - Ashfall's central path now has a pulsing, inspectable Cracked Mineral Seal.
   Reading it adds a persistent key-item discovery and reveals a small clue
   about airflow below; reach it from the south and face north. Interaction,
@@ -62,11 +80,21 @@ status, locked decisions, and the next bounded task.
 - The Arena trial now has a pulsing world beacon and a west-center HUD locator
   while Thornfang is missing and the trial is dormant, addressing the reported
   difficulty finding the marker. This locator still needs a hands-on check.
-- An upper-right island map now shows all six currently playable rooms and
-  their connections, with the player's position inside the current room node.
-  While the Thornback trial is dormant and Thornfang is missing, it also marks
-  the trial. Planned, unbuilt campaign regions are not represented; visual
-  playtest is pending.
+- The upper-right campaign mini-map always shows all eight regions and all 24
+  zones, distinguishing playable and planned zones and marking the current
+  zone. Press M/controller View to open a full readable campaign overview.
+- A separate campaign topology now describes the blueprint's eight regions
+  and 24 zones, with bidirectional exits, progression gates, and per-zone
+  checkpoint metadata. Startup validates zone counts, exit symmetry, and
+  reachability. This is campaign metadata only: unbuilt zones are not yet
+  playable, included in saves, or wired into the current room transitions.
+- Build verification on 2026-10-17: the full CMake build compiles the
+  campaign-map and Root Mite work cleanly with `-Wall -Wextra` and no
+  warnings, and all 11 automated tests pass including `root_mite` and
+  `campaign_world_map`. A launch smoke test
+  confirmed startup logs "validated: 24 zones, 8 regions", assets load, and
+  the window opens. `Room_DrawWorldMap` in `src/room.c` is now unreferenced by
+  the game and remains as dead code for a later cleanup.
 - The user reports that the Ashfall route, vent warning/fairness, damage/reset,
   and checkpoint after leaving/relaunching all passed hands-on testing on
   2026-10-15. This is a user-reported playtest result.
@@ -296,22 +324,33 @@ Historical decision notes are in [`DECISIONS.md`](DECISIONS.md).
 Stage F's room-template gate is complete. The Ashfall Descent navigation gate
 passed in a user-reported hands-on playtest on 2026-10-15: route, vent
 warnings/fairness, damage/reset feedback, and checkpoint persistence after
-relaunch were confirmed. The Arena trial has a pulsing marker, HUD locator, and
-an island map of all six playable rooms with the player's position and a trial
-icon while the trial is available; hands-on verification is pending. The first
-Ash Skitter is implemented as a two-hit Palmwood Club/Thornfang encounter with
-a bright route tell, dash/contact, and recovery; automated checks cover weapon
-eligibility, alert-range boundary, once-per-dash contact, and reinitialization.
-The Palmwood Club is granted for new and previously saved games; it becomes
-active if the save has no selected weapon. Thornfang remains the Arena reward
-and marked-vine cutting ability. Next, verify the island map and locator in
-play, then hands-on test starter-weapon combat and Ash Skitter's warning
-readability, evasion, elevation safety, attack range/facing, recovery timing,
-and defeat/reset behavior. The cracked mineral seal is now an inspectable,
-saved Ashfall discovery, and the optional west-lower cooled seam records its
-forked crack pattern. The next expansion is Forge Veins, one zone at a time,
-but only after the Ashfall map and Ash Skitter playtest gate passes. Do not add
-the Forge Warden or a guardian.
+relaunch were confirmed. The Arena trial has a pulsing marker and HUD locator.
+The upper-right mini-map shows the full 8-region/24-zone campaign and marks
+playable, planned, and current zones; M/controller View opens its readable
+full-screen view. Planned zones are visible but not yet playable and do not
+change current transitions. Hands-on visual verification of the expanded map
+is pending.
+The first Ash Skitter is implemented as a two-hit Palmwood Club/Thornfang
+encounter with a bright route tell, dash/contact, and recovery; automated checks
+cover weapon eligibility, alert-range boundary, once-per-dash contact, and
+reinitialization. The Palmwood Club is granted for new and previously saved
+games; it becomes active if the save has no selected weapon. Thornfang remains
+the Arena reward and marked-vine cutting ability. Next, verify the island map
+and locator in play, then hands-on test starter-weapon combat and Ash Skitter's
+warning readability, evasion, elevation safety, attack range/facing, recovery
+timing, and defeat/reset behavior. The new Root Path Root Mite still needs
+its own hands-on pass: nest readability while asleep, pause-tell legibility,
+lunge fairness, elevation safety, the death-reset banner, the HUD state cue,
+and collecting the reward drop from the walkable row north of the nest while
+facing south. The cracked mineral seal is now an
+inspectable, saved Ashfall discovery, and the optional west-lower cooled seam
+records its forked crack pattern. The next expansion is Forge Veins, one zone
+at a time, but only after the Ashfall map, Ash Skitter, and Root Mite playtest
+gates pass.
+Do not add the Forge Warden or a guardian.
+Automated build and test verification passed on 2026-10-17; the remaining
+gates are still the hands-on map, locator, Ash Skitter, and Root Mite
+playtests above.
 
 ## Upcoming Roadmap
 

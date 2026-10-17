@@ -10,6 +10,8 @@
 #include "ash_skitter.h"
 #include "jungle_task.h"
 #include "save.h"
+#include "world_map.h"
+#include "root_mite.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -338,6 +340,7 @@ static void DrawHelpUI(void)
         "Inventory",
         "Help",
         "Debug overlay",
+        "Campaign map",
         "Window mode",
         "Quit"
     };
@@ -349,6 +352,7 @@ static void DrawHelpUI(void)
         "I / Tab",
         "F1",
         "F3",
+        "M",
         "F11",
         "Esc"
     };
@@ -360,6 +364,7 @@ static void DrawHelpUI(void)
         "Y",
         "Start",
         "--",
+        "View",
         "--",
         "--"
     };
@@ -371,12 +376,28 @@ static void DrawHelpUI(void)
     DrawText("KEYBOARD", 132, 38, 8, mutedColor);
     DrawText("CONTROLLER", 216, 38, 8, mutedColor);
     for (int i = 0; i < (int)(sizeof(actions) / sizeof(actions[0])); i++) {
-        int y = 50 + i * 11;
+        int y = 50 + i * 9;
         DrawText(actions[i], 32, y, 8, RAYWHITE);
         DrawText(keys[i], 132, y, 8, RAYWHITE);
         DrawText(controller[i], 216, y, 8, RAYWHITE);
     }
     DrawText("WORLD PAUSED - F1 / START CLOSES", 32, 150, 8, headingColor);
+}
+
+static ZoneId CampaignZoneForRoom(RoomArea area)
+{
+    switch (area) {
+        case ROOM_AREA_JUNGLE_ENTRANCE: return Z_JUNGLE_ENTRANCE;
+        case ROOM_AREA_ROOT_PATH: return Z_ROOT_PATH;
+        case ROOM_AREA_OVERGROWN_CLEARING: return Z_OVERGROWN_CLEARING;
+        case ROOM_AREA_SHRINE_APPROACH:
+        case ROOM_AREA_THORNBACK_ARENA:
+            return Z_SHRINE_APPROACH;
+        case ROOM_AREA_ASHFALL_DESCENT: return Z_ASHFALL_DESCENT;
+        case ROOM_AREA_COUNT:
+        default:
+            return Z_WRECKSHORE;
+    }
 }
 
 static void DrawHealthHUD(int health)
@@ -484,6 +505,12 @@ static void DrawCooledMineralSeam(float worldTime, bool discovered)
 
 int main(void)
 {
+    if (!world_validate()) {
+        fputs("Campaign world map validation failed; refusing to start.\n",
+              stderr);
+        return EXIT_FAILURE;
+    }
+
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "Palm Island");
     SetWindowMinSize(VIRTUAL_W, VIRTUAL_H);
@@ -631,6 +658,7 @@ int main(void)
     float worldTime = 0.0f;
     bool inventoryOpen = false;
     bool helpOpen = false;
+    bool mapOpen = false;
     enum { TRANSITION_NONE, TRANSITION_FADE_OUT, TRANSITION_FADE_IN };
     int transitionPhase = TRANSITION_NONE;
     float transitionTime = 0.0f;
@@ -645,11 +673,15 @@ int main(void)
     float thornGateFeedbackTime = 0.0f;
     float retryFeedbackTime = 0.0f;
     float ashfallRetryFeedbackTime = 0.0f;
+    float rootPathRetryFeedbackTime = 0.0f;
     float promptFade = 0.0f;
     Thornback thornback;
     Thornback_Init(&thornback);
     AshSkitter ashSkitter;
     AshSkitter_Init(&ashSkitter);
+    RootMite rootMite;
+    RootMite_Init(&rootMite,
+                  (collectedFoodNodes & ROOM_FOOD_NODE_ROOT_PATH) != 0);
     const RoomInteractable *activeInteractable = NULL;
     const RoomInteractable *promptInteractable = NULL;
 
@@ -663,13 +695,26 @@ int main(void)
         Input_Poll(&input);
         if (input.inventoryPressed) {
             inventoryOpen = !inventoryOpen;
-            if (inventoryOpen) helpOpen = false;
+            if (inventoryOpen) {
+                helpOpen = false;
+                mapOpen = false;
+            }
         }
         if (input.helpPressed) {
             helpOpen = !helpOpen;
-            if (helpOpen) inventoryOpen = false;
+            if (helpOpen) {
+                inventoryOpen = false;
+                mapOpen = false;
+            }
         }
-        bool overlayOpen = inventoryOpen || helpOpen;
+        if (input.mapPressed) {
+            mapOpen = !mapOpen;
+            if (mapOpen) {
+                inventoryOpen = false;
+                helpOpen = false;
+            }
+        }
+        bool overlayOpen = inventoryOpen || helpOpen || mapOpen;
         if (overlayOpen) {
             interactBuffer = 0.0f;
             attackBuffer = 0.0f;
@@ -760,6 +805,12 @@ int main(void)
                         }
                         foodUseBuffer = 0.0f;
                     }
+                    uint32_t visibleFoodNodes = collectedFoodNodes;
+                    if (room.area == ROOM_AREA_ROOT_PATH &&
+                        rootMite.state != ROOT_MITE_STATE_DEFEATED) {
+                        /* The drop stays hidden while the Root Mite lives. */
+                        visibleFoodNodes |= ROOM_FOOD_NODE_ROOT_PATH;
+                    }
                     Vector2 facingDirection = FacingDirection(player.facing);
                     activeInteractable =
                         room.area == ROOM_AREA_THORNBACK_ARENA &&
@@ -769,7 +820,7 @@ int main(void)
                             : Room_FindInteractableWithFruitState(
                                   room.area, player.pos, facingDirection,
                                   INTERACT_PROMPT_RANGE,
-                                  collectedFoodNodes);
+                                  visibleFoodNodes);
                     if (activeInteractable != NULL) {
                         promptInteractable = activeInteractable;
                         promptFade += SIM_DT / INTERACT_PROMPT_FADE;
@@ -787,7 +838,7 @@ int main(void)
                         const RoomInteractable *inRange =
                             Room_FindInteractableWithFruitState(
                                 room.area, player.pos, facingDirection,
-                                INTERACT_RANGE, collectedFoodNodes);
+                                INTERACT_RANGE, visibleFoodNodes);
                         if (inRange != NULL) {
                             if (inRange->kind ==
                                 ROOM_INTERACTABLE_PALM_FRUIT) {
@@ -861,6 +912,9 @@ int main(void)
                                 player.damageInvulnerability;
                             Room_SetArea(&room, destinationArea);
                             checkpointArea = destinationArea;
+                            RootMite_Init(&rootMite,
+                                          (collectedFoodNodes &
+                                           ROOM_FOOD_NODE_ROOT_PATH) != 0);
                             Thornback_Init(&thornback);
                             AshSkitter_Init(&ashSkitter);
                             Player_Init(&player, destinationSpawn);
@@ -946,6 +1000,36 @@ int main(void)
                 }
             } else if (room.area == ROOM_AREA_ROOT_PATH &&
                        transitionPhase == TRANSITION_NONE) {
+                RootMite_Update(&rootMite, player.pos, SIM_DT);
+                if (RootMite_TryPlayerContact(&rootMite, player.pos,
+                                              player.elevation)) {
+                    (void)Player_TakeDamage(&player, rootMite.position,
+                                            room.area);
+                    if (player.health <= 0) {
+                        Player_Init(&player, Room_SpawnPoint(room.area));
+                        player.thornfangOwned = HasThornfang(&inventory);
+                        player.thornGateOpen = thornGateOpen;
+                        RootMite_Init(&rootMite,
+                                      (collectedFoodNodes &
+                                       ROOM_FOOD_NODE_ROOT_PATH) != 0);
+                        Camera_Init(&camera, player.pos, Room_Bounds(),
+                                    (Vector2){(float)VIRTUAL_W,
+                                              (float)VIRTUAL_H});
+                        interactBuffer = 0.0f;
+                        attackBuffer = 0.0f;
+                        foodUseBuffer = 0.0f;
+                        rootPathRetryFeedbackTime = 1.5f;
+                        if (saveAvailable &&
+                            !PersistProgress(
+                                savePath, checkpointArea, player.health,
+                                &inventory, thornGateOpen,
+                                collectedFoodNodes, saveNotice,
+                                sizeof(saveNotice), &saveNoticeTime)) {
+                            saveAvailable = false;
+                            saveError = true;
+                        }
+                    }
+                }
                 if (attackBuffer > 0.0f) {
                     if (Room_TryCutThornGate(
                             room.area, player.pos,
@@ -966,6 +1050,13 @@ int main(void)
                             saveAvailable = false;
                             saveError = true;
                         }
+                        attackBuffer = 0.0f;
+                    } else if (RootMite_TryHit(
+                                   &rootMite, player.pos,
+                                   FacingDirection(player.facing),
+                                   player.elevation,
+                                   inventory.selectedWeapon)) {
+                        attackFeedbackTime = 0.25f;
                         attackBuffer = 0.0f;
                     } else {
                         attackBuffer -= SIM_DT;
@@ -1038,6 +1129,12 @@ int main(void)
                     ashfallRetryFeedbackTime = 0.0f;
                 }
             }
+            if (rootPathRetryFeedbackTime > 0.0f) {
+                rootPathRetryFeedbackTime -= SIM_DT;
+                if (rootPathRetryFeedbackTime < 0.0f) {
+                    rootPathRetryFeedbackTime = 0.0f;
+                }
+            }
             if (pickupNoticeTime > 0.0f) {
                 pickupNoticeTime -= SIM_DT;
                 if (pickupNoticeTime < 0.0f) pickupNoticeTime = 0.0f;
@@ -1080,11 +1177,18 @@ int main(void)
             if (room.area == ROOM_AREA_ASHFALL_DESCENT) {
                 AshSkitter_DrawWarning(&ashSkitter);
             }
+            if (room.area == ROOM_AREA_ROOT_PATH) {
+                RootMite_DrawWarning(&rootMite);
+            }
             RenderItem foodPickup;
             const RenderItem *foodPickupPtr = NULL;
             uint32_t roomFoodNode = Room_FoodNodeForArea(room.area);
+            bool rootPathRewardHidden =
+                room.area == ROOM_AREA_ROOT_PATH &&
+                rootMite.state != ROOT_MITE_STATE_DEFEATED;
             if (roomFoodNode != ROOM_FOOD_NODE_NONE &&
-                (collectedFoodNodes & roomFoodNode) == 0) {
+                (collectedFoodNodes & roomFoodNode) == 0 &&
+                !rootPathRewardHidden) {
                 foodPickup = PalmFruitRenderItem(room.area);
                 foodPickupPtr = &foodPickup;
             }
@@ -1092,6 +1196,7 @@ int main(void)
                 &player, sheet, props,
                 room.area == ROOM_AREA_THORNBACK_ARENA ? &thornback : NULL,
                 room.area == ROOM_AREA_ASHFALL_DESCENT ? &ashSkitter : NULL,
+                room.area == ROOM_AREA_ROOT_PATH ? &rootMite : NULL,
                 foodPickupPtr, debug);
             DrawWeaponHitEffect(player.pos, player.facing,
                                 inventory.selectedWeapon,
@@ -1120,6 +1225,10 @@ int main(void)
                  retryFeedbackTime <= 0.0f) ||
                 (room.area == ROOM_AREA_ROOT_PATH &&
                  thornGateOpen && thornGateFeedbackTime > 0.0f) ||
+                (room.area == ROOM_AREA_ROOT_PATH &&
+                 rootMite.state != ROOT_MITE_STATE_DEFEATED) ||
+                (room.area == ROOM_AREA_ROOT_PATH &&
+                 rootPathRetryFeedbackTime > 0.0f) ||
                 (room.area == ROOM_AREA_THORNBACK_ARENA &&
                  (retryFeedbackTime > 0.0f ||
                   HasThornfang(&inventory) ||
@@ -1159,6 +1268,33 @@ int main(void)
                 DrawRectangle(6, 81, 194, 15, (Color){11, 26, 34, 220});
                 DrawText("ARENA TRIAL: WEST-CENTER GLOWING MARKER",
                          10, 85, 8, (Color){245, 214, 124, 255});
+            } else if (room.area == ROOM_AREA_ROOT_PATH &&
+                       rootMite.state != ROOT_MITE_STATE_DEFEATED &&
+                       thornGateFeedbackTime <= 0.0f &&
+                       rootPathRetryFeedbackTime <= 0.0f) {
+                const char *miteCue;
+                if (rootMite.state == ROOT_MITE_STATE_DORMANT) {
+                    miteCue = "ROOT MITE NEST - GIVE IT A WIDE BERTH";
+                } else if (rootMite.state == ROOT_MITE_STATE_APPROACH) {
+                    miteCue = "MITE APPROACH - KEEP YOUR DISTANCE";
+                } else if (rootMite.state == ROOT_MITE_STATE_PAUSE) {
+                    miteCue = "MITE PAUSE - DODGE THE MARKED LINE";
+                } else if (rootMite.state == ROOT_MITE_STATE_LUNGE) {
+                    miteCue = "LUNGE! MOVE CLEAR";
+                } else {
+                    miteCue = attackFeedbackTime > 0.0f
+                                  ? "MITE HIT!"
+                                  : HasCombatWeapon(&inventory)
+                                        ? "RECOVERY - FACE + SPACE / X"
+                                        : "RECOVERY - WEAPON NEEDED";
+                }
+                DrawRectangle(6, 81, 236, 15, (Color){11, 26, 34, 220});
+                DrawText(miteCue, 10, 85, 8, (Color){245, 214, 124, 255});
+                if (rootMite.state != ROOT_MITE_STATE_DORMANT) {
+                    DrawText(TextFormat("MITE %d/%d", rootMite.health,
+                                        ROOT_MITE_HEALTH),
+                             234, 98, 8, RAYWHITE);
+                }
             } else if (!objectiveCueVisible) {
                 JungleTaskProgress taskProgress = {
                     .rootWeaveSeen = interaction.rootWeaveSeen,
@@ -1176,8 +1312,8 @@ int main(void)
                                     JungleTask_CurrentObjective(taskProgress)),
                          10, 85, 8, (Color){245, 214, 124, 255});
             }
-            Room_DrawWorldMap(
-                room.area, player.pos,
+            world_map_draw_minimap(
+                CampaignZoneForRoom(room.area),
                 room.area == ROOM_AREA_THORNBACK_ARENA &&
                     !HasThornfang(&inventory) &&
                     thornback.state == THORNBACK_STATE_DORMANT);
@@ -1222,6 +1358,11 @@ int main(void)
                 DrawRectangle(6, 81, 218, 15, (Color){11, 26, 34, 220});
                 DrawText("STEAM RESET - ROOM ENTRY", 10, 85, 8,
                          (Color){255, 139, 115, 255});
+            } else if (room.area == ROOM_AREA_ROOT_PATH &&
+                       rootPathRetryFeedbackTime > 0.0f) {
+                DrawRectangle(6, 81, 218, 15, (Color){11, 26, 34, 220});
+                DrawText("MITE RESET - THE NEST STIRS", 10, 85, 8,
+                         (Color){255, 139, 115, 255});
             } else if (room.area == ROOM_AREA_THORNBACK_ARENA &&
                 HasThornfang(&inventory)) {
                 DrawRectangle(6, 81, 146, 15, (Color){11, 26, 34, 220});
@@ -1250,6 +1391,7 @@ int main(void)
             }
             if (inventoryOpen) DrawInventoryUI(&inventory);
             if (helpOpen) DrawHelpUI();
+            if (mapOpen) world_map_draw(CampaignZoneForRoom(room.area));
         } else {
             DrawText("Assets not found.", 8, 8, 10, WHITE);
             DrawText("Run from the repo root or keep", 8, 24, 10, WHITE);

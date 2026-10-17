@@ -34,3 +34,8 @@ temp/
 
 # Assets that should not be committed (optional)
 # assets/raw/
+
+# Untracked working files
+_map_extract/
+palm-island-worldmap-8regions-24zones.zip
+buildlog.txt

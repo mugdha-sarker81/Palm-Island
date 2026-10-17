@@ -5,12 +5,14 @@
 #include "room.h"
 #include "thornback.h"
 #include "ash_skitter.h"
+#include "root_mite.h"
 #include <stddef.h>
 
 typedef enum RenderItemType {
     RENDER_ITEM_PLAYER,
     RENDER_ITEM_THORNBACK,
     RENDER_ITEM_ASH_SKITTER,
+    RENDER_ITEM_ROOT_MITE,
     RENDER_ITEM_PROP,
     RENDER_ITEM_FOOD
 } RenderItemType;
@@ -33,6 +35,7 @@ void Render_DrawDepthScene(const Player *player, Texture2D playerSheet,
                            const RenderItem props[RENDER_PROP_COUNT],
                            const Thornback *thornback,
                            const AshSkitter *ashSkitter,
+                           const RootMite *rootMite,
                            const RenderItem *foodPickup, bool debug);
 
 #endif
